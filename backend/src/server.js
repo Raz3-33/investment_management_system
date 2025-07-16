@@ -24,7 +24,7 @@ app.use(bodyParser.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api/auth/");
+// app.use("/api/auth/");
 
 app.get("/", (req, res) => {
   res.send("API is running!");
