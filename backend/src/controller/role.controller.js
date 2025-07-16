@@ -18,6 +18,9 @@ export const getRoleDetails = async (req, res) => {
 
     const role = await roleService.getRoleWithPermissions(roleId);
 
+    console.log(role,"rolerolerolerolerolerolerole");
+    
+
     if (!role) {
       return res
         .status(404)

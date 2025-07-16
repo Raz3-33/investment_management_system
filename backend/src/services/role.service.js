@@ -20,7 +20,7 @@ export const getRoleWithPermissions = async (roleId) => {
     include: {
       permissions: {
         include: {
-          rolePermission: true,
+          permission: true,
         },
       },
     },

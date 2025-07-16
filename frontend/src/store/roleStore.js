@@ -28,7 +28,7 @@ export const useRoleStore = create(
       fetchRoleDetail: async (roleId) => {
         set({ loadingRoleDetail: true, errorRoleDetail: null });
         try {
-          const res = await axios.get(`/api/role/${roleId}`);
+          const res = await api.get(`/roles/role/${roleId}`);
           set({ roleDetail: res.data.data });
         } catch (err) {
           set({
