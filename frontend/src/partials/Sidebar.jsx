@@ -93,14 +93,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
           </button>
           {/* Logo */}
           <NavLink end to="/" className="block">
-            <svg
-              className="fill-violet-500"
-              xmlns="http://www.w3.org/2000/svg"
-              width={32}
-              height={32}
-            >
-              <path d="M31.956 14.8C31.372 6.92 25.08.628 17.2.044V5.76a9.04 9.04 0 0 0 9.04 9.04h5.716ZM14.8 26.24v5.716C6.92 31.372.63 25.08.044 17.2H5.76a9.04 9.04 0 0 1 9.04 9.04Zm11.44-9.04h5.716c-.584 7.88-6.876 14.172-14.756 14.756V26.24a9.04 9.04 0 0 1 9.04-9.04ZM.044 14.8C.63 6.92 6.92.628 14.8.044V5.76a9.04 9.04 0 0 1-9.04 9.04H.044Z" />
-            </svg>
+            <img
+              src="/images/logos/logo.png"
+              alt="Logo"
+              className={`transition-all duration-300 object-contain ${
+                sidebarExpanded ? "w-24" : "w-46 mx-auto"
+              }`}
+            />
           </NavLink>
         </div>
 
@@ -233,6 +232,43 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                 }}
               </SidebarLinkGroup>
 
+              {/* Inbox */}
+              <li
+                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                  pathname.includes("inbox") &&
+                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                }`}
+              >
+                <NavLink
+                  end
+                  to="/role_management"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("inbox")
+                      ? ""
+                      : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg
+                      className={`shrink-0 fill-current ${
+                        pathname.includes("roles")
+                          ? "text-violet-500"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="17"
+                      height="17"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M8 0c.2 0 .4.06.56.17l4.82 3.67c.36.27.57.7.57 1.16v4.45c0 3.07-2.39 5.36-5.33 6.48a.72.72 0 0 1-.46 0c-2.93-1.12-5.33-3.4-5.33-6.48V5c0-.46.21-.89.56-1.17L7.44.17A.86.86 0 0 1 8 0Zm0 1.6L3.33 5.17v4.27c0 2.3 1.7 4.16 4.2 5.18 2.5-1.02 4.14-2.88 4.14-5.18V5.17L8 1.6Zm0 5.9c.55 0 1-.45 1-1S8.55 5.5 8 5.5 7 5.95 7 6.5s.45 1 1 1Zm2.15 2.9c-.3-.8-1.05-1.4-2.15-1.4s-1.85.6-2.15 1.4a.5.5 0 0 0 .47.6h3.36a.5.5 0 0 0 .47-.6Z" />
+                    </svg>
+
+                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Role Management
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
               {/* Messages */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
@@ -278,42 +314,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   </div>
                 </NavLink>
               </li>
-              {/* Inbox */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("inbox") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to=""
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("inbox")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      className={`shrink-0 fill-current ${
-                        pathname.includes("inbox")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M11.92 6.851c.044-.027.09-.05.137-.07.481-.275.758-.68.908-1.256.126-.55.169-.81.357-2.058.075-.498.144-.91.217-1.264-4.122.75-7.087 2.984-9.12 6.284a18.087 18.087 0 0 0-1.985 4.585 17.07 17.07 0 0 0-.354 1.506c-.05.265-.076.448-.086.535a1 1 0 0 1-1.988-.226c.056-.49.209-1.312.502-2.357a20.063 20.063 0 0 1 2.208-5.09C5.31 3.226 9.306.494 14.913.004a1 1 0 0 1 .954 1.494c-.237.414-.375.993-.567 2.267-.197 1.306-.244 1.586-.392 2.235-.285 1.094-.789 1.853-1.552 2.363-.748 3.816-3.976 5.06-8.515 4.326a1 1 0 0 1 .318-1.974c2.954.477 4.918.025 5.808-1.556-.628.085-1.335.121-2.127.121a1 1 0 1 1 0-2c1.458 0 2.434-.116 3.08-.429Z" />
-                    </svg>
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Inbox
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
+
               {/* Calendar */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${

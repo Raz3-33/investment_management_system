@@ -6,6 +6,7 @@ import bodyParser from "body-parser";
 import sanitizedConfig from "./config.js";
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlware.js";
+import roleRoutes from "./routes/role.routes.js";
 
 dotenv.config();
 
@@ -24,7 +25,8 @@ app.use(bodyParser.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-// app.use("/api/auth/");
+// role Management
+app.use("/api/roles", roleRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running!");

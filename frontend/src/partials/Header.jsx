@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 
 import SearchModal from '../components/ModalSearch';
 import Notifications from '../components/DropdownNotifications';

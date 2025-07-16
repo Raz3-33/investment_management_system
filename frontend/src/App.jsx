@@ -1,33 +1,44 @@
-import React, { useEffect } from 'react';
-import {
-  Routes,
-  Route,
-  useLocation
-} from 'react-router-dom';
+// src/App.tsx
+import React, { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 
-import './css/style.css';
+import "./css/style.css";
+import "./charts/ChartjsConfig";
 
-import './charts/ChartjsConfig';
+import Dashboard from "./pages/Dashboard";
+import RoleManagement from "./pages/roleManagement/RoleManagement";
+import MainLayout from "./layout/MainLayout";
+import RolePermissionForm from "./pages/roleManagement/RolePermissionForm";
 
-// Import pages
-import Dashboard from './pages/Dashboard';
-
-function App() {
-
+function ScrollToTopOnNavigate() {
   const location = useLocation();
 
   useEffect(() => {
-    document.querySelector('html').style.scrollBehavior = 'auto'
-    window.scroll({ top: 0 })
-    document.querySelector('html').style.scrollBehavior = ''
-  }, [location.pathname]); // triggered on route change
+    document.querySelector("html").style.scrollBehavior = "auto";
+    window.scroll({ top: 0 });
+    document.querySelector("html").style.scrollBehavior = "";
+  }, [location.pathname]);
 
+  return null;
+}
+
+function App() {
   return (
-    <>
+    <div className="h-full w-full">
+      <ScrollToTopOnNavigate />
       <Routes>
-        <Route exact path="/" element={<Dashboard />} />
+        <Route path="/" element={<MainLayout children={<Dashboard />} />} />
+        <Route
+          path="/role_management"
+          element={<MainLayout children={<RoleManagement />} />}
+        />
+
+        <Route
+          path="/role_management/permission"
+          element={<MainLayout children={<RolePermissionForm />} />}
+        />
       </Routes>
-    </>
+    </div>
   );
 }
 
