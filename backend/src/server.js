@@ -7,6 +7,8 @@ import sanitizedConfig from "./config.js";
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlware.js";
 import roleRoutes from "./routes/role.routes.js";
+import authenticationRoute from "./routes/authentication.routes.js";
+
 
 dotenv.config();
 
@@ -27,6 +29,9 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 // role Management
 app.use("/api/roles", roleRoutes);
+
+// authentication
+app.use("/api/auth", authenticationRoute);
 
 app.get("/", (req, res) => {
   res.send("API is running!");
