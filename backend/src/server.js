@@ -30,10 +30,10 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 // role Management
 app.use("/api/roles", roleRoutes);
+// branch
 app.use("/api/branches", branchRouter);
+// user management
 app.use("/api/users",userRouter)
-
-
 // authentication
 app.use("/api/auth", authenticationRoute);
 

@@ -1,5 +1,5 @@
 // ToastNotification.jsx
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 const ToastNotification = ({ show, message, type, onClose }) => {
   useEffect(() => {

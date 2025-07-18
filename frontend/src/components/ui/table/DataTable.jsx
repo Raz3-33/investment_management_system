@@ -25,6 +25,10 @@ export default function DataTable({ columns, rows, renderActions }) {
                   >
                     {col.isAction
                       ? renderActions?.(row) ?? null
+                      : col.key === "role"
+                      ? row?.role?.name ?? "—"
+                      : col.key === "branch"
+                      ? row?.branch?.name ?? "—"
                       : row?.[col.key] ?? "—"}
                   </td>
                 ))}
@@ -36,3 +40,4 @@ export default function DataTable({ columns, rows, renderActions }) {
     </div>
   );
 }
+

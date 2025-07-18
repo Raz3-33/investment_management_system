@@ -1,12 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
-// Import your user store
+import { useState, useMemo, useEffect } from "react";
+import Button from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/userStore";
 import DataTable from "../../components/ui/table/DataTable";
-import Button from "../../components/ui/Button";
 import PaginationControls from "../../components/ui/PaginationContrls";
-import AddUserForm from "../../components/userManagement/AddUserForm";
 import Modal from "../../components/ui/modal/Modal";
+import EditUserForm from "../../components/userManagement/EditUser";
+import AddUserForm from "../../components/userManagement/AddUserForm";
 
 const columns = [
   { key: "name", label: "Name" },
@@ -20,33 +20,24 @@ export default function UserManagement() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(3);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    roleId: 0,
-    branchId: 0,
-  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [editingRoleId, setEditingRoleId] = useState(null);
-  const [error, setError] = useState(null);
+  const [editingUserId, setEditingUserId] = useState(null);
 
-  const { users, fetchUsers, loading, deleteUser } = useUserStore(
+  const { users, fetchUsers, loading, deleteUser,userEdit } = useUserStore(
     (state) => state
   );
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+  }, [fetchUsers,userEdit]);
 
   const handleDelete = async (id) => {
     await deleteUser(id);
   };
 
   const filteredRows = useMemo(() => {
-    return users.filter(
+    return users?.filter(
       (row) =>
         (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
         (row?.email?.toLowerCase() || "").includes(search.toLowerCase())
@@ -76,7 +67,6 @@ export default function UserManagement() {
             variant="primary"
             onClick={() => {
               setEditMode(false);
-              setFormData({ name: "", description: "", permissions: [] });
               setIsModalOpen(true);
             }}
           >
@@ -97,7 +87,11 @@ export default function UserManagement() {
                 <>
                   <Button
                     variant="primary"
-                    onClick={() => navigate(`/edit-user/${row.id}`)}
+                    onClick={() => {
+                      setEditMode(true);
+                      setEditingUserId(row.id);
+                      setIsModalOpen(true);
+                    }}
                   >
                     Edit
                   </Button>
@@ -119,21 +113,14 @@ export default function UserManagement() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editMode ? "Edit Role" : "Create New Role"}
+        title={editMode ? "Edit User" : "Add New User"}
       >
         <div className="space-y-4">
-          {false ? (
-            <p className="text-gray-500">Loading role details...</p>
+          {editMode ? (
+            <EditUserForm userId={editingUserId} closeModal={() => setIsModalOpen(false)} />
           ) : (
             <AddUserForm />
           )}
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <div className="flex justify-end pt-2">
-            <Button variant="primary" onClick={() => alert()}>
-              {editMode ? "Update" : "Add"}
-            </Button>
-          </div>
         </div>
       </Modal>
     </main>

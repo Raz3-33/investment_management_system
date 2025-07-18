@@ -31,7 +31,7 @@ function App() {
   return (
     <div className="h-full w-full">
       <ScrollToTopOnNavigate />
-      <AuthRedirector />
+      {/* <AuthRedirector /> */}
 
       <Routes>
         {/* dashboard */}
@@ -55,14 +55,14 @@ function App() {
         {/* User Management */}
 
         <Route
-          path="/user_managment"
+          path="/user_management"
           element={<MainLayout children={<UserManagement />} />}
         />
 
-         <Route
-          path="/user_managment/add-user"
+         {/* <Route
+          path="/user_management/add-user"
           element={<MainLayout children={<AddUserForm />} />}
-        />
+        /> */}
 
         {/* Settings */}
         <Route
