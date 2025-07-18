@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { useState } from "react";
 import { useThemeProvider } from "../../utils/ThemeContext";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { useAuthStore } from "../../store/authentication";
