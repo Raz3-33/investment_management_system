@@ -12,6 +12,8 @@ import RolePermissionForm from "./pages/roleManagement/RolePermissionForm";
 import Settings from "./pages/settings/Settings";
 import UserManagement from "./pages/userManagement/UserManagement";
 import AddUserForm from "./components/userManagement/AddUserForm";
+import LoginPage from "./pages/Auth/login";
+import AuthRedirector from "./components/authRedirect";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -29,6 +31,8 @@ function App() {
   return (
     <div className="h-full w-full">
       <ScrollToTopOnNavigate />
+      <AuthRedirector />
+
       <Routes>
         {/* dashboard */}
         <Route path="/" element={<MainLayout children={<Dashboard />} />} />
@@ -37,6 +41,11 @@ function App() {
         <Route
           path="/role_management"
           element={<MainLayout children={<RoleManagement />} />}
+        />
+
+        <Route
+          path="/login"
+          element={<LoginPage />}
         />
 
         <Route

@@ -9,6 +9,7 @@ import { errorHandler, notFound } from "./middlewares/errorMiddlware.js";
 import roleRoutes from "./routes/role.routes.js";
 import branchRouter from "./routes/branch.routes.js"
 import userRouter from "./routes/user.routes.js"
+import authenticationRoute from "./routes/authentication.routes.js";
 
 dotenv.config();
 
@@ -32,6 +33,9 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/branches", branchRouter);
 app.use("/api/users",userRouter)
 
+
+// authentication
+app.use("/api/auth", authenticationRoute);
 
 app.get("/", (req, res) => {
   res.send("API is running!");
