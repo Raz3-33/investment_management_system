@@ -40,15 +40,26 @@ export const useRoleStore = create(
         }
       },
 
-      addRole: async (newRole) => {
+     addRole: async (newRole) => {
+    try {
+      const res = await api.post("/roles", newRole); // API POST
+      set((state) => ({
+        roles: [...state.roles, res.data.role],
+      }));
+    } catch (err) {
+      set({ error: "Failed to add role" });
+    }
+  },
+      updateRole: async (roleId, updatedRole) => {
         try {
-          const res = await api.post("/roles", newRole); // Optional API POST
+          const res = await api.put(`/roles/${roleId}`, updatedRole); // API PUT for update
           set((state) => ({
-            roles: [...state.roles, res.data || newRole],
+            roles: state.roles.map((role) =>
+              role.id === roleId ? res.data.role : role
+            ),
           }));
         } catch (err) {
-          console.error("Add role failed", err);
-          // Optional: set({ error: "Failed to add role" });
+          set({ error: "Failed to update role" });
         }
       },
 

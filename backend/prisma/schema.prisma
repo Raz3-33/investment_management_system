@@ -8,40 +8,52 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  name       String
-  email      String   @unique
-  password   String
-  phone      String?
-  image_url  String?
+  id        String  @id @default(uuid())
+  UserID    String? @unique
+  name      String
+  email     String  @unique
+  password  String
+  phone     String?
+  image_url String?
 
-  roleId     String?
-  role       Role?     @relation(fields: [roleId], references: [id])
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id])
 
-  branchId   String?
-  branch     Branch?   @relation(fields: [branchId], references: [id])
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
 
-  isActive   Boolean   @default(true)
-  isLogin    Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  // Self-referencing field for hierarchical relationships
+  managerId String?
+  manager   User?   @relation("UserManager", fields: [managerId], references: [id])
+
+  // Users under this manager (subordinates)
+  subordinates User[] @relation("UserManager")
+
+  // Optional fields for future sales incentive system
+  salesTarget   Float? @default(0)
+  salesAchieved Float? @default(0)
+  incentive     Float? @default(0)
+
+  isActive  Boolean  @default(true)
+  isLogin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
 model Role {
-  id          String             @id @default(uuid())
-  name        String             @unique
+  id          String           @id @default(uuid())
+  name        String           @unique
   description String?
   users       User[]
   permissions RolePermission[]
 
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
-
 model Permission {
-  id          String             @id @default(uuid())
-  name        String             @unique
+  id          String           @id @default(uuid())
+  name        String           @unique
   description String?
   roles       RolePermission[]
 }
@@ -52,15 +64,14 @@ model RolePermission {
   roleId       String
   permission   Permission @relation(fields: [permissionId], references: [id])
   permissionId String
-  access String?    // "View", "Update", "Delete", etc.
+  access       String? // "View", "Update", "Delete", etc.
 
   @@unique([roleId, permissionId, access]) // optional to avoid duplicates
 }
 
-
 model Branch {
   id        String   @id @default(uuid())
-  name      String
+  name      String   @unique // Add @unique directive here
   location  String?
   users     User[]
   createdAt DateTime @default(now())

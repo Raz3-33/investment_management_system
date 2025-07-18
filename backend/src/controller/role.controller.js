@@ -1,8 +1,8 @@
 import * as roleService from "../services/role.service.js";
-import { roleSchema } from "../validations/role.schema.js";
+// import { roleSchema } from "../validations/role.schema.js";
 
 export const getAll = async (req, res) => {
-  const roles = await roleService.getAllRoles();
+  const roles = await roleService.getAllRoles();  
   res.json(roles);
 };
 
@@ -16,10 +16,7 @@ export const getRoleDetails = async (req, res) => {
         .json({ success: false, message: "Missing roleId" });
     }
 
-    const role = await roleService.getRoleWithPermissions(roleId);
-
-    console.log(role,"rolerolerolerolerolerolerole");
-    
+    const role = await roleService.getRoleWithPermissions(roleId);    
 
     if (!role) {
       return res
@@ -39,30 +36,25 @@ export const getRoleDetails = async (req, res) => {
 
 export const create = async (req, res, next) => {
   try {
-    const validated = req.body;
-    const role = await roleService.createRole(validated);
-    res.status(201).json({ success: true, data: role });
+    const validatedData = req.body;
+    const { role, permissions } = await roleService.createRole(validatedData);
+    res.status(201).json({ success: true, data: { role, permissions } });
   } catch (err) {
-    if (err.code === "P2002") {
-      // Prisma unique constraint violation
-      return res.status(409).json({
-        success: false,
-        message: `Role name '${req.body.name}' already exists.`,
-      });
-    }
     next(err);
   }
 };
 
 export const update = async (req, res, next) => {
+  const { id } = req.params;
   try {
-    const validated = roleSchema.parse(req.body);
-    const role = await roleService.updateRole(req.params.id, validated);
-    res.json(role);
+    const updatedData = req.body;
+    const { role, permissions } = await roleService.updateRole(id, updatedData);
+    res.status(200).json({ success: true, data: { role, permissions } });
   } catch (err) {
     next(err);
   }
 };
+
 
 export const remove = async (req, res, next) => {
   try {

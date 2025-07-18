@@ -16,7 +16,7 @@ export default function DataTable({ columns, rows, renderActions }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {rows.map((row, rowIndex) => (
+            {rows?.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {columns.map((col) => (
                   <td
@@ -25,7 +25,7 @@ export default function DataTable({ columns, rows, renderActions }) {
                   >
                     {col.isAction
                       ? renderActions?.(row) ?? null
-                      : row[col.key] ?? "—"}
+                      : row?.[col.key] ?? "—"}
                   </td>
                 ))}
               </tr>

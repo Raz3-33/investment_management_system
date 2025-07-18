@@ -412,7 +412,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end
-                              to=""
+                              to="/settings"
                               className={({ isActive }) =>
                                 "block transition duration-150 truncate " +
                                 (isActive
@@ -421,7 +421,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                My Account
+                                Branch
                               </span>
                             </NavLink>
                           </li>

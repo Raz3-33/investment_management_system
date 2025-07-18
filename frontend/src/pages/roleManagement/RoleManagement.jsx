@@ -1,11 +1,8 @@
-// Updated RoleManagement.jsx with permissions editing and modal integration
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
 import DataTable from "../../components/ui/table/DataTable";
 import Button from "../../components/ui/Button";
 import PaginationControls from "../../components/ui/PaginationContrls";
-import Modal from "../../components/ui/Modal/Modal";
+import Modal from "../../components/ui/modal/Modal";
 import PermissionSelector from "../../components/roleManagement/permission/PermissionSelector";
 import { useRoleStore } from "../../store/roleStore";
 
@@ -52,12 +49,11 @@ export default function RoleManagement() {
   const [editingRoleId, setEditingRoleId] = useState(null);
   const [error, setError] = useState(null);
 
-  const navigate = useNavigate();
-
   const {
     roles,
     fetchRoles,
     addRole,
+    updateRole,
     loading,
     fetchRoleDetail,
     loadingRoleDetail,
@@ -69,13 +65,18 @@ export default function RoleManagement() {
   }, [fetchRoles]);
 
   const handleCreateOrUpdate = async () => {
-    if (!formData.name) {
+    if (!formData?.name) {
       setError("Name is required.");
       return;
     }
     setError(null);
     try {
-      await addRole(formData); // should handle both create and update based on backend
+      if (editMode) {
+        await updateRole(editingRoleId, formData); // If in edit mode, update the role
+        console.log(formData, "formDataformDataformDataformDataformData");
+      } else {
+        await addRole(formData); // If new role, create the role
+      }
       setFormData({ name: "", description: "", permissions: [] });
       setIsModalOpen(false);
       setEditMode(false);
@@ -85,20 +86,25 @@ export default function RoleManagement() {
   };
 
   useEffect(() => {
-  if (!editMode || !roleDetail?.permissions) return;
+    console.log(
+      roleDetail,
+      "roleDetailroleDetailroleDetailroleDetailroleDetailroleDetail"
+    );
 
-  const formattedPermissions = roleDetail.permissions.map((rp) => {
-    const name = rp.permission?.name || ""; // Already "User Management:view"
-    return name; // Don't append access again — it's already there
-  });
+    if (!editMode || !roleDetail?.permissions) return;
+    // Mapping the permissions based on permission name (name:access)
+    const formattedPermissions = roleDetail.permissions.map((rp) => {
+      const name = rp.permission?.name || ""; // Permission name
+      // const access = rp.access || ""; // Access (e.g., "view", "approve")
+      return `${name}`; // Use the name and access to create the key
+    });
 
-  setFormData({
-    name: roleDetail.name || "",
-    description: roleDetail.description || "",
-    permissions: formattedPermissions,
-  });
-}, [roleDetail]);
-
+    setFormData({
+      name: roleDetail?.name || "",
+      description: roleDetail.description || "",
+      permissions: formattedPermissions,
+    });
+  }, [roleDetail, editMode]);
 
   const handleEdit = async (role) => {
     setEditMode(true);
@@ -106,7 +112,6 @@ export default function RoleManagement() {
     setIsModalOpen(true);
 
     try {
-      alert(role.id);
       await fetchRoleDetail(role.id);
     } catch (err) {
       setError("Failed to load role details.");
@@ -116,8 +121,8 @@ export default function RoleManagement() {
   const filteredRows = useMemo(() => {
     return roles.filter(
       (row) =>
-        (row.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (row.description?.toLowerCase() || "").includes(search.toLowerCase())
+        (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (row?.description?.toLowerCase() || "").includes(search.toLowerCase())
     );
   }, [search, roles]);
 

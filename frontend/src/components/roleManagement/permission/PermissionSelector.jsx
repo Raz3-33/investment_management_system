@@ -6,6 +6,9 @@ export default function PermissionSelector({
   onChange,
   actions = defaultActions,
 }) {
+
+  console.log(permissions,"permissionspermissionspermissionspermissionspermissions");
+  
   const handleCheckboxChange = (action) => {
     const key = `${module}:${action.toLowerCase()}`;
     const updated = permissions.includes(key)

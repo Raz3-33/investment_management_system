@@ -9,6 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import RoleManagement from "./pages/roleManagement/RoleManagement";
 import MainLayout from "./layout/MainLayout";
 import RolePermissionForm from "./pages/roleManagement/RolePermissionForm";
+import Settings from "./pages/settings/Settings";
+import UserManagement from "./pages/userManagement/UserManagement";
+import AddUserForm from "./components/userManagement/AddUserForm";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -27,7 +30,10 @@ function App() {
     <div className="h-full w-full">
       <ScrollToTopOnNavigate />
       <Routes>
+        {/* dashboard */}
         <Route path="/" element={<MainLayout children={<Dashboard />} />} />
+
+        {/* Role Management */}
         <Route
           path="/role_management"
           element={<MainLayout children={<RoleManagement />} />}
@@ -36,6 +42,23 @@ function App() {
         <Route
           path="/role_management/permission"
           element={<MainLayout children={<RolePermissionForm />} />}
+        />
+        {/* User Management */}
+
+        <Route
+          path="/user_managment"
+          element={<MainLayout children={<UserManagement />} />}
+        />
+
+         <Route
+          path="/user_managment/add-user"
+          element={<MainLayout children={<AddUserForm />} />}
+        />
+
+        {/* Settings */}
+        <Route
+          path="/settings"
+          element={<MainLayout children={<Settings />} />}
         />
       </Routes>
     </div>
