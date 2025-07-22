@@ -7,9 +7,13 @@ import sanitizedConfig from "./config.js";
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlware.js";
 import roleRoutes from "./routes/role.routes.js";
-import branchRouter from "./routes/branch.routes.js"
-import userRouter from "./routes/user.routes.js"
+import branchRouter from "./routes/branch.routes.js";
+import userRouter from "./routes/user.routes.js";
+import investmentOpportunity from "./routes/investmentOpportunity.routes.js";
+import investorRouter from "./routes/investor.routes.js"; 
+import settingRouter from "./routes/settings.routes.js";
 import authenticationRoute from "./routes/authentication.routes.js";
+
 
 dotenv.config();
 
@@ -28,14 +32,27 @@ app.use(bodyParser.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-// role Management
-app.use("/api/roles", roleRoutes);
-// branch
-app.use("/api/branches", branchRouter);
-// user management
-app.use("/api/users",userRouter)
 // authentication
 app.use("/api/auth", authenticationRoute);
+
+// role Management
+app.use("/api/roles", roleRoutes);
+
+// branch
+app.use("/api/branches", branchRouter);
+
+// user management
+app.use("/api/users", userRouter);
+
+// investment Opportunity
+app.use("/api/investmentOpportunity", investmentOpportunity);
+
+// investor routes
+app.use("/api/investors", investorRouter);
+
+
+// settings
+app.use("/api/settings", settingRouter);
 
 app.get("/", (req, res) => {
   res.send("API is running!");

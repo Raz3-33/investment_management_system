@@ -2,6 +2,8 @@
 
 import Branch from "../../components/settings/branch/Branch";
 import Tabs from "../../components/ui/tab/Tabs";
+import BusinessCategoryManagement from "./BusinessCategoryManagement";
+import InvestmentTypeManagement from "./InvestmentTypeManagement";
 
 const tabs = [
   {
@@ -11,16 +13,16 @@ const tabs = [
     content: <Branch />,
   },
   {
-    id: "dashboard",
-    label: "Dashboard",
+    id: "businessCategory",
+    label: "Business Category",
     icon: "M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Z",
-    content: <div>This is the Dashboard tab content.</div>,
+    content: <BusinessCategoryManagement/>,
   },
   {
-    id: "settings",
-    label: "Settings",
+    id: "investmentType",
+    label: "Investment Type",
     icon: "M5 11.424V1a1 1 0 1 0-2 0v10.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.228 3.228 0 0 0 0-6.152Z",
-    content: <div>This is the Settings tab content.</div>,
+    content: <InvestmentTypeManagement/>,
   },
   {
     id: "contacts",

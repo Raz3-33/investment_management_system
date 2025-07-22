@@ -270,7 +270,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                 </NavLink>
               </li>
 
-                {/* user management  */}
+              {/* user management  */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
                   pathname.includes("inbox") &&
@@ -307,6 +307,107 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   </div>
                 </NavLink>
               </li>
+
+              {/* Investment Opportunity Management  */}
+              <li
+                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                  pathname.includes("inbox") &&
+                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                }`}
+              >
+                <NavLink
+                  end
+                  to="/investment_opportunity_management"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("inbox")
+                      ? ""
+                      : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      className={`shrink-0 ${
+                        pathname.includes("investment-opportunity")
+                          ? "text-violet-500"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
+                      {/* <!-- Bar chart --> */}
+                      <rect x="3" y="10" width="2" height="8" rx="0.5" />
+                      <rect x="7" y="6" width="2" height="12" rx="0.5" />
+                      <rect x="11" y="3" width="2" height="15" rx="0.5" />
+
+                      {/* <!-- Magnifying glass (opportunity/discovery) --> */}
+                      <circle cx="17" cy="17" r="3" />
+                      <line x1="19.5" y1="19.5" x2="22" y2="22" />
+                    </svg>
+
+                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Investment Opportunity Management
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
+
+              {/* Investors management  */}
+              <li
+                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                  pathname.includes("inbox") &&
+                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                }`}
+              >
+                <NavLink
+                  end
+                  to="/investors_management"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("inbox")
+                      ? ""
+                      : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      className={`shrink-0 ${
+                        pathname.includes("investors")
+                          ? "text-violet-500"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
+                      {/* <!-- User Icon (Investor) --> */}
+                      <circle cx="6" cy="7" r="3" />
+                      <path d="M2 21v-1a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v1" />
+
+                      {/* <!-- Investment Bars --> */}
+                      <rect x="14" y="10" width="2" height="7" rx="0.5" />
+                      <rect x="18" y="7" width="2" height="10" rx="0.5" />
+                      <rect x="10" y="13" width="2" height="4" rx="0.5" />
+                    </svg>
+
+                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Investors Management
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
+
               {/* Messages */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${

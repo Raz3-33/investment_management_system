@@ -23,13 +23,25 @@ export default function DataTable({ columns, rows, renderActions }) {
                     key={col.key}
                     className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400"
                   >
-                    {col.isAction
-                      ? renderActions?.(row) ?? null
-                      : col.key === "role"
-                      ? row?.role?.name ?? "—"
-                      : col.key === "branch"
-                      ? row?.branch?.name ?? "—"
-                      : row?.[col.key] ?? "—"}
+                    {/* Handling action column */}
+                    {col.isAction ? (
+                      renderActions?.(row) ?? null
+                    ) : (
+                      <>
+                        {/* Fallback for missing data */}
+                        {col.key === "role" ? (
+                          row?.role?.name ?? "—"
+                        ) : col.key === "branch" ? (
+                          row?.branch?.name ?? "—"
+                        ) : col.key === "investmentType" ? (
+                          row?.investmentType?.name ?? "—"
+                        ) : col.key === "businessCategory" ? (
+                          row?.businessCategory?.name ?? "—"
+                        ) : (
+                          row?.[col.key] ?? "—"
+                        )}
+                      </>
+                    )}
                   </td>
                 ))}
               </tr>
@@ -40,4 +52,3 @@ export default function DataTable({ columns, rows, renderActions }) {
     </div>
   );
 }
-

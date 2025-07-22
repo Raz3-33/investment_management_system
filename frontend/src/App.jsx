@@ -11,9 +11,11 @@ import MainLayout from "./layout/MainLayout";
 import RolePermissionForm from "./pages/roleManagement/RolePermissionForm";
 import Settings from "./pages/settings/Settings";
 import UserManagement from "./pages/userManagement/UserManagement";
-import AddUserForm from "./components/userManagement/AddUserForm";
+// import AddUserForm from "./components/userManagement/AddUserForm";
 import LoginPage from "./pages/Auth/login";
 import AuthRedirector from "./components/authRedirect";
+import InvestmentOpportunityManagement from "./pages/investmentOpportunityManagement/InvestmentOpportunityManagement";
+import InvestorManagement from "./pages/investorManagement/InvestorManagement";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -43,10 +45,7 @@ function App() {
           element={<MainLayout children={<RoleManagement />} />}
         />
 
-        <Route
-          path="/login"
-          element={<LoginPage />}
-        />
+        <Route path="/login" element={<LoginPage />} />
 
         <Route
           path="/role_management/permission"
@@ -59,7 +58,24 @@ function App() {
           element={<MainLayout children={<UserManagement />} />}
         />
 
-         {/* <Route
+        {/* Investment Opportunity Management */}
+
+        <Route
+          path="/investment_opportunity_management"
+          element={
+            <MainLayout children={<InvestmentOpportunityManagement />} />
+          }
+        />
+
+        {/* Investor Management */}
+        <Route
+          path="/investors_management"
+          element={
+            <MainLayout children={<InvestorManagement />} />
+          }
+        />
+
+        {/* <Route
           path="/user_management/add-user"
           element={<MainLayout children={<AddUserForm />} />}
         /> */}

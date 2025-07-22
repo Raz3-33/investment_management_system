@@ -20,8 +20,6 @@ export const getUserById = async (id) => {
   });
 };
 
-
-
 export const createUser = async (data) => {
   const { name, email, password, roleId, branchId } = data;
 
@@ -67,7 +65,9 @@ export const updateUser = async (id, data) => {
   try {
     // Validate required fields
     if (!data.name || !data.email || !data.roleId || !data.branchId) {
-      throw new Error("All fields (name, email, role, and branch) are required.");
+      throw new Error(
+        "All fields (name, email, role, and branch) are required."
+      );
     }
 
     // Check if the email is unique (if updated)
@@ -100,7 +100,6 @@ export const updateUser = async (id, data) => {
     throw new Error(`Failed to update user: ${error.message}`);
   }
 };
-
 
 export const deleteUser = async (id) => {
   return prisma.user.delete({
