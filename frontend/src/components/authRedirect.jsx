@@ -21,8 +21,6 @@ const AuthRedirector = () => {
         if (!token) {
             console.log(loginDetails, "eeeeeeeeeeeeeeeeeeeeeeeeeeee")
             navigate("/login"); // Otherwise, go to login
-        } else {
-            navigate("/"); // Authenticated users go to home
         }
     }, [navigate, loginDetails]);
 
