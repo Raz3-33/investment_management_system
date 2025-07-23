@@ -1,3 +1,85 @@
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model User {
+//   id        String  @id @default(uuid())
+//   UserID    String? @unique
+//   name      String
+//   email     String  @unique
+//   password  String
+//   phone     String?
+//   image_url String?
+
+//   roleId String?
+//   role   Role?   @relation(fields: [roleId], references: [id])
+
+//   branchId String?
+//   branch   Branch? @relation(fields: [branchId], references: [id])
+
+//   // Self-referencing field for hierarchical relationships
+//   managerId String?
+//   manager   User?   @relation("UserManager", fields: [managerId], references: [id])
+
+//   // Users under this manager (subordinates)
+//   subordinates User[] @relation("UserManager")
+
+//   // Optional fields for future sales incentive system
+//   salesTarget   Float? @default(0)
+//   salesAchieved Float? @default(0)
+//   incentive     Float? @default(0)
+
+//   isActive  Boolean  @default(true)
+//   isLogin   Boolean  @default(false)
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model Role {
+//   id          String           @id @default(uuid())
+//   name        String           @unique
+//   description String?
+//   users       User[]
+//   permissions RolePermission[]
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model Permission {
+//   id          String           @id @default(uuid())
+//   name        String           @unique
+//   description String?
+//   roles       RolePermission[]
+// }
+
+// model RolePermission {
+//   id           String     @id @default(uuid())
+//   role         Role       @relation(fields: [roleId], references: [id])
+//   roleId       String
+//   permission   Permission @relation(fields: [permissionId], references: [id])
+//   permissionId String
+//   access       String? // "View", "Update", "Delete", etc.
+
+//   @@unique([roleId, permissionId, access]) // optional to avoid duplicates
+// }
+
+// model Branch {
+//   id        String   @id @default(uuid())
+//   name      String   @unique // Add @unique directive here
+//   location  String?
+//   users     User[]
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// {{// NEW MODEL}}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,14 +104,12 @@ model User {
   branchId String?
   branch   Branch? @relation(fields: [branchId], references: [id])
 
-  // Self-referencing field for hierarchical relationships
-  managerId String?
-  manager   User?   @relation("UserManager", fields: [managerId], references: [id])
+  investments Investment[] @relation("UserInvestments")
 
-  // Users under this manager (subordinates)
-  subordinates User[] @relation("UserManager")
+  managerId    String?
+  manager      User?   @relation("UserManager", fields: [managerId], references: [id])
+  subordinates User[]  @relation("UserManager")
 
-  // Optional fields for future sales incentive system
   salesTarget   Float? @default(0)
   salesAchieved Float? @default(0)
   incentive     Float? @default(0)
@@ -38,6 +118,8 @@ model User {
   isLogin   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  assignedInvestors Investor[]
 }
 
 model Role {
@@ -64,16 +146,112 @@ model RolePermission {
   roleId       String
   permission   Permission @relation(fields: [permissionId], references: [id])
   permissionId String
-  access       String? // "View", "Update", "Delete", etc.
+  access       String?
 
-  @@unique([roleId, permissionId, access]) // optional to avoid duplicates
+  @@unique([roleId, permissionId, access])
 }
 
 model Branch {
   id        String   @id @default(uuid())
-  name      String   @unique // Add @unique directive here
+  name      String   @unique
   location  String?
   users     User[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Investor {
+  id                    String   @id @default(uuid())
+  name                  String
+  email                 String   @unique
+  phone                 String?
+  type                  String   // Individual, HNI, NRI, Company etc.
+  address               String?
+  pan                   String?
+  aadhaar               String?
+  gstNumber             String?
+  referredBy            String?
+  status                String   @default("Pending") 
+  password              String   
+  relationshipManagerId String?
+  relationshipManager   User?    @relation(fields: [relationshipManagerId], references: [id])
+  documents             String[] 
+  investments           Investment[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+
+model InvestmentType {
+  id            String                  @id @default(uuid())
+  name          String                  @unique
+  description   String?
+  opportunities InvestmentOpportunity[]
+}
+
+model BusinessCategory {
+  id            String                  @id @default(uuid())
+  name          String                  @unique
+  description   String?
+  opportunities InvestmentOpportunity[]
+}
+
+model InvestmentOpportunity {
+  id           String   @id @default(uuid())
+  name         String
+  brandName    String
+  description       String
+  minAmount    Float
+  maxAmount    Float?
+  roiPercent   Float
+  lockInMonths Int
+  exitOptions  String?
+  payoutMode   String // Monthly, Quarterly, etc.
+  isActive     Boolean  @default(true)
+  documents    String[] // Array of file URLs
+
+  investmentTypeId String
+  investmentType   InvestmentType @relation(fields: [investmentTypeId], references: [id])
+
+  businessCategoryId String
+  businessCategory   BusinessCategory @relation(fields: [businessCategoryId], references: [id])
+
+  investments Investment[]
+}
+
+model Investment {
+  id            String  @id @default(uuid())
+  investorId    String
+  opportunityId String
+  createdById   String?
+
+  investor    Investor              @relation(fields: [investorId], references: [id])
+  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  createdBy   User?                 @relation("UserInvestments", fields: [createdById], references: [id])
+
+  amount          Float
+  date            DateTime
+  roiPercent      Float
+  payoutMode      String
+  contractStart   DateTime
+  contractEnd     DateTime
+  paymentMethod   String
+  agreementSigned Boolean  @default(false)
+  status          String   @default("Ongoing")
+
+  payouts Payout[]
+}
+
+model Payout {
+  id           String    @id @default(uuid())
+  investmentId String
+  dueDate      DateTime
+  amountDue    Float
+  amountPaid   Float?
+  paidDate     DateTime?
+  paymentMode  String?
+  receiptRef   String?
+  notes        String?
+
+  investment Investment @relation(fields: [investmentId], references: [id])
 }

@@ -105,7 +105,7 @@ export default function RolePermissionForm() {
 
         <div className="pt-4 flex justify-end">
           <Button
-            className="w-25 h-8"
+            className="w-30 h-8"
             variant="primary"
             type="submit"
             disabled={loading}

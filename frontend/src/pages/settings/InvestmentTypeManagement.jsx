@@ -1,48 +1,48 @@
 import { useState, useMemo, useEffect } from "react";
 import Button from "../../components/ui/Button";
-import { useNavigate } from "react-router-dom";
-import { useUserStore } from "../../store/userStore";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
 import Modal from "../../components/ui/modal/Modal";
-import EditUserForm from "../../components/userManagement/EditUser";
-import AddUserForm from "../../components/userManagement/AddUserForm";
+import AddInvestmentTypeForm from "../../components/settings/investmentType/AddInvestmentTypeForm";
+import EditInvestmentTypeForm from "../../components/settings/investmentType/EditInvestmentTypeForm";
+import { useSettingStore } from "../../store/settingStore";
 
 const columns = [
   { key: "name", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "role", label: "Role" },
-  { key: "branch", label: "Branch" },
+  { key: "description", label: "Description" },
   { key: "actions", label: "Actions", isAction: true },
 ];
 
-export default function UserManagement() {
+export default function InvestmentTypeManagement() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(3);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [editingUserId, setEditingUserId] = useState(null);
+  const [editingTypeId, setEditingTypeId] = useState(null);
 
-  const { users, fetchUsers, loading, deleteUser,userEdit } = useUserStore(
-    (state) => state
-  );
+  const {
+    investmentTypes,
+    fetchInvestmentTypes,
+    loading,
+    deleteInvestmentType,
+  } = useSettingStore((state) => state);
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers,userEdit]);
+    fetchInvestmentTypes();
+  }, [fetchInvestmentTypes]);
 
   const handleDelete = async (id) => {
-    await deleteUser(id);
+    await deleteInvestmentType(id);
   };
 
   const filteredRows = useMemo(() => {
-    return users?.filter(
+    return investmentTypes?.filter(
       (row) =>
         (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (row?.email?.toLowerCase() || "").includes(search.toLowerCase())
+        (row?.description?.toLowerCase() || "").includes(search.toLowerCase())
     );
-  }, [search, users]);
+  }, [search, investmentTypes]);
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const paginatedRows = useMemo(() => {
@@ -50,28 +50,25 @@ export default function UserManagement() {
     return filteredRows.slice(start, start + rowsPerPage);
   }, [filteredRows, currentPage, rowsPerPage]);
 
-  const navigate = useNavigate();
-
   return (
     <main className="grow">
       <div className="p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
           <input
             type="text"
-            placeholder="Search name or email..."
+            placeholder="Search name or description..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border px-3 py-2 rounded-md w-full sm:w-1/3 dark:bg-gray-800 dark:text-white"
           />
           <Button
-            className="w-30 h-8"
             variant="primary"
             onClick={() => {
               setEditMode(false);
               setIsModalOpen(true);
             }}
           >
-            Add User
+            Add Investment Type
           </Button>
         </div>
 
@@ -90,7 +87,7 @@ export default function UserManagement() {
                     variant="primary"
                     onClick={() => {
                       setEditMode(true);
-                      setEditingUserId(row.id);
+                      setEditingTypeId(row.id);
                       setIsModalOpen(true);
                     }}
                   >
@@ -114,13 +111,16 @@ export default function UserManagement() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editMode ? "Edit User" : "Add New User"}
+        title={editMode ? "Edit Investment Type" : "Add Investment Type"}
       >
         <div className="space-y-4">
           {editMode ? (
-            <EditUserForm userId={editingUserId} closeModal={() => setIsModalOpen(false)} />
+            <EditInvestmentTypeForm
+              typeId={editingTypeId}
+              closeModal={() => setIsModalOpen(false)}
+            />
           ) : (
-            <AddUserForm />
+            <AddInvestmentTypeForm />
           )}
         </div>
       </Modal>

@@ -9,6 +9,8 @@ const getConfig = () => {
     PORT: process.env.PORT ? process.env.PORT : undefined,
     DATABASE_URL: process.env.DATABASE_URL,
     JWT_SECRET: process.env.JWT_SECRET,
+    EMAIL_USER: process.env.EMAIL_USER,
+    EMAIL_PASS: process.env.EMAIL_PASS,
     // AWS_ACCESS: process.env.AWS_ACCESS,
     // AWS_SECRETACCESS: process.env.AWS_SECRETACCESS,
     // S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
@@ -27,6 +29,5 @@ const getSanitizedConfig = (config) => {
 const config = getConfig();
 
 const sanitizedConfig = getSanitizedConfig(config);
-
 
 export default sanitizedConfig;
