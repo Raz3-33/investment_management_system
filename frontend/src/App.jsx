@@ -34,7 +34,7 @@ function App() {
   return (
     <div className="h-full w-full">
       <ScrollToTopOnNavigate />
-      {/* <AuthRedirector /> */}
+      <AuthRedirector />
 
       <Routes>
         {/* dashboard */}

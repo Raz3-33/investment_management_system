@@ -6,7 +6,9 @@ import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
     const [form, setForm] = useState({ email: "", password: "" });
-    const [error, setError] = useState("");
+    const [emailError, setEmailError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { currentTheme } = useThemeProvider();
@@ -19,22 +21,52 @@ const LoginPage = () => {
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
-        setError("");
+        if (e.target.name === "email") {
+            setEmailError("");
+        } else if (e.target.name === "password") {
+            setPasswordError("");
+        }
     };
 
-   
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.email || !form.password) {
-            return setError("Both fields are required");
+
+        let valid = true;
+
+        // Reset errors before validation
+        setEmailError("");
+        setPasswordError("");
+
+        // Email required
+        if (!form.email) {
+            setEmailError("Email field is required");
+            valid = false;
+        } else {
+            // Email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(form.email)) {
+                setEmailError("Please enter a valid email address");
+                valid = false;
+            }
         }
+
+        // Password required
+        if (!form.password) {
+            setPasswordError("Password field is required");
+            valid = false;
+        }
+
+        if (!valid) {
+            return;
+        }
+
         try {
             setLoading(true);
-            await login(form)
+            await login(form);
         } catch (err) {
-            console.log(err, "errrrrrrrrrr")
-            setError(err.response?.data?.message || "Login failed");
+            console.log(err, "errrrrrrrrrr");
         } finally {
             setLoading(false);
         }
@@ -78,9 +110,7 @@ const LoginPage = () => {
                         <h2 className="text-2xl font-bold">Sign In</h2>
                         <p className="text-sm text-gray-400">Access your dashboard</p>
                     </div>
-                    {error && (
-                        <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
-                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="relative">
                             <label className="block text-sm font-medium mb-1">Email</label>
@@ -98,11 +128,14 @@ const LoginPage = () => {
                                     }`}
                                 placeholder="you@example.com"
                                 autoComplete="username"
-                                onBlur={() => setEmailTouched(true)}
+                            // onBlur={() => setEmailTouched(true)}
                             />
+                            {emailError && (
+                                <p className="text-red-500 text-sm mt-2 text-left">{emailError}</p>
+                            )}
                         </div>
                         {/* Show password field only after email is filled and valid */}
-                        {(form.email && /^[^\s@]+@[^\s@]+\.(com)(?:\s*)$/.test(form.email)) && (
+                        {(form.email && /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}(?:\s*)$/.test(form.email)) && (
                             <div className="relative animate-fade-in">
                                 <label className="block text-sm font-medium mb-1">Password</label>
                                 <span className="absolute left-3 top-11 text-gray-400">
@@ -120,6 +153,9 @@ const LoginPage = () => {
                                     placeholder="••••••••"
                                     autoComplete="current-password"
                                 />
+                                {passwordError && (
+                                    <p className="text-red-500 text-sm mt-2 text-left">{passwordError}</p>
+                                )}
                                 <button
                                     type="button"
                                     tabIndex={-1}
