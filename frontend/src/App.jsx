@@ -16,6 +16,7 @@ import LoginPage from "./pages/Auth/login";
 import AuthRedirector from "./components/authRedirect";
 import InvestmentOpportunityManagement from "./pages/investmentOpportunityManagement/InvestmentOpportunityManagement";
 import InvestorManagement from "./pages/investorManagement/InvestorManagement";
+import InvestmentManagement from "./pages/InvestmentManagement/InvestmentManagement";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -72,6 +73,14 @@ function App() {
           path="/investors_management"
           element={
             <MainLayout children={<InvestorManagement />} />
+          }
+        />
+
+         {/* Investment Management */}
+        <Route
+          path="/investment_management"
+          element={
+            <MainLayout children={<InvestmentManagement />} />
           }
         />
 

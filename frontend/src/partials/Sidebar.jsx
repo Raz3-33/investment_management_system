@@ -288,21 +288,91 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                 >
                   <div className="flex items-center">
                     <svg
-                      className={`shrink-0 fill-current ${
-                        pathname.includes("roles")
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      className={`shrink-0 ${
+                        pathname.includes("user-management")
                           ? "text-violet-500"
                           : "text-gray-400 dark:text-gray-500"
                       }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="17"
-                      height="17"
-                      viewBox="0 0 16 16"
                     >
-                      <path d="M8 0c.2 0 .4.06.56.17l4.82 3.67c.36.27.57.7.57 1.16v4.45c0 3.07-2.39 5.36-5.33 6.48a.72.72 0 0 1-.46 0c-2.93-1.12-5.33-3.4-5.33-6.48V5c0-.46.21-.89.56-1.17L7.44.17A.86.86 0 0 1 8 0Zm0 1.6L3.33 5.17v4.27c0 2.3 1.7 4.16 4.2 5.18 2.5-1.02 4.14-2.88 4.14-5.18V5.17L8 1.6Zm0 5.9c.55 0 1-.45 1-1S8.55 5.5 8 5.5 7 5.95 7 6.5s.45 1 1 1Zm2.15 2.9c-.3-.8-1.05-1.4-2.15-1.4s-1.85.6-2.15 1.4a.5.5 0 0 0 .47.6h3.36a.5.5 0 0 0 .47-.6Z" />
+                      {/* <!-- User head and body --> */}
+                      <circle cx="9" cy="7" r="3" />
+                      <path d="M5 21v-2a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v2" />
+
+                      {/* <!-- Gear for management --> */}
+                      <circle cx="17" cy="17" r="2" />
+                      <path d="M17 13v1" />
+                      <path d="M17 19v1" />
+                      <path d="M20 17h1" />
+                      <path d="M13 17h1" />
+                      <path d="M18.5 14.5l.7.7" />
+                      <path d="M15.5 14.5l-.7.7" />
+                      <path d="M18.5 19.5l.7-.7" />
+                      <path d="M15.5 19.5l-.7-.7" />
                     </svg>
 
                     <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
                       User Management
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
+
+              {/* Investment Management  */}
+              <li
+                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                  pathname.includes("inbox") &&
+                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                }`}
+              >
+                <NavLink
+                  end
+                  to="/investment_management"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("inbox")
+                      ? ""
+                      : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      className={`shrink-0 ${
+                        pathname.includes("investment-management")
+                          ? "text-violet-500"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
+                      {/* <!-- Hand holding investment --> */}
+                      <path d="M3 17s1.5 1 4 1h10c1.1 0 2-.9 2-2s-1-2-2-2h-5" />
+                      <path d="M7 17s.5 1 1.5 1 1.5-1 1.5-1" />
+                      {/* <!-- Investment bars --> */}
+                      <rect x="4" y="10" width="2" height="4" rx="0.5" />
+                      <rect x="8" y="8" width="2" height="6" rx="0.5" />
+                      <rect x="12" y="6" width="2" height="8" rx="0.5" />
+                      {/* <!-- Optional: upward arrow showing growth --> */}
+                      <path d="M16 6l2-2 2 2" />
+                      <line x1="18" y1="4" x2="18" y2="10" />
+                    </svg>
+
+                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Investment Management
                     </span>
                   </div>
                 </NavLink>

@@ -10,10 +10,10 @@ import roleRoutes from "./routes/role.routes.js";
 import branchRouter from "./routes/branch.routes.js";
 import userRouter from "./routes/user.routes.js";
 import investmentOpportunity from "./routes/investmentOpportunity.routes.js";
-import investorRouter from "./routes/investor.routes.js"; 
+import investorRouter from "./routes/investor.routes.js";
+import investmentRoutes from "./routes/investment.routes.js";
 import settingRouter from "./routes/settings.routes.js";
 import authenticationRoute from "./routes/authentication.routes.js";
-
 
 dotenv.config();
 
@@ -50,6 +50,8 @@ app.use("/api/investmentOpportunity", investmentOpportunity);
 // investor routes
 app.use("/api/investors", investorRouter);
 
+// Use the investment routes
+app.use("/api/investments", investmentRoutes);
 
 // settings
 app.use("/api/settings", settingRouter);
