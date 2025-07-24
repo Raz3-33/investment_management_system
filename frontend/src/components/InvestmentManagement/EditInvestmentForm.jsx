@@ -1,47 +1,59 @@
 import { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import { useInvestmentStore } from "../../store/investmentStore";
+import { useInvestorStore } from "../../store/investorStore";
+import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
 
 export default function EditInvestmentForm({ investmentId, closeModal }) {
   const { investments, updateInvestment } = useInvestmentStore((state) => state);
+  const { investors, fetchInvestors } = useInvestorStore((state) => state);
+  const { investmentOpportunities, fetchInvestmentOpportunities } = useInvestmentOpportunityStore((state) => state);
+
   const investment = investments.find((inv) => inv.id === investmentId);
 
   const [formData, setFormData] = useState({
     amount: investment?.amount || "",
     investorId: investment?.investorId || "",
-    investmentOpportunityId: investment?.investmentOpportunityId || "",
+    opportunityId: investment?.opportunityId || "",
     roiPercent: investment?.roiPercent || "",
     payoutMode: investment?.payoutMode || "",
     contractStart: investment?.contractStart || "",
     contractEnd: investment?.contractEnd || "",
     paymentMethod: investment?.paymentMethod || "",
+    agreementSigned: investment?.agreementSigned || false,
     status: investment?.status || "Ongoing",
   });
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
 
   useEffect(() => {
-    if (errorValidation) {
-      setErrorValidation(errorValidation);
-    }
-  }, [errorValidation]);
+    fetchInvestors(); // Fetch investors on component mount
+    fetchInvestmentOpportunities(); // Fetch investment opportunities on component mount
+  }, [fetchInvestors, fetchInvestmentOpportunities]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Basic validation for required fields
-    if (!formData.amount || !formData.investorId || !formData.investmentOpportunityId) {
+    if (!formData.amount || !formData.investorId || !formData.opportunityId) {
       setErrorValidation("Amount, Investor, and Investment Opportunity are required.");
       return;
     }
 
-    // Validate that amount, roiPercent, contractStart and contractEnd are numbers
+    // Validate that amount and roiPercent are numbers
     if (isNaN(formData.amount) || isNaN(formData.roiPercent)) {
       setErrorValidation("Amount and ROI Percent must be numbers.");
       return;
     }
 
+    // Validate contract dates
+    if (new Date(formData.contractEnd) <= new Date(formData.contractStart)) {
+      setErrorValidation("Contract End date must be after Contract Start date.");
+      return;
+    }
+
     try {
+      // Call the store's updateInvestment function to send updated data to the backend
       await updateInvestment(investmentId, formData);
       closeModal(); // Close the modal after successful form submission
     } catch (err) {
@@ -63,27 +75,37 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
       />
 
       {/* Investor ID */}
-      <input
-        type="text"
-        placeholder="Investor ID"
+      <select
         value={formData.investorId}
         onChange={(e) => setFormData({ ...formData, investorId: e.target.value })}
         className="border px-3 py-2 rounded-md w-full"
-      />
+      >
+        <option value="">Select Investor</option>
+        {investors?.map((investor) => (
+          <option key={investor.id} value={investor.id}>
+            {investor.name} - {investor.type}
+          </option>
+        ))}
+      </select>
 
-      {/* Investment Opportunity ID */}
-      <input
-        type="text"
-        placeholder="Investment Opportunity ID"
-        value={formData.investmentOpportunityId}
-        onChange={(e) => setFormData({ ...formData, investmentOpportunityId: e.target.value })}
+      {/* Investment Opportunity */}
+      <select
+        value={formData.opportunityId}
+        onChange={(e) => setFormData({ ...formData, opportunityId: e.target.value })}
         className="border px-3 py-2 rounded-md w-full"
-      />
+      >
+        <option value="">Select Investment Opportunity</option>
+        {investmentOpportunities?.map((opp) => (
+          <option key={opp.id} value={opp.id}>
+            {opp.name} - {opp.brandName}
+          </option>
+        ))}
+      </select>
 
-      {/* ROI Percent */}
+      {/* ROI Percentage */}
       <input
         type="number"
-        placeholder="ROI Percent"
+        placeholder="ROI Percentage"
         value={formData.roiPercent}
         onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
         className="border px-3 py-2 rounded-md w-full"
@@ -126,6 +148,17 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
         onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
         className="border px-3 py-2 rounded-md w-full"
       />
+
+      {/* Agreement Signed Checkbox */}
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          checked={formData.agreementSigned}
+          onChange={() => setFormData({ ...formData, agreementSigned: !formData.agreementSigned })}
+          className="mr-2"
+        />
+        <label>Agreement Signed</label>
+      </div>
 
       {/* Status */}
       <select

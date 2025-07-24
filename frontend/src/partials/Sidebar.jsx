@@ -235,7 +235,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               {/* Inbox */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("inbox") &&
+                  pathname.includes("role_management") &&
                   "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
                 }`}
               >
@@ -243,7 +243,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   end
                   to="/role_management"
                   className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("inbox")
+                    pathname.includes("role_management")
                       ? ""
                       : "hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -251,7 +251,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   <div className="flex items-center">
                     <svg
                       className={`shrink-0 fill-current ${
-                        pathname.includes("roles")
+                        pathname.includes("role_management")
                           ? "text-violet-500"
                           : "text-gray-400 dark:text-gray-500"
                       }`}
@@ -273,7 +273,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               {/* user management  */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("inbox") &&
+                  pathname.includes("user_management") &&
                   "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
                 }`}
               >
@@ -281,7 +281,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   end
                   to="/user_management"
                   className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("inbox")
+                    pathname.includes("user_management")
                       ? ""
                       : "hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -298,7 +298,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       className={`shrink-0 ${
-                        pathname.includes("user-management")
+                        pathname.includes("user_management")
                           ? "text-violet-500"
                           : "text-gray-400 dark:text-gray-500"
                       }`}
@@ -329,7 +329,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               {/* Investment Management  */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("inbox") &&
+                  pathname.includes("investment_management") &&
                   "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
                 }`}
               >
@@ -337,7 +337,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   end
                   to="/investment_management"
                   className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("inbox")
+                    pathname.includes("investment_management")
                       ? ""
                       : "hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -354,7 +354,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       className={`shrink-0 ${
-                        pathname.includes("investment-management")
+                        pathname.includes("investment_management")
                           ? "text-violet-500"
                           : "text-gray-400 dark:text-gray-500"
                       }`}
@@ -381,7 +381,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               {/* Investment Opportunity Management  */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("inbox") &&
+                  pathname.includes("investment_opportunity_management") &&
                   "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
                 }`}
               >
@@ -389,7 +389,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   end
                   to="/investment_opportunity_management"
                   className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("inbox")
+                    pathname.includes("investment_opportunity_management")
                       ? ""
                       : "hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -406,7 +406,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       className={`shrink-0 ${
-                        pathname.includes("investment-opportunity")
+                        pathname.includes("investment_opportunity_management")
                           ? "text-violet-500"
                           : "text-gray-400 dark:text-gray-500"
                       }`}
@@ -431,7 +431,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               {/* Investors management  */}
               <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("inbox") &&
+                  pathname.includes("investors_management") &&
                   "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
                 }`}
               >
@@ -439,7 +439,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                   end
                   to="/investors_management"
                   className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("inbox")
+                    pathname.includes("investors_management")
                       ? ""
                       : "hover:text-gray-900 dark:hover:text-white"
                   }`}
@@ -456,7 +456,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       className={`shrink-0 ${
-                        pathname.includes("investors")
+                        pathname.includes("investors_management")
                           ? "text-violet-500"
                           : "text-gray-400 dark:text-gray-500"
                       }`}
@@ -479,7 +479,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               </li>
 
               {/* Messages */}
-              <li
+              {/* <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
                   pathname.includes("messages") &&
                   "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
@@ -513,19 +513,19 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
                         Messages
                       </span>
-                    </div>
+                    </div> */}
                     {/* Badge */}
-                    <div className="flex shrink-0 ml-2">
+                    {/* <div className="flex shrink-0 ml-2">
                       <span className="inline-flex items-center justify-center h-5 text-xs font-medium text-white bg-violet-400 px-2 rounded-sm">
                         4
                       </span>
                     </div>
                   </div>
-                </NavLink>
-              </li>
+                </NavLink> */}
+              {/* </li> */}
 
               {/* Calendar */}
-              <li
+              {/* <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
                   pathname.includes("calendar") &&
                   "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
@@ -561,7 +561,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     </span>
                   </div>
                 </NavLink>
-              </li>
+              </li> */}
 
               {/* Settings */}
               <SidebarLinkGroup activecondition={pathname.includes("settings")}>

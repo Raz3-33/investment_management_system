@@ -12,6 +12,7 @@ import userRouter from "./routes/user.routes.js";
 import investmentOpportunity from "./routes/investmentOpportunity.routes.js";
 import investorRouter from "./routes/investor.routes.js";
 import investmentRoutes from "./routes/investment.routes.js";
+import payoutsRoutes from "./routes/payout.routes.js";
 import settingRouter from "./routes/settings.routes.js";
 import authenticationRoute from "./routes/authentication.routes.js";
 
@@ -52,6 +53,9 @@ app.use("/api/investors", investorRouter);
 
 // Use the investment routes
 app.use("/api/investments", investmentRoutes);
+
+// Use the Payouts routes
+app.use("/api/payouts", payoutsRoutes);
 
 // settings
 app.use("/api/settings", settingRouter);

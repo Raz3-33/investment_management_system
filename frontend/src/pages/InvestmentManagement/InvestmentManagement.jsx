@@ -7,11 +7,20 @@ import Modal from "../../components/ui/modal/Modal.jsx";
 import AddInvestmentForm from "../../components/InvestmentManagement/AddInvestmentForm.jsx";
 import EditInvestmentForm from "../../components/InvestmentManagement/EditInvestmentForm.jsx";
 
+// const columns = [
+//   { key: "name", label: "Name" },
+//   { key: "amount", label: "Amount" },
+//   { key: "date", label: "Date" },
+//   { key: "status", label: "Status" },
+//   { key: "actions", label: "Actions", isAction: true },
+// ];
+
 const columns = [
-  { key: "name", label: "Name" },
+  { key: "name", label: "Investor Name" },
   { key: "amount", label: "Amount" },
-  { key: "date", label: "Date" },
+  { key: "date", label: "Investment Date" },
   { key: "status", label: "Status" },
+  { key: "investment", label: "Investor" },
   { key: "actions", label: "Actions", isAction: true },
 ];
 
@@ -23,7 +32,8 @@ export default function InvestmentManagement() {
   const [editMode, setEditMode] = useState(false);
   const [editingInvestmentId, setEditingInvestmentId] = useState(null);
 
-  const { investments, fetchInvestments, loading, deleteInvestment } = useInvestmentStore((state) => state);
+  const { investments, fetchInvestments, loading, deleteInvestment } =
+    useInvestmentStore((state) => state);
 
   useEffect(() => {
     fetchInvestments();
@@ -35,8 +45,9 @@ export default function InvestmentManagement() {
 
   const filteredRows = investments.filter(
     (row) =>
-      (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (row?.amount?.toString() || "").includes(search.toLowerCase())
+      (row?.investor?.name?.toLowerCase() || "").includes(
+        search.toLowerCase()
+      ) || (row?.amount?.toString() || "").includes(search.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
@@ -111,9 +122,12 @@ export default function InvestmentManagement() {
       >
         <div className="space-y-4">
           {editMode ? (
-            <EditInvestmentForm investmentId={editingInvestmentId} closeModal={() => setIsModalOpen(false)} />
+            <EditInvestmentForm
+              investmentId={editingInvestmentId}
+              closeModal={() => setIsModalOpen(false)}
+            />
           ) : (
-            <AddInvestmentForm />
+            <AddInvestmentForm closeModal={() => setIsModalOpen(false)} />
           )}
         </div>
       </Modal>

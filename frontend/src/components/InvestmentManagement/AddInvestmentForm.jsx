@@ -12,7 +12,7 @@ export default function AddInvestmentForm({ closeModal }) {
   const [formData, setFormData] = useState({
     amount: "",
     investorId: "",
-    investmentOpportunityId: "",
+    opportunityId: "",
     roiPercent: "",
     payoutMode: "",
     contractStart: "",
@@ -42,7 +42,7 @@ export default function AddInvestmentForm({ closeModal }) {
     if (
       !formData.amount ||
       !formData.investorId ||
-      !formData.investmentOpportunityId ||
+      !formData.opportunityId ||
       !formData.roiPercent ||
       !formData.payoutMode ||
       !formData.contractStart ||
@@ -66,7 +66,7 @@ export default function AddInvestmentForm({ closeModal }) {
       setFormData({
         amount: "",
         investorId: "",
-        investmentOpportunityId: "",
+        opportunityId: "",
         roiPercent: "",
         payoutMode: "",
         contractStart: "",
@@ -112,8 +112,8 @@ export default function AddInvestmentForm({ closeModal }) {
 
       {/* Investment Opportunity */}
       <select
-        value={formData.investmentOpportunityId}
-        onChange={(e) => setFormData({ ...formData, investmentOpportunityId: e.target.value })}
+        value={formData.opportunityId}
+        onChange={(e) => setFormData({ ...formData, opportunityId: e.target.value })}
         className="border px-3 py-2 rounded-md w-full"
       >
         <option value="">Select Investment Opportunity</option>
@@ -200,7 +200,7 @@ export default function AddInvestmentForm({ closeModal }) {
 
       {/* Submit Button */}
       <div className="flex justify-center">
-        <Button type="submit" className="w-full h-10 md:w-auto bg-blue-600 text-white hover:bg-blue-700 transition duration-300">
+        <Button type="submit" className="w-40 h-12 bg-blue-600 text-white  hover:bg-blue-700 transition duration-300">
           Add Investment
         </Button>
       </div>

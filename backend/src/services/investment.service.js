@@ -1,7 +1,6 @@
 import { prisma } from "../config/db.js";
 
 export const createInvestment = async (data) => {
-  // Destructure required fields from input data
   const {
     amount,
     investorId,
@@ -15,15 +14,23 @@ export const createInvestment = async (data) => {
     status,
   } = data;
 
+  // Convert amount and roiPercent to proper types
+  const amountFloat = parseFloat(amount);
+  const roiPercentFloat = parseFloat(roiPercent);
+
+  // Ensure the dates are valid Date objects
+  const contractStartDate = new Date(contractStart); // Convert to Date object
+  const contractEndDate = new Date(contractEnd); // Convert to Date object
+
   // Validate input data
-  if (!amount || isNaN(amount) || amount <= 0) {
+  if (isNaN(amountFloat) || amountFloat <= 0) {
     throw new Error("Invalid amount: It should be a positive number.");
+  }
+  if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
+    throw new Error("Invalid ROI Percent: It should be a positive number.");
   }
   if (!investorId || !opportunityId) {
     throw new Error("Investor ID and Opportunity ID are required.");
-  }
-  if (!roiPercent || isNaN(roiPercent) || roiPercent <= 0) {
-    throw new Error("Invalid ROI Percent: It should be a positive number.");
   }
   if (!payoutMode || !["Monthly", "Quarterly", "Yearly"].includes(payoutMode)) {
     throw new Error(
@@ -31,13 +38,11 @@ export const createInvestment = async (data) => {
     );
   }
   if (
-    !contractStart ||
-    !contractEnd ||
-    new Date(contractEnd) <= new Date(contractStart)
+    isNaN(contractStartDate.getTime()) ||
+    isNaN(contractEndDate.getTime()) ||
+    contractEndDate <= contractStartDate
   ) {
-    throw new Error(
-      "Invalid dates: Contract end date should be after the start date."
-    );
+    throw new Error("Invalid contract dates: Ensure the contract end date is after the start date.");
   }
   if (!paymentMethod) {
     throw new Error("Payment Method is required.");
@@ -51,39 +56,30 @@ export const createInvestment = async (data) => {
     );
   }
 
-  // Log the creation attempt for monitoring
-  console.log(
-    `Attempting to create a new investment for investor: ${investorId} with opportunity: ${opportunityId}`
-  );
-
   try {
     // Create a new investment record in the database
     const newInvestment = await prisma.investment.create({
       data: {
-        amount,
+        amount: amountFloat,
         investorId,
         opportunityId,
-        roiPercent,
+        roiPercent: roiPercentFloat,
         payoutMode,
-        contractStart,
-        contractEnd,
+        contractStart: contractStartDate, // Store as Date object
+        contractEnd: contractEndDate, // Store as Date object
         paymentMethod,
         agreementSigned,
         status,
+        date: new Date(), // Assuming this is the current date when creating the investment
       },
     });
 
-    // Log the success for tracking
-    console.log(`Investment created successfully: ${newInvestment.id}`);
-
-    // Return the newly created investment data
     return newInvestment;
   } catch (error) {
-    // Log the error and rethrow it for handling in the calling code
-    console.error("Error creating investment:", error);
-    throw new Error(`Error creating investment: ${error.message}`);
+    throw new Error("Error creating investment: " + error.message);
   }
 };
+
 
 // Get all investments
 export const getAllInvestments = async () => {
@@ -122,10 +118,78 @@ export const getInvestmentById = async (id) => {
 
 // Update an investment
 export const updateInvestment = async (id, data) => {
+  const {
+    amount,
+    investorId,
+    opportunityId,
+    roiPercent,
+    payoutMode,
+    contractStart,
+    contractEnd,
+    paymentMethod,
+    agreementSigned,
+    status,
+  } = data;
+
+  // Convert amount and roiPercent to proper types
+  const amountFloat = parseFloat(amount);
+  const roiPercentFloat = parseFloat(roiPercent);
+
+  // Ensure the dates are valid Date objects
+  const contractStartDate = new Date(contractStart); // Convert to Date object
+  const contractEndDate = new Date(contractEnd); // Convert to Date object
+
+  // Validate input data
+  if (isNaN(amountFloat) || amountFloat <= 0) {
+    throw new Error("Invalid amount: It should be a positive number.");
+  }
+  if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
+    throw new Error("Invalid ROI Percent: It should be a positive number.");
+  }
+  if (!investorId || !opportunityId) {
+    throw new Error("Investor ID and Opportunity ID are required.");
+  }
+  if (!payoutMode || !["Monthly", "Quarterly", "Yearly"].includes(payoutMode)) {
+    throw new Error(
+      "Invalid payout mode: It should be one of 'Monthly', 'Quarterly', or 'Yearly'."
+    );
+  }
+  if (
+    isNaN(contractStartDate.getTime()) ||
+    isNaN(contractEndDate.getTime()) ||
+    contractEndDate <= contractStartDate
+  ) {
+    throw new Error("Invalid contract dates: Ensure the contract end date is after the start date.");
+  }
+  if (!paymentMethod) {
+    throw new Error("Payment Method is required.");
+  }
+  if (typeof agreementSigned !== "boolean") {
+    throw new Error("Agreement Signed should be a boolean value.");
+  }
+  if (!status || !["Ongoing", "Completed", "Canceled"].includes(status)) {
+    throw new Error(
+      "Invalid status: It should be one of 'Ongoing', 'Completed', or 'Canceled'."
+    );
+  }
+
   try {
+    // Update the existing investment record in the database
     const updatedInvestment = await prisma.investment.update({
       where: { id },
-      data,
+      data: {
+        amount: amountFloat, 
+        investorId,
+        opportunityId,
+        roiPercent: roiPercentFloat,
+        payoutMode,
+        contractStart: contractStartDate, // Store as Date object
+        contractEnd: contractEndDate, // Store as Date object
+        paymentMethod,
+        agreementSigned,
+        status,
+        date: new Date(), // Assuming this is the current date when updating the investment
+      },
     });
 
     return updatedInvestment;
@@ -133,6 +197,7 @@ export const updateInvestment = async (id, data) => {
     throw new Error("Error updating investment: " + error.message);
   }
 };
+
 
 // Delete an investment
 export const deleteInvestment = async (id) => {
