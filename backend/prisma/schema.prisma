@@ -98,11 +98,11 @@ model User {
   phone     String?
   image_url String?
 
-  roleId String?
-  role   Role?   @relation(fields: [roleId], references: [id])
+  roleId    String?
+  role      Role?   @relation(fields: [roleId], references: [id])
 
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
+  branchId  String?
+  branch    Branch? @relation(fields: [branchId], references: [id])
 
   investments Investment[] @relation("UserInvestments")
 
@@ -116,11 +116,13 @@ model User {
 
   isActive  Boolean  @default(true)
   isLogin   Boolean  @default(false)
+  isAdmin   Boolean  @default(false)  // New field added to check if user is an admin
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   assignedInvestors Investor[]
 }
+
 
 model Role {
   id          String           @id @default(uuid())

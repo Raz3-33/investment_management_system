@@ -1,5 +1,5 @@
 import express from "express";
-import { createPayout, getPayouts, updatePayout } from "../controller/payout.controller.js";
+import { createPayout, deletePayoutController, getPayouts, updatePayout } from "../controller/payout.controller.js";
 
 const router = express.Router();
 
@@ -7,9 +7,11 @@ const router = express.Router();
 router.post("/create", createPayout);
 
 // Get all payouts for an investment
-router.get("/:investmentId", getPayouts);
+router.get("/", getPayouts);
 
 // Update payout details
 router.put("/:payoutId", updatePayout);
+
+router.delete("/:payoutId", deletePayoutController);
 
 export default router;
