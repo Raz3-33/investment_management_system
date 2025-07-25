@@ -8,32 +8,43 @@ export async function verifyToken(req, res, next) {
     ? authHeader.split(" ")[1]
     : null;
 
+    console.log(token,"tokentokentokentokentokentokentokentokentokentoken");
+    
+
   if (!token) {
     console.warn("⛔ No token provided in Authorization header");
     return res.status(403).json({ message: "Token is required" });
   }
 
+  // Verify the token
   jwt.verify(token, sanitizedConfig.JWT_SECRET, async (err, decoded) => {
     if (err) {
-      console.error("⛔ Invalid token:", err.message);
+      console.error("Invalid token:", err.message);
       return res.status(401).json({ message: "Invalid or expired token" });
     }
+    console.log("Decoded token: ", decoded); // Log the decoded token to verify its contents
 
     try {
-      // : Fetch user from DB using ID from token
       const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { id: true, name: true, email: true, role: true },
+        where: { id: decoded.id }, // Fetch user based on the id in the decoded token
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: { select: { id: true, name: true } },
+        },
       });
 
       if (!user) {
+        console.error("User not found for ID:", decoded.id);
         return res.status(404).json({ message: "User not found" });
       }
 
-      req.user = user; // Attach full user info with role
-      next();
-    } catch (dbErr) {
-      console.error("⛔ DB error during user fetch:", dbErr.message);
+      req.user = user;
+      console.log("User authenticated:", user.name);
+      next(); // Proceed if the user is found
+    } catch (err) {
+      console.error("Error fetching user from DB:", err.message);
       return res.status(500).json({ message: "Internal server error" });
     }
   });

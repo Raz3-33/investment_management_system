@@ -24,13 +24,13 @@ export default function UserManagement() {
   const [editMode, setEditMode] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
 
-  const { users, fetchUsers, loading, deleteUser,userEdit } = useUserStore(
+  const { users, fetchUsers, loading, deleteUser, userEdit } = useUserStore(
     (state) => state
   );
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers,userEdit]);
+  }, [fetchUsers, userEdit]);
 
   const handleDelete = async (id) => {
     await deleteUser(id);
@@ -64,7 +64,7 @@ export default function UserManagement() {
             className="border px-3 py-2 rounded-md w-full sm:w-1/3 dark:bg-gray-800 dark:text-white"
           />
           <Button
-            className="w-30 h-8"
+            className="w-40 h-11"
             variant="primary"
             onClick={() => {
               setEditMode(false);
@@ -118,7 +118,10 @@ export default function UserManagement() {
       >
         <div className="space-y-4">
           {editMode ? (
-            <EditUserForm userId={editingUserId} closeModal={() => setIsModalOpen(false)} />
+            <EditUserForm
+              userId={editingUserId}
+              closeModal={() => setIsModalOpen(false)}
+            />
           ) : (
             <AddUserForm />
           )}

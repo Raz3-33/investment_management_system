@@ -32,9 +32,7 @@ export const createRole = async (data) => {
 
 
   console.log(data,"================");
-  console.log(permissions,"permissionspermissionspermissionspermissionspermissions");
 
-  
   // 1. Check if the role already exists
   const existingRole = await prisma.role.findUnique({
     where: { name },

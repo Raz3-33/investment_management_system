@@ -51,6 +51,7 @@ export default function RoleManagement() {
 
   const {
     roles,
+    rolesAdd,
     fetchRoles,
     addRole,
     updateRole,
@@ -62,7 +63,7 @@ export default function RoleManagement() {
 
   useEffect(() => {
     fetchRoles();
-  }, [fetchRoles]);
+  }, [fetchRoles,rolesAdd]);
 
   const handleCreateOrUpdate = async () => {
     if (!formData?.name) {
@@ -86,10 +87,6 @@ export default function RoleManagement() {
   };
 
   useEffect(() => {
-    console.log(
-      roleDetail,
-      "roleDetailroleDetailroleDetailroleDetailroleDetailroleDetail"
-    );
 
     if (!editMode || !roleDetail?.permissions) return;
     // Mapping the permissions based on permission name (name:access)
@@ -145,7 +142,7 @@ export default function RoleManagement() {
           />
           <Button
             variant="primary"
-            className="w-25 h-8"
+            className="w-40 h-11"
             onClick={() => {
               setEditMode(false);
               setFormData({ name: "", description: "", permissions: [] });

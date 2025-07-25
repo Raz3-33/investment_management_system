@@ -10,7 +10,7 @@ export const usePayoutStore = create((set) => ({
   fetchPayouts: async (investmentId) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.get(`/payouts/${investmentId}`);
+      const response = await api.get(`/payouts`);
       set({ payouts: response.data.data, loading: false });
     } catch (error) {
       set({ loading: false, error: error.message });

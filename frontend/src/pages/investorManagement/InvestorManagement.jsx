@@ -3,9 +3,9 @@ import Button from "../../components/ui/Button";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
 import Modal from "../../components/ui/modal/Modal";
-import { useInvestorStore } from "../../store/investorStore"; 
+import { useInvestorStore } from "../../store/investorStore";
 import AddInvestorForm from "../../components/investorManagement/AddInvestorForm";
-import EditInvestorForm from "../../components/investorManagement/EditInvestorForm"; 
+import EditInvestorForm from "../../components/investorManagement/EditInvestorForm";
 
 const columns = [
   { key: "name", label: "Name" },
@@ -36,7 +36,7 @@ export default function InvestorManagement() {
 
   useEffect(() => {
     fetchInvestors();
-  }, [fetchInvestors, updateInvestor,investorAdd,investorUpdate]);
+  }, [fetchInvestors, updateInvestor, investorAdd, investorUpdate]);
 
   const handleDelete = async (id) => {
     await deleteInvestor(id);
@@ -66,7 +66,8 @@ export default function InvestorManagement() {
             className="border px-3 py-2 rounded-md w-full sm:w-1/3 dark:bg-gray-800 dark:text-white"
           />
           <Button
-            className="w-40 h-12"
+            // className="w-40 h-12"
+            className="w-40 h-11"
             variant="primary"
             onClick={() => {
               setEditMode(false);

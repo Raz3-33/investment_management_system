@@ -13,7 +13,7 @@ export default function AddPayoutForm({ closeModal }) {
     investmentId: "", // investmentId will be selected
     dueDate: "",
     amountDue: "",
-    amountPaid: "",
+    amountPaid: 0,
     paymentMode: "",
     receiptRef: "",
     notes: "",
@@ -138,7 +138,7 @@ export default function AddPayoutForm({ closeModal }) {
         placeholder="Amount Paid"
         value={formData.amountPaid}
         onChange={(e) =>
-          setFormData({ ...formData, amountPaid: e.target.value })
+          setFormData({ ...formData, amountPaid: Number(e.target.value) })
         }
         className="border px-3 py-2 rounded-md w-full"
       />

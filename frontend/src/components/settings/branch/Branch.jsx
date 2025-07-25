@@ -145,6 +145,7 @@ export default function BranchManagement() {
             className="border px-3 py-2 rounded-md w-full sm:w-1/3 dark:bg-gray-800 dark:text-white"
           />
           <Button
+            className="w-40 h-11"
             variant="primary"
             onClick={() => {
               setEditMode(false);
