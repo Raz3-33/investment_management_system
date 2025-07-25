@@ -64,6 +64,7 @@ export default function BusinessCategoryManagement() {
           />
           <Button
             variant="primary"
+            className="w-40 h-11"
             onClick={() => {
               setEditMode(false);
               setIsModalOpen(true);

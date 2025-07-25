@@ -1,9 +1,10 @@
 // import { getUserPermissions } from "../utils/fetchingUserPermissions.js";
+import { prisma } from "../config/db.js";
 
 // Middleware to check if a user has a specific permission
 export const checkPermission = (requiredPermission) => {
   return async (req, res, next) => {
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
     try {
       // Fetch the user's permissions from the database
@@ -15,12 +16,13 @@ export const checkPermission = (requiredPermission) => {
               permissions: {
                 include: {
                   permission: true, // Include permission details
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       });
+      console.log(user, "888888888887687687686876876876");
 
       // Check if the user has the isAdmin flag
       if (user?.isAdmin) {
@@ -29,7 +31,7 @@ export const checkPermission = (requiredPermission) => {
       }
 
       // If the user is not an admin, fetch their permissions and check if they have the required permission
-      const permissions = user.role.permissions.map(p => p.permission.name);
+      const permissions = user.role.permissions.map((p) => p.permission.name);
 
       if (!permissions.includes(requiredPermission)) {
         return res.status(403).json({
