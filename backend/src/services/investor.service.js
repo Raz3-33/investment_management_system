@@ -21,14 +21,14 @@ const sendPasswordEmail = async (email, password) => {
   );
 
   const transporter = nodemailer.createTransport({
-    service: "gmail", // Use your email service (e.g., Gmail, Outlook, etc.)
+    service: "gmail",
     auth: {
       user: sanitizedConfig.EMAIL_USER, // Your email
-      pass: sanitizedConfig.EMAIL_PASS, // Your email password or app password
+      pass: sanitizedConfig.EMAIL_PASS, // App-specific password
     },
   });
 
-  const mailOptions = {
+const mailOptions = {
     from: sanitizedConfig.EMAIL_USER, // Sender's email address
     to: email, // Recipient's email address
     subject: "Your Investor Account Password",
@@ -61,6 +61,8 @@ export const createInvestor = async (data) => {
   } = data;
 
   const password = generatePassword(); // Generate a 6-digit password
+  console.log(password,"passwordpasswordpassword");
+  
   const hashedPassword = await bcrypt.hash(password, 10); // Hash the password using bcrypt
 
   try {

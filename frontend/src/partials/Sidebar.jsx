@@ -478,6 +478,56 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                 </NavLink>
               </li>
 
+              {/* Payout management  */}
+              <li
+                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                  pathname.includes("payout_management") &&
+                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                }`}
+              >
+                <NavLink
+                  end
+                  to="/payout_management"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("payout_management")
+                      ? ""
+                      : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      className={`shrink-0 ${
+                        pathname.includes("payout_management")
+                          ? "text-violet-500"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
+                      {/* <!-- Wallet outline --> */}
+                      <path d="M4 7C4 5.89543 4.89543 5 6 5H20C21.1046 5 22 5.89543 22 7V17C22 18.1046 21.1046 19 20 19H6C4.89543 19 4 18.1046 4 17V7Z" />
+                      {/* <!-- Inner pocket --> */}
+                      <path d="M4 9H18C19.1046 9 20 9.89543 20 11V13C20 14.1046 19.1046 15 18 15H4" />
+                      {/* <!-- Rupee symbol for payout --> */}
+                      <path d="M9 10H13" />
+                      <path d="M9 13H12.5C11.5 13 11 14.5 9 14.5" />
+                      <path d="M13 7H9V10" />
+                    </svg>
+
+                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Payout Management
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
+
               {/* Messages */}
               {/* <li
                 className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
@@ -514,8 +564,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         Messages
                       </span>
                     </div> */}
-                    {/* Badge */}
-                    {/* <div className="flex shrink-0 ml-2">
+              {/* Badge */}
+              {/* <div className="flex shrink-0 ml-2">
                       <span className="inline-flex items-center justify-center h-5 text-xs font-medium text-white bg-violet-400 px-2 rounded-sm">
                         4
                       </span>
@@ -630,7 +680,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Branch
+                                Utils
                               </span>
                             </NavLink>
                           </li>

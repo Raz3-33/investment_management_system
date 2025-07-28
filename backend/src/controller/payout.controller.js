@@ -52,14 +52,39 @@ export const updatePayout = async (req, res) => {
   const { payoutId } = req.params;
   const { amountPaid, paidDate, notes, paymentMode, receiptRef } = req.body;
 
+  // Ensure amountPaid is a number and parse paidDate to a Date object
+  const parsedAmountPaid = Number(amountPaid); // Convert amountPaid to a number
+  const parsedPaidDate = paidDate ? new Date(paidDate) : null; // Parse paidDate to Date, or null if not provided
+
+  // Validate parsedAmountPaid to ensure it's a valid number
+  if (isNaN(parsedAmountPaid)) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Invalid amountPaid. It must be a valid number.",
+      });
+  }
+
+  // Validate parsedPaidDate to ensure it's a valid date
+  if (parsedPaidDate && isNaN(parsedPaidDate.getTime())) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Invalid paidDate. Please provide a valid date.",
+      });
+  }
+
   try {
     const updatedPayout = await updatePayoutService(payoutId, {
-      amountPaid,
-      paidDate,
+      amountPaid: parsedAmountPaid,
+      paidDate: parsedPaidDate,
       notes,
       paymentMode,
       receiptRef,
     });
+
     res.status(200).json({ success: true, data: updatedPayout });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

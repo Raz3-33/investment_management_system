@@ -9,18 +9,38 @@ const router = express.Router();
 router.use(verifyToken);
 
 // Get all users (requires permission: "User Management:view")
-router.get("/", checkPermission("User Management:view"), userController.getAllUsers);
+router.get(
+  "/",
+  checkPermission("User Management:view"),
+  userController.getAllUsers
+);
 
 // Get user details by ID (requires permission: "User Management:view")
-router.get("/:id", checkPermission("User Management:view"), userController.getUserDetails);
+router.get(
+  "/:id",
+  checkPermission("User Management:view"),
+  userController.getUserDetails
+);
 
 // Create a new user (requires permission: "User Management:create")
-router.post("/", checkPermission("User Management:create"), userController.createUser);
+router.post(
+  "/",
+  checkPermission("User Management:create"),
+  userController.createUser
+);
 
 // Update user by ID (requires permission: "User Management:update")
-router.put("/:id", checkPermission("User Management:update"), userController.updateUser);
+router.put(
+  "/:id",
+  checkPermission("User Management:update"),
+  userController.updateUser
+);
 
 // Delete user by ID (requires permission: "User Management:delete")
-router.delete("/:id", checkPermission("User Management:delete"), userController.deleteUser);
+router.delete(
+  "/:id",
+  checkPermission("User Management:delete"),
+  userController.deleteUser
+);
 
 export default router;

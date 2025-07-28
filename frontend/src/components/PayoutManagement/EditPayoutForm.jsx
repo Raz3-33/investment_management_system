@@ -10,9 +10,12 @@ export default function EditPayoutForm({ payoutId, closeModal }) {
   // Find the payout to edit
   const payout = payouts.find((p) => p.id === payoutId);
 
+  // Formatting the dueDate for input[type="date"]
+  const formattedDueDate = payout?.dueDate ? new Date(payout.dueDate).toISOString().split('T')[0] : "";
+
   const [formData, setFormData] = useState({
     investmentId: payout?.investmentId || "",
-    dueDate: payout?.dueDate || "",
+    dueDate: formattedDueDate, // Format the dueDate for the date input
     amountDue: payout?.amountDue || "",
     amountPaid: payout?.amountPaid || "",
     paymentMode: payout?.paymentMode || "",
@@ -85,7 +88,7 @@ export default function EditPayoutForm({ payoutId, closeModal }) {
       closeModal(); // Close the modal after successful creation
     } catch (error) {
       console.error("Error updating payout:", error);
-      setError("Error updating payout. Please try again later.");
+      setError(error?.response?.data?.message);
     }
   };
 

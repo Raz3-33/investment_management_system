@@ -91,16 +91,16 @@ export const getPayoutsService = async () => {
 export const updatePayoutService = async (payoutId, data) => {
   const { amountPaid, paidDate, notes, paymentMode, receiptRef } = data;
 
-  let paidAmount = Number(amountPaid);
+  let parsedAmountPaid = Number(amountPaid); // Convert to number
 
   // Validate that amountPaid is a valid number
-  if (isNaN(paidAmount) || paidAmount < 0) {
+  if (isNaN(parsedAmountPaid) || parsedAmountPaid < 0) {
     throw new Error("Invalid amountPaid. It must be a non-negative number.");
   }
 
   // Validate paidDate
-  const paidDateObj = new Date(paidDate);
-  if (isNaN(paidDateObj.getTime())) {
+  const parsedPaidDate = new Date(paidDate);
+  if (isNaN(parsedPaidDate.getTime())) {
     throw new Error("Invalid paidDate. Please provide a valid date.");
   }
 
@@ -109,8 +109,8 @@ export const updatePayoutService = async (payoutId, data) => {
     const updatedPayout = await prisma.payout.update({
       where: { id: payoutId },
       data: {
-        paidAmount,
-        paidDate: paidDateObj,
+        amountPaid: parsedAmountPaid, // Ensure we use the correct field name
+        paidDate: parsedPaidDate, // Correctly use paidDate as a Date object
         notes,
         paymentMode,
         receiptRef,
