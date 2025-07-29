@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import { useInvestmentStore } from "../../store/investmentStore";
-import { useInvestorStore } from "../../store/investorStore"; 
-import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";  // Fetch investment opportunities
+import { useInvestorStore } from "../../store/investorStore";
+import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
 
 export default function AddInvestmentForm({ closeModal }) {
   const { addInvestment, error } = useInvestmentStore((state) => state);
@@ -19,50 +19,55 @@ export default function AddInvestmentForm({ closeModal }) {
     contractEnd: "",
     paymentMethod: "",
     agreementSigned: false,
-    status: "Ongoing", // Default status
+    status: "Ongoing",
   });
 
-  const [errorValidation, setErrorValidation] = useState(""); // Error message state
+  const [errorValidation, setErrorValidation] = useState("");
 
   useEffect(() => {
-    fetchInvestors(); // Fetch investors on component mount
-    fetchInvestmentOpportunities(); // Fetch investment opportunities on component mount
+    fetchInvestors();
+    fetchInvestmentOpportunities();
   }, [fetchInvestors, fetchInvestmentOpportunities]);
 
   useEffect(() => {
-    if (error) {
-      setErrorValidation(error);
-    }
+    if (error) setErrorValidation(error);
   }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation for required fields
+    const {
+      amount,
+      investorId,
+      opportunityId,
+      roiPercent,
+      payoutMode,
+      contractStart,
+      contractEnd,
+      paymentMethod,
+    } = formData;
+
     if (
-      !formData.amount ||
-      !formData.investorId ||
-      !formData.opportunityId ||
-      !formData.roiPercent ||
-      !formData.payoutMode ||
-      !formData.contractStart ||
-      !formData.contractEnd ||
-      !formData.paymentMethod
+      !amount ||
+      !investorId ||
+      !opportunityId ||
+      !roiPercent ||
+      !payoutMode ||
+      !contractStart ||
+      !contractEnd ||
+      !paymentMethod
     ) {
       setErrorValidation("All fields are required.");
       return;
     }
 
-    // Validate that amount, roiPercent are numbers
-    if (isNaN(formData.amount) || isNaN(formData.roiPercent)) {
+    if (isNaN(amount) || isNaN(roiPercent)) {
       setErrorValidation("Amount and ROI Percent must be numbers.");
       return;
     }
 
     try {
-      // Call the store's addInvestment function to send data to the backend
       await addInvestment(formData);
-      // Reset form data after successful submission
       setFormData({
         amount: "",
         investorId: "",
@@ -75,132 +80,158 @@ export default function AddInvestmentForm({ closeModal }) {
         agreementSigned: false,
         status: "Ongoing",
       });
-      setErrorValidation(""); // Clear any previous errors
-      closeModal(); // Close modal after successful form submission
+      setErrorValidation("");
+      closeModal();
     } catch (err) {
       setErrorValidation("Failed to add investment: " + err.message);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Display error message */}
+    <form onSubmit={handleSubmit} className="space-y-6">
       {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
 
-      {/* Amount */}
-      <input
-        type="number"
-        placeholder="Amount"
-        value={formData.amount}
-        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Amount */}
+        <div>
+          <label className="block mb-1">Amount</label>
+          <input
+            type="number"
+            placeholder="Amount"
+            value={formData.amount}
+            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
 
-      {/* Investor */}
-      <select
-        value={formData.investorId}
-        onChange={(e) => setFormData({ ...formData, investorId: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Investor</option>
-        {investors.map((investor) => (
-          <option key={investor.id} value={investor.id}>
-            {investor.name} - {investor.type}
-          </option>
-        ))}
-      </select>
+        {/* ROI Percentage */}
+        <div>
+          <label className="block mb-1">ROI Percentage</label>
+          <input
+            type="number"
+            placeholder="ROI %"
+            value={formData.roiPercent}
+            onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
 
-      {/* Investment Opportunity */}
-      <select
-        value={formData.opportunityId}
-        onChange={(e) => setFormData({ ...formData, opportunityId: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Investment Opportunity</option>
-        {investmentOpportunities.map((opp) => (
-          <option key={opp.id} value={opp.id}>
-            {opp.name} - {opp.brandName}
-          </option>
-        ))}
-      </select>
+        {/* Investor */}
+        <div>
+          <label className="block mb-1">Investor</label>
+          <select
+            value={formData.investorId}
+            onChange={(e) => setFormData({ ...formData, investorId: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Investor</option>
+            {investors.map((investor) => (
+              <option key={investor.id} value={investor.id}>
+                {investor.name} - {investor.type}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* ROI Percentage */}
-      <input
-        type="number"
-        placeholder="ROI Percentage"
-        value={formData.roiPercent}
-        onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Investment Opportunity */}
+        <div>
+          <label className="block mb-1">Investment Opportunity</label>
+          <select
+            value={formData.opportunityId}
+            onChange={(e) => setFormData({ ...formData, opportunityId: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Opportunity</option>
+            {investmentOpportunities.map((opp) => (
+              <option key={opp.id} value={opp.id}>
+                {opp.name} - {opp.brandName}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* Payout Mode */}
-      <select
-        value={formData.payoutMode}
-        onChange={(e) => setFormData({ ...formData, payoutMode: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Payout Mode</option>
-        <option value="Monthly">Monthly</option>
-        <option value="Quarterly">Quarterly</option>
-      </select>
+        {/* Payout Mode */}
+        <div>
+          <label className="block mb-1">Payout Mode</label>
+          <select
+            value={formData.payoutMode}
+            onChange={(e) => setFormData({ ...formData, payoutMode: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Mode</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+          </select>
+        </div>
 
-      {/* Contract Start */}
-      <label>Contract Start</label>
-      <input
-        type="date"
-        placeholder="Contract Start"
-        value={formData.contractStart}
-        onChange={(e) => setFormData({ ...formData, contractStart: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Payment Method */}
+        <div>
+          <label className="block mb-1">Payment Method</label>
+          <input
+            type="text"
+            placeholder="e.g., Bank Transfer"
+            value={formData.paymentMethod}
+            onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
 
-      {/* Contract End */}
-      <label>Contract End</label>
+        {/* Contract Start */}
+        <div>
+          <label className="block mb-1">Contract Start</label>
+          <input
+            type="date"
+            value={formData.contractStart}
+            onChange={(e) => setFormData({ ...formData, contractStart: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
 
-      <input
-        type="date"
-        placeholder="Contract End"
-        value={formData.contractEnd}
-        onChange={(e) => setFormData({ ...formData, contractEnd: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Contract End */}
+        <div>
+          <label className="block mb-1">Contract End</label>
+          <input
+            type="date"
+            value={formData.contractEnd}
+            onChange={(e) => setFormData({ ...formData, contractEnd: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
 
-      {/* Payment Method */}
-      <label>Payment Method</label>
+        {/* Status */}
+        <div>
+          <label className="block mb-1">Status</label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="Ongoing">Ongoing</option>
+            <option value="Completed">Completed</option>
+            <option value="Canceled">Canceled</option>
+          </select>
+        </div>
 
-      <input
-        type="text"
-        placeholder="Payment Method"
-        value={formData.paymentMethod}
-        onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
-
-      {/* Agreement Signed Checkbox */}
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          checked={formData.agreementSigned}
-          onChange={() => setFormData({ ...formData, agreementSigned: !formData.agreementSigned })}
-          className="mr-2"
-        />
-        <label>Agreement Signed</label>
+        {/* Agreement Signed */}
+        <div className="flex items-center mt-6">
+          <input
+            type="checkbox"
+            checked={formData.agreementSigned}
+            onChange={() =>
+              setFormData((prev) => ({ ...prev, agreementSigned: !prev.agreementSigned }))
+            }
+            className="mr-2"
+          />
+          <label>Agreement Signed</label>
+        </div>
       </div>
-
-      {/* Status */}
-      <select
-        value={formData.status}
-        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="Ongoing">Ongoing</option>
-        <option value="Completed">Completed</option>
-        <option value="Canceled">Canceled</option>
-      </select>
 
       {/* Submit Button */}
       <div className="flex justify-center">
-        <Button type="submit" className="w-40 h-12 bg-blue-600 text-white  hover:bg-blue-700 transition duration-300">
+        <Button
+          type="submit"
+          className="w-full md:w-40 h-12 bg-blue-600 text-white hover:bg-blue-700 transition duration-300"
+        >
           Add Investment
         </Button>
       </div>

@@ -92,114 +92,117 @@ export default function AddInvestmentOpportunityForm() {
       {/* Display error message */}
       {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
 
-      {/* Opportunity Name */}
-      <input
-        type="text"
-        placeholder="Opportunity Name"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Opportunity Name */}
+        <input
+          type="text"
+          placeholder="Opportunity Name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* Description */}
-      <input
-        type="text"
-        placeholder="Description"
-        value={formData.description}
-        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Description */}
+        <input
+          type="text"
+          placeholder="Description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* Brand Name */}
-      <input
-        type="text"
-        placeholder="Brand Name"
-        value={formData.brandName}
-        onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Brand Name */}
+        <input
+          type="text"
+          placeholder="Brand Name"
+          value={formData.brandName}
+          onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* Investment Type */}
-      <select
-        value={formData.investmentTypeId}
-        onChange={(e) => setFormData({ ...formData, investmentTypeId: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Investment Type</option>
-        {investmentTypes?.map((type) => (
-          <option key={type.id} value={type.id}>
-            {type.name}
-          </option>
-        ))}
-      </select>
+        {/* Investment Type */}
+        <select
+          value={formData.investmentTypeId}
+          onChange={(e) => setFormData({ ...formData, investmentTypeId: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        >
+          <option value="">Select Investment Type</option>
+          {investmentTypes?.map((type) => (
+            <option key={type.id} value={type.id}>
+              {type.name}
+            </option>
+          ))}
+        </select>
 
-      {/* Business Category */}
-      <select
-        value={formData.businessCategoryId}
-        onChange={(e) => setFormData({ ...formData, businessCategoryId: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Business Category</option>
-        {businessCategories?.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
+        {/* Business Category */}
+        <select
+          value={formData.businessCategoryId}
+          onChange={(e) => setFormData({ ...formData, businessCategoryId: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        >
+          <option value="">Select Business Category</option>
+          {businessCategories?.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
 
-      {/* Minimum Amount */}
-      <input
-        type="text"
-        placeholder="Min Amount"
-        value={formData.minAmount}
-        onChange={(e) => setFormData({ ...formData, minAmount: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Minimum Amount */}
+        <input
+          type="text"
+          placeholder="Min Amount"
+          value={formData.minAmount}
+          onChange={(e) => setFormData({ ...formData, minAmount: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* Maximum Amount */}
-      <input
-        type="text"
-        placeholder="Max Amount"
-        value={formData.maxAmount}
-        onChange={(e) => setFormData({ ...formData, maxAmount: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Maximum Amount */}
+        <input
+          type="text"
+          placeholder="Max Amount"
+          value={formData.maxAmount}
+          onChange={(e) => setFormData({ ...formData, maxAmount: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* ROI Percentage */}
-      <input
-        type="text"
-        placeholder="ROI Percent"
-        value={formData.roiPercent}
-        onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* ROI Percentage */}
+        <input
+          type="text"
+          placeholder="ROI Percent"
+          value={formData.roiPercent}
+          onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* Lock-in Months */}
-      <input
-        type="text"
-        placeholder="Lock-in Months"
-        value={formData.lockInMonths}
-        onChange={(e) => setFormData({ ...formData, lockInMonths: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Lock-in Months */}
+        <input
+          type="text"
+          placeholder="Lock-in Months"
+          value={formData.lockInMonths}
+          onChange={(e) => setFormData({ ...formData, lockInMonths: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* Exit Options */}
-      <input
-        type="text"
-        placeholder="Exit Options"
-        value={formData.exitOptions}
-        onChange={(e) => setFormData({ ...formData, exitOptions: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Exit Options */}
+        <input
+          type="text"
+          placeholder="Exit Options"
+          value={formData.exitOptions}
+          onChange={(e) => setFormData({ ...formData, exitOptions: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
 
-      {/* Payout Mode */}
-      <input
-        type="text"
-        placeholder="Payout Mode (Monthly, Quarterly, etc.)"
-        value={formData.payoutMode}
-        onChange={(e) => setFormData({ ...formData, payoutMode: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Payout Mode */}
+        <input
+          type="text"
+          placeholder="Payout Mode (Monthly, Quarterly, etc.)"
+          value={formData.payoutMode}
+          onChange={(e) => setFormData({ ...formData, payoutMode: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
+
+      </div>
 
       {/* Submit Button */}
       <div className="flex justify-center">
