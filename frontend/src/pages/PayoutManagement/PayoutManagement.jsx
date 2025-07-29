@@ -1,21 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import Button from '../../components/ui/Button';
-import { usePayoutStore } from '../../store/payoutStore';
-import Modal from '../../components/ui/modal/Modal';
-import EditPayoutForm from '../../components/PayoutManagement/EditPayoutForm';
-import AddPayoutForm from '../../components/PayoutManagement/AddPayoutForm';
-import DataTable from '../../components/ui/table/DataTable';
+import React, { useEffect, useState } from "react";
+import Button from "../../components/ui/Button";
+import { usePayoutStore } from "../../store/payoutStore";
+import Modal from "../../components/ui/modal/Modal";
+import EditPayoutForm from "../../components/PayoutManagement/EditPayoutForm";
+import AddPayoutForm from "../../components/PayoutManagement/AddPayoutForm";
+import DataTable from "../../components/ui/table/DataTable";
 
 const columns = [
-  { key: 'dueDate', label: 'Due Date' },
-  { key: 'amountDue', label: 'Amount Due' },
-  { key: 'amountPaid', label: 'Amount Paid' },
-  { key: 'paymentMode', label: 'Payment Mode' }, // Change from 'status' to 'paymentMode'
-  { key: 'actions', label: 'Actions', isAction: true },
+  { key: "dueDate", label: "Due Date" },
+  { key: "amountDue", label: "Amount Due" },
+  { key: "amountPaid", label: "Amount Paid" },
+  { key: "paymentMode", label: "Payment Mode" }, // Change from 'status' to 'paymentMode'
+  { key: "actions", label: "Actions", isAction: true },
 ];
 
 export default function PayoutManagement({ investmentId }) {
-  const { payouts, fetchPayouts, loading, deletePayout } = usePayoutStore((state) => state);
+  const {
+    payouts,
+    addPayouts,
+    editPayouts,
+    fetchPayouts,
+    loading,
+    deletePayout,
+  } = usePayoutStore((state) => state);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingPayoutId, setEditingPayoutId] = useState(null);
@@ -24,6 +31,12 @@ export default function PayoutManagement({ investmentId }) {
   useEffect(() => {
     fetchPayouts(investmentId);
   }, [fetchPayouts, investmentId]);
+
+  useEffect(() => {
+    if ((addPayouts, editPayouts)) {
+      setIsModalOpen(false);
+    }
+  }, [addPayouts, editPayouts]);
 
   const handleDelete = async (id) => {
     await deletePayout(id);
@@ -88,13 +101,19 @@ export default function PayoutManagement({ investmentId }) {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editMode ? 'Edit Payout' : 'Add Payout'}
+        title={editMode ? "Edit Payout" : "Add Payout"}
       >
         <div className="space-y-4">
           {editMode ? (
-            <EditPayoutForm payoutId={editingPayoutId} closeModal={() => setIsModalOpen(false)} />
+            <EditPayoutForm
+              payoutId={editingPayoutId}
+              closeModal={() => setIsModalOpen(false)}
+            />
           ) : (
-            <AddPayoutForm investmentId={investmentId} closeModal={() => setIsModalOpen(false)} />
+            <AddPayoutForm
+              investmentId={investmentId}
+              closeModal={() => setIsModalOpen(false)}
+            />
           )}
         </div>
       </Modal>

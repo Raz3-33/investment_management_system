@@ -9,25 +9,164 @@ const tabs = [
   {
     id: "branch",
     label: "Branch",
-    icon: "M7 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm0 10a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm10-6a3 3 0 1 0-2.83-2H9.83A3.001 3.001 0 0 0 7 11a3 3 0 0 0 2.83 2h4.34A3.001 3.001 0 0 0 17 11Zm0-4a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z", // Example SVG Path
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* <!-- Left node --> */}
+        <circle cx="6" cy="6" r="2" stroke="currentColor" stroke-width="1.5" />
+        {/* <!-- Right node --> */}
+        <circle cx="18" cy="6" r="2" stroke="currentColor" stroke-width="1.5" />
+        {/* <!-- Bottom node --> */}
+        <circle
+          cx="12"
+          cy="18"
+          r="2"
+          stroke="currentColor"
+          stroke-width="1.5"
+        />
+
+        {/* <!-- Connections --> */}
+        <path
+          d="M6 6V10C6 13 9 15 12 15C15 15 18 13 18 10V6"
+          stroke="currentColor"
+          stroke-width="1.5"
+        />
+      </svg>
+    ),
     content: <Branch />,
   },
   {
     id: "businessCategory",
     label: "Business Category",
-    icon: "M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Z",
-    content: <BusinessCategoryManagement/>,
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* <!-- Box or container --> */}
+        <rect
+          x="3"
+          y="4"
+          width="18"
+          height="16"
+          rx="2"
+          stroke="currentColor"
+          stroke-width="1.5"
+        />
+
+        {/* <!-- Category tags --> */}
+        <path
+          d="M7 8H17"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+        <path
+          d="M7 12H14"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+        <path
+          d="M7 16H12"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
+    ),
+    content: <BusinessCategoryManagement />,
   },
   {
     id: "investmentType",
     label: "Investment Type",
-    icon: "M5 11.424V1a1 1 0 1 0-2 0v10.424a3.228 3.228 0 0 0 0 6.152V19a1 1 0 1 0 2 0v-1.424a3.228 3.228 0 0 0 0-6.152Z",
-    content: <InvestmentTypeManagement/>,
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* <!-- Coin --> */}
+        <circle cx="18" cy="6" r="3" stroke="currentColor" stroke-width="1.5" />
+
+        {/* <!-- Stacked bars --> */}
+        <rect x="4" y="14" width="3" height="6" rx="1" fill="currentColor" />
+        <rect x="9" y="10" width="3" height="10" rx="1" fill="currentColor" />
+        <rect x="14" y="12" width="3" height="8" rx="1" fill="currentColor" />
+
+        {/* <!-- Coin dollar sign (optional, stylistic) --> */}
+        <path
+          d="M18 5.25V6.75M17.25 6C17.25 6.41421 17.5858 6.75 18 6.75C18.4142 6.75 18.75 6.41421 18.75 6C18.75 5.58579 18.4142 5.25 18 5.25"
+          stroke="currentColor"
+          stroke-width="1.2"
+          stroke-linecap="round"
+        />
+      </svg>
+    ),
+    content: <InvestmentTypeManagement />,
   },
   {
     id: "contacts",
     label: "Contacts",
-    icon: "M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2Z",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* <!-- Profile circle --> */}
+        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5" />
+
+        {/* <!-- Body shape --> */}
+        <path
+          d="M4 20c0-3.31 3.58-6 8-6s8 2.69 8 6"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+
+        {/* <!-- Address book lines --> */}
+        <line
+          x1="20"
+          y1="4"
+          x2="20"
+          y2="6"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+        <line
+          x1="20"
+          y1="9"
+          x2="20"
+          y2="11"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+        <line
+          x1="20"
+          y1="14"
+          x2="20"
+          y2="16"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
+    ),
     content: <div>This is the Contacts tab content.</div>,
   },
 ];

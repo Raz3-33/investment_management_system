@@ -1,5 +1,5 @@
 // Tab.js
-export default function Tab({ id, label, icon, onClick, isActive }) {
+export default function Tab({ id, label, svg, onClick, isActive }) {
   return (
     <li role="presentation" className="me-2">
       <button
@@ -13,7 +13,7 @@ export default function Tab({ id, label, icon, onClick, isActive }) {
         aria-controls={id}
         aria-selected={isActive}
       >
-        <svg
+        {/* <svg
           className="w-4 h-4 me-2 text-gray-400 dark:text-gray-500"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
@@ -21,7 +21,8 @@ export default function Tab({ id, label, icon, onClick, isActive }) {
           viewBox="0 0 20 20"
         >
           <path d={icon} />
-        </svg>
+        </svg> */}
+        {svg}
         {label}
       </button>
     </li>

@@ -106,7 +106,7 @@ const LoginPage = () => {
             alt="Logo"
             className="w-40 h-40 object-contain mb-4 drop-shadow-lg"
           />
-          <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2>
+          {/* <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2> */}
           <p className="text-base text-gray-400 text-center">
             Sign in to access your dashboard
           </p>
@@ -192,12 +192,12 @@ const LoginPage = () => {
               )}
             <div className="flex items-center justify-between">
               <div></div>
-              <a
+              {/* <a
                 href="#"
                 className="text-sm text-blue-500 hover:underline focus:outline-none"
               >
                 Forgot password?
-              </a>
+              </a> */}
             </div>
             <button
               type="submit"

@@ -7,11 +7,12 @@ export default function AddPayoutForm({ closeModal }) {
   const { createPayout } = usePayoutStore((state) => state);
   const { investments, fetchInvestments } = useInvestmentStore(
     (state) => state
-  ); // Fetch investments
+  );
 
   const [formData, setFormData] = useState({
-    investmentId: "", // investmentId will be selected
+    investmentId: "",
     dueDate: "",
+    paidDate: "",
     amountDue: "",
     amountPaid: 0,
     paymentMode: "",
@@ -34,6 +35,9 @@ export default function AddPayoutForm({ closeModal }) {
     }
     if (!formData.dueDate) {
       return "Due date is required.";
+    }
+    if (!formData.paidDate) {
+      return "Paid date is required."; // Added validation for paidDate
     }
     if (!formData.amountDue || formData.amountDue <= 0) {
       return "Amount Due must be a positive number.";
@@ -59,9 +63,7 @@ export default function AddPayoutForm({ closeModal }) {
     }
 
     try {
-      // Submit the payout form
       await createPayout(formData);
-      closeModal(); // Close the modal after successful creation
     } catch (error) {
       console.error("Error creating payout:", error);
       setError("Error creating payout. Please try again later.");
@@ -117,6 +119,15 @@ export default function AddPayoutForm({ closeModal }) {
         placeholder="Due Date"
         value={formData.dueDate}
         onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+        className="border px-3 py-2 rounded-md w-full"
+      />
+
+      {/* Paid Date */}
+      <input
+        type="date"
+        placeholder="Paid Date"
+        value={formData.paidDate}
+        onChange={(e) => setFormData({ ...formData, paidDate: e.target.value })}
         className="border px-3 py-2 rounded-md w-full"
       />
 

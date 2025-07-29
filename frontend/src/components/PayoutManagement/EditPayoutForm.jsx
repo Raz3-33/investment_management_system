@@ -5,17 +5,26 @@ import { useInvestmentStore } from "../../store/investmentStore"; // To fetch in
 
 export default function EditPayoutForm({ payoutId, closeModal }) {
   const { payouts, updatePayout } = usePayoutStore((state) => state);
-  const { investments, fetchInvestments } = useInvestmentStore((state) => state); // Fetch investments
+  const { investments, fetchInvestments } = useInvestmentStore(
+    (state) => state
+  ); // Fetch investments
 
   // Find the payout to edit
   const payout = payouts.find((p) => p.id === payoutId);
 
-  // Formatting the dueDate for input[type="date"]
-  const formattedDueDate = payout?.dueDate ? new Date(payout.dueDate).toISOString().split('T')[0] : "";
+  // Formatting the dueDate and paidDate for input[type="date"]
+  const formattedDueDate = payout?.dueDate
+    ? new Date(payout.dueDate).toISOString().split("T")[0]
+    : "";
+
+  const formattedPaidDate = payout?.paidDate
+    ? new Date(payout.paidDate).toISOString().split("T")[0]
+    : "";
 
   const [formData, setFormData] = useState({
     investmentId: payout?.investmentId || "",
     dueDate: formattedDueDate, // Format the dueDate for the date input
+    paidDate: formattedPaidDate, // Format the paidDate for the date input
     amountDue: payout?.amountDue || "",
     amountPaid: payout?.amountPaid || "",
     paymentMode: payout?.paymentMode || "",
@@ -68,6 +77,9 @@ export default function EditPayoutForm({ payoutId, closeModal }) {
     if (!formData.paymentMode) {
       return "Payment Mode is required.";
     }
+    if (!formData.paidDate) {
+      return "Paid Date is required.";
+    }
 
     return ""; // No error
   };
@@ -118,6 +130,17 @@ export default function EditPayoutForm({ payoutId, closeModal }) {
         placeholder="Due Date"
         value={formData.dueDate}
         onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+        className="border px-3 py-2 rounded-md w-full"
+      />
+
+      {/* Paid Date */}
+      <input
+        type="date"
+        placeholder="Paid Date"
+        value={formData.paidDate}
+        onChange={(e) =>
+          setFormData({ ...formData, paidDate: e.target.value })
+        }
         className="border px-3 py-2 rounded-md w-full"
       />
 

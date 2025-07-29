@@ -19,7 +19,7 @@ export default function Tabs({ tabs }) {
             key={tab.id}
             id={tab.id}
             label={tab.label}
-            icon={tab.icon}
+            svg={tab.icon}
             onClick={handleTabClick}
             isActive={tab.id === selectedTab}
           />

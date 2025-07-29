@@ -24,17 +24,14 @@ export const createPayoutService = async ({
   investmentId,
   dueDate,
   amountDue,
-  amountPaid, // Add amountPaid field
+  amountPaid,
   paymentMode,
   receiptRef,
   notes,
+  paidDate, // Accept paidDate as parameter
 }) => {
-  console.log(amountPaid, "amountPaidamountPaidamountPaidamountPaid");
-
   // Convert the amountPaid string to a number
   const paidAmount = Number(amountPaid);
-
-  console.log(paidAmount, "paidAmountpaidAmountpaidAmountpaidAmount");
 
   // Ensure the paidAmount is a valid number
   if (isNaN(paidAmount) || paidAmount < 0) {
@@ -42,14 +39,22 @@ export const createPayoutService = async ({
   }
 
   // Convert the dueDate string to a Date object (if it's a valid date string)
-  const dueDateObj = new Date(dueDate); // Ensure this is a valid date object
+  const dueDateObj = new Date(dueDate);
 
   // Check if the dueDate is a valid Date
   if (isNaN(dueDateObj.getTime())) {
     throw new Error("Invalid dueDate format. Please provide a valid date.");
   }
 
-  // Fetch the investment details
+  // Convert the paidDate string to a Date object (if it's a valid date string)
+  const paidDateObj = paidDate ? new Date(paidDate) : null;
+
+  // Check if the paidDate is valid
+  if (paidDate && isNaN(paidDateObj.getTime())) {
+    throw new Error("Invalid paidDate format. Please provide a valid date.");
+  }
+
+  // Fetch the investment details from the database
   const investment = await prisma.investment.findUnique({
     where: { id: investmentId },
     include: {
@@ -61,7 +66,7 @@ export const createPayoutService = async ({
     throw new Error("Investment not found");
   }
 
-  // Calculate the payout amount based on the ROI and payout mode
+  // Assuming you have a function to calculate payout based on ROI and payout mode
   const calculatedAmountDue = calculatePayoutAmount(investment, paymentMode);
 
   // Create the payout entry in the database
@@ -69,15 +74,16 @@ export const createPayoutService = async ({
     data: {
       investmentId,
       dueDate: dueDateObj,
-      amountDue: calculatedAmountDue, // Calculated amount due
-      amountPaid: paidAmount, // Store the valid paid amount
+      amountDue: calculatedAmountDue,
+      amountPaid: paidAmount,
       paymentMode,
       receiptRef,
       notes,
+      paidDate: paidDateObj,
     },
   });
 
-  return payout;
+  return payout; // Return the created payout
 };
 
 // Get all payouts for a specific investment

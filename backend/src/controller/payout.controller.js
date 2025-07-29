@@ -15,20 +15,24 @@ export const createPayout = async (req, res) => {
     paymentMode,
     receiptRef,
     notes,
+    paidDate,  // Added paidDate field
   } = req.body;
 
   try {
+    // Ensure amountPaid is a valid number and handle date formats correctly
     const payout = await createPayoutService({
       investmentId,
       dueDate,
       amountDue,
-      amountPaid, // Add amountPaid field
+      amountPaid, 
       paymentMode,
       receiptRef,
       notes,
+      paidDate, 
     });
     res.status(201).json({ success: true, data: payout });
   } catch (error) {
+    // Handle errors and return them with a 500 status code
     res.status(500).json({ success: false, message: error.message });
   }
 };
