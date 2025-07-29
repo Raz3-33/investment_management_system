@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
+import path from "path";
 
 import sanitizedConfig from "./config.js";
 
@@ -60,9 +61,26 @@ app.use("/api/payouts", payoutsRoutes);
 // settings
 app.use("/api/settings", settingRouter);
 
-app.get("/", (req, res) => {
-  res.send("API is running!");
-});
+// app.get("/", (req, res) => {
+//   res.send("API is running!");
+// });
+
+let dirname = path.resolve();
+
+if (sanitizedConfig.NODE_ENV === "production") {
+  try {
+    app.use(express.static(path.join(dirname, "../frontend", "dist")));
+
+    app.use((req, res) => {
+      res.sendFile(path.resolve(dirname, "../frontend", "dist", "index.html"));
+    });
+  } catch (error) {
+    console.log(
+      error,
+      "errorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerror"
+    );
+  }
+}
 
 app.use(notFound);
 app.use(errorHandler);
