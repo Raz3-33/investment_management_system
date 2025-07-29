@@ -3,7 +3,7 @@ import Button from "../../components/ui/Button.jsx";
 import { useInvestmentStore } from "../../store/investmentStore.js";
 import DataTable from "../../components/ui/table/DataTable.jsx";
 import PaginationControls from "../../components/ui/PaginationContrls.jsx";
-import Modal from "../../components/ui/Modal/Modal.jsx.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import AddInvestmentForm from "../../components/InvestmentManagement/AddInvestmentForm.jsx";
 import EditInvestmentForm from "../../components/InvestmentManagement/EditInvestmentForm.jsx";
 import InvestmentTable from "../../components/ui/table/InvestmentTable.jsx";
