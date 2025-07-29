@@ -4,7 +4,7 @@ import Button from "../../ui/Button";
 import PaginationControls from "../../ui/PaginationContrls";
 import Modal from "../../ui/Modal/Modal";
 import { useBranchStore } from "../../../store/branchStore";
-import ToastNotification from "../../ui/ToastNotification.JSX";
+import ToastNotification from "../../ui/ToastNotification.jsx";
 
 const columns = [
   { key: "name", label: "Branch Name" },
