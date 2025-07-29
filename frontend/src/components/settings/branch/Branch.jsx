@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import DataTable from "../../ui/table/DataTable";
 import Button from "../../ui/Button";
 import PaginationControls from "../../ui/PaginationContrls";
-import Modal from "../../ui/modal/Modal";
+import Modal from "../../ui/Modal/Modal";
 import { useBranchStore } from "../../../store/branchStore";
 import ToastNotification from "../../ui/ToastNotification.JSX";
 
