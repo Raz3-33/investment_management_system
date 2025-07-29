@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import DataTable from "../../components/ui/table/DataTable";
 import Button from "../../components/ui/Button";
 import PaginationControls from "../../components/ui/PaginationContrls";
-import Modal from "../../components/ui/modal/Modal.jsx";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import PermissionSelector from "../../components/roleManagement/permission/PermissionSelector";
 import { useRoleStore } from "../../store/roleStore";
 
