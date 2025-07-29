@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Button from "../../components/ui/Button";
 import { usePayoutStore } from "../../store/payoutStore";
-import Modal from "../../components/ui/modal/Modal";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import EditPayoutForm from "../../components/PayoutManagement/EditPayoutForm";
 import AddPayoutForm from "../../components/PayoutManagement/AddPayoutForm";
 import DataTable from "../../components/ui/table/DataTable";

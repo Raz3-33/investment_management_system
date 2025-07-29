@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import Button from "../../components/ui/Button";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
-import Modal from "../../components/ui/modal/Modal";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import AddInvestmentTypeForm from "../../components/settings/investmentType/AddInvestmentTypeForm";
 import EditInvestmentTypeForm from "../../components/settings/investmentType/EditInvestmentTypeForm";
 import { useSettingStore } from "../../store/settingStore";

@@ -3,7 +3,7 @@ import Button from "../../components/ui/Button";
 
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
-import Modal from "../../components/ui/modal/Modal";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import AddBusinessCategoryForm from "../../components/settings/businessCategory/AddBusinessCategoryForm";
 import EditBusinessCategoryForm from "../../components/settings/businessCategory/EditBusinessCategoryForm";
 import { useSettingStore } from "../../store/settingStore";

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Button from "../../components/ui/Button";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
-import Modal from "../../components/ui/modal/Modal";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
 import AddInvestmentOpportunityForm from "../../components/investmentOpportunityManagement/AddInvestmentOpportunityForm";
 import EditInvestmentOpportunityForm from "../../components/investmentOpportunityManagement/EditInvestmentOpportunityForm";

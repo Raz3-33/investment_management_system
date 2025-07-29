@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/userStore";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
-import Modal from "../../components/ui/modal/Modal";
+import Modal from "../../components/ui/Modal/Modal.jsx";
 import EditUserForm from "../../components/userManagement/EditUser";
 import AddUserForm from "../../components/userManagement/AddUserForm";
 
