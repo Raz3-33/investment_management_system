@@ -206,6 +206,8 @@ model InvestmentOpportunity {
   minAmount    Float
   maxAmount    Float?
   roiPercent   Float
+  turnOverPercentage  Float?
+  turnOverAmount   Float?
   lockInMonths Int
   exitOptions  String?
   payoutMode   String // Monthly, Quarterly, etc.
