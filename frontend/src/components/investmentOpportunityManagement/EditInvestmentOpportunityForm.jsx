@@ -20,6 +20,7 @@ export default function EditInvestmentOpportunityForm({
     (opp) => opp.id === opportunityId
   );
 
+
   const [formData, setFormData] = useState({
     name: opportunity?.name || "",
     description: opportunity?.description || "",
@@ -29,10 +30,15 @@ export default function EditInvestmentOpportunityForm({
     minAmount: opportunity?.minAmount || "",
     maxAmount: opportunity?.maxAmount || "",
     roiPercent: opportunity?.roiPercent || "",
+    turnOverPercentage: opportunity?.turnOverPercentage || "",
+    turnOverAmount: opportunity?.turnOverAmount || "",
     lockInMonths: opportunity?.lockInMonths || "",
     exitOptions: opportunity?.exitOptions || "",
     payoutMode: opportunity?.payoutMode || "",
   });
+
+  console.log(formData,"formDataformDataformData")
+
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
 
@@ -54,6 +60,8 @@ export default function EditInvestmentOpportunityForm({
       !formData.brandName ||
       !formData.minAmount ||
       !formData.roiPercent ||
+      !formData.turnOverAmount ||
+      !formData.turnOverPercentage ||
       !formData.lockInMonths ||
       !formData.exitOptions ||
       !formData.payoutMode
@@ -86,146 +94,212 @@ export default function EditInvestmentOpportunityForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-2">
       {/* Display error message */}
       {errorValidation && (
         <p className="text-red-500 text-sm">{errorValidation}</p>
       )}
 
-      {/* Opportunity Name */}
-      <input
-        type="text"
-        placeholder="Opportunity Name"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+        {/* Opportunity Name */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Opportunity Name</label>
+          <input
+            type="text"
+            placeholder="Opportunity Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* Description */}
-      <input
-        type="text"
-        placeholder="Description"
-        value={formData.description}
-        onChange={(e) =>
-          setFormData({ ...formData, description: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Description */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Description</label>
+          <input
+            type="text"
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* Brand Name */}
-      <input
-        type="text"
-        placeholder="Brand Name"
-        value={formData.brandName}
-        onChange={(e) =>
-          setFormData({ ...formData, brandName: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Brand Name */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Brand Name</label>
+          <input
+            type="text"
+            placeholder="Brand Name"
+            value={formData.brandName}
+            onChange={(e) =>
+              setFormData({ ...formData, brandName: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* Investment Type */}
-      <select
-        value={formData.investmentTypeId}
-        onChange={(e) =>
-          setFormData({ ...formData, investmentTypeId: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Investment Type</option>
-        {investmentTypes?.map((type) => (
-          <option key={type.id} value={type.id}>
-            {type.name}
-          </option>
-        ))}
-      </select>
+        {/* Investment Type */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Investment Type</label>
+          <select
+            value={formData.investmentTypeId}
+            onChange={(e) =>
+              setFormData({ ...formData, investmentTypeId: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          >
+            <option value="">Select Investment Type</option>
+            {investmentTypes?.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* Business Category */}
-      <select
-        value={formData.businessCategoryId}
-        onChange={(e) =>
-          setFormData({ ...formData, businessCategoryId: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Business Category</option>
-        {businessCategories?.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
+        {/* Business Category */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Business Category</label>
+          <select
+            value={formData.businessCategoryId}
+            onChange={(e) =>
+              setFormData({ ...formData, businessCategoryId: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          >
+            <option value="">Select Business Category</option>
+            {businessCategories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* Minimum Amount */}
-      <input
-        type="text"
-        placeholder="Min Amount"
-        value={formData.minAmount}
-        onChange={(e) =>
-          setFormData({ ...formData, minAmount: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Minimum Amount */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Min Amount</label>
+          <input
+            type="text"
+            placeholder="Min Amount"
+            value={formData.minAmount}
+            onChange={(e) =>
+              setFormData({ ...formData, minAmount: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* Maximum Amount */}
-      <input
-        type="text"
-        placeholder="Max Amount"
-        value={formData.maxAmount}
-        onChange={(e) =>
-          setFormData({ ...formData, maxAmount: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Maximum Amount */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Max Amount</label>
+          <input
+            type="text"
+            placeholder="Max Amount"
+            value={formData.maxAmount}
+            onChange={(e) =>
+              setFormData({ ...formData, maxAmount: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* ROI Percentage */}
-      <input
-        type="text"
-        placeholder="ROI Percent"
-        value={formData.roiPercent}
-        onChange={(e) =>
-          setFormData({ ...formData, roiPercent: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* ROI Percentage */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Minimum Gurante %</label>
+          <input
+            type="text"
+            placeholder="Minimum Gurante %"
+            value={formData.roiPercent}
+            onChange={(e) =>
+              setFormData({ ...formData, roiPercent: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* Lock-in Months */}
-      <input
-        type="text"
-        placeholder="Lock-in Months"
-        value={formData.lockInMonths}
-        onChange={(e) =>
-          setFormData({ ...formData, lockInMonths: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Turn over Percentage  */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Turn Over Percentage</label>
+          <input
+            type="text"
+            placeholder="Turn Over Percentage"
+            value={formData.turnOverPercentage}
+            onChange={(e) =>
+              setFormData({ ...formData, turnOverPercentage: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* Exit Options */}
-      <input
-        type="text"
-        placeholder="Exit Options"
-        value={formData.exitOptions}
-        onChange={(e) =>
-          setFormData({ ...formData, exitOptions: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Turn over Amount */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Turn Over Amount</label>
+          <input
+            type="text"
+            placeholder="Turn Over Amount"
+            value={formData.turnOverAmount}
+            onChange={(e) =>
+              setFormData({ ...formData, turnOverAmount: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
 
-      {/* Payout Mode */}
-      <input
-        type="text"
-        placeholder="Payout Mode (Monthly, Quarterly, etc.)"
-        value={formData.payoutMode}
-        onChange={(e) =>
-          setFormData({ ...formData, payoutMode: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+        {/* Lock-in Months */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Lock-in Months</label>
+          <input
+            type="text"
+            placeholder="Lock-in Months"
+            value={formData.lockInMonths}
+            onChange={(e) =>
+              setFormData({ ...formData, lockInMonths: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
+
+        {/* Exit Options */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Exit Options</label>
+          <input
+            type="text"
+            placeholder="Exit Options"
+            value={formData.exitOptions}
+            onChange={(e) =>
+              setFormData({ ...formData, exitOptions: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
+        </div>
+
+        {/* Payout Mode */}
+        <div>
+          <label className="block text-xs font-medium mb-0.5">Payout Mode</label>
+          <select
+            value={formData.payoutMode}
+            onChange={(e) =>
+              setFormData({ ...formData, payoutMode: e.target.value })
+            }
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          >
+            <option value="">Select Payout Mode</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+            <option value="Yearly">Yearly</option>
+          </select>
+        </div>
+      </div>
 
       {/* Submit Button */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-2">
         <Button
           type="submit"
-          className="w-full md:w-auto bg-blue-600 text-white hover:bg-blue-700 transition duration-300"
+          className="w-full md:w-auto h-8 bg-blue-600 text-white hover:bg-blue-700 transition duration-300 text-sm"
         >
           Update Investment Opportunity
         </Button>

@@ -30,6 +30,8 @@ export const createInvestmentOpportunity = async (data) => {
     minAmount,
     maxAmount,
     roiPercent,
+    turnOverPercentage,
+    turnOverAmount,
     lockInMonths,
     brandName,
     exitOptions,
@@ -59,6 +61,8 @@ export const createInvestmentOpportunity = async (data) => {
         maxAmount: maxAmount ? parseFloat(maxAmount) : null,
         roiPercent: parseFloat(roiPercent),
         lockInMonths: parseInt(lockInMonths),
+        turnOverPercentage:parseInt(turnOverPercentage),
+        turnOverAmount:parseInt(turnOverAmount),
         brandName,
         exitOptions,
         payoutMode,
@@ -82,6 +86,8 @@ export const updateInvestmentOpportunity = async (id, data) => {
       maxAmount: data.maxAmount ? parseFloat(data.maxAmount) : null,
       roiPercent: parseFloat(data.roiPercent),
       lockInMonths: parseInt(data.lockInMonths),
+      turnOverPercentage:parseInt(data.turnOverPercentage),
+      turnOverAmount:parseInt(data.turnOverAmount),
     };
 
     const updatedOpportunity = await prisma.investmentOpportunity.update({

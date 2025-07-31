@@ -18,6 +18,8 @@ export default function AddInvestmentOpportunityForm() {
     minAmount: "",
     maxAmount: "",
     roiPercent: "",
+    turnOverPercentage: "",
+    turnOverAmount: "",
     lockInMonths: "",
     exitOptions: "",
     payoutMode: "",
@@ -51,7 +53,10 @@ export default function AddInvestmentOpportunityForm() {
       !formData.roiPercent ||
       !formData.lockInMonths ||
       !formData.exitOptions ||
-      !formData.payoutMode
+      !formData.payoutMode ||
+      !formData.turnOverAmount ||
+      !formData.turnOverPercentage
+
     ) {
       setErrorValidation("All fields are required.");
       return;
@@ -77,6 +82,8 @@ export default function AddInvestmentOpportunityForm() {
         minAmount: "",
         maxAmount: "",
         roiPercent: "",
+        turnOverAmount: "",
+        turnOverPercentage: "",
         lockInMonths: "",
         exitOptions: "",
         payoutMode: "",
@@ -169,9 +176,33 @@ export default function AddInvestmentOpportunityForm() {
         {/* ROI Percentage */}
         <input
           type="text"
-          placeholder="ROI Percent"
+          placeholder="Minimum Gurate %"
           value={formData.roiPercent}
           onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
+
+        {/* Turn Over Percentage */}
+        <input
+          type="text"
+          placeholder="Turn Over Percentage"
+          value={formData.turnOverPercentage}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^0-9.]/g, '');
+            setFormData({ ...formData, turnOverPercentage: value });
+          }}
+          className="border px-3 py-2 rounded-md w-full"
+        />
+
+        {/* Turn Over Amount */}
+        <input
+          type="text"
+          placeholder="Turn Over Amount"
+          value={formData.turnOverAmount}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^0-9.]/g, '');
+            setFormData({ ...formData, turnOverAmount: value });
+          }}
           className="border px-3 py-2 rounded-md w-full"
         />
 
@@ -194,13 +225,16 @@ export default function AddInvestmentOpportunityForm() {
         />
 
         {/* Payout Mode */}
-        <input
-          type="text"
-          placeholder="Payout Mode (Monthly, Quarterly, etc.)"
+        <select
           value={formData.payoutMode}
           onChange={(e) => setFormData({ ...formData, payoutMode: e.target.value })}
           className="border px-3 py-2 rounded-md w-full"
-        />
+        >
+          <option value="">Select Payout Mode</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Yearly">Yearly</option>
+        </select>
 
       </div>
 
