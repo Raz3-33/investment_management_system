@@ -211,7 +211,10 @@ export default function AddInvestmentOpportunityForm() {
           type="text"
           placeholder="Lock-in Months"
           value={formData.lockInMonths}
-          onChange={(e) => setFormData({ ...formData, lockInMonths: e.target.value })}
+          onChange={(e) => {
+            const value = e.target.value.replace(/[^0-9]/g, '');
+            setFormData({ ...formData, lockInMonths: value });
+          }}
           className="border px-3 py-2 rounded-md w-full"
         />
 

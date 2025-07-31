@@ -235,7 +235,7 @@ model Investment {
 
   amount          Float
   date            DateTime
-  roiPercent      Float
+  roiPercent      Float?
   payoutMode      String
   contractStart   DateTime
   contractEnd     DateTime

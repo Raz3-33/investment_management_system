@@ -39,7 +39,7 @@ export const createInvestmentOpportunity = async (data) => {
   } = data;
 
   // Validate that the investment type and business category exist
-  const investmentTypeExists = await prisma.investmentType.findUnique({
+  const investmentTypeExists = await prisma.investmentType.findUnique({ 
     where: { id: investmentTypeId },
   });
   const businessCategoryExists = await prisma.businessCategory.findUnique({
@@ -61,8 +61,8 @@ export const createInvestmentOpportunity = async (data) => {
         maxAmount: maxAmount ? parseFloat(maxAmount) : null,
         roiPercent: parseFloat(roiPercent),
         lockInMonths: parseInt(lockInMonths),
-        turnOverPercentage:parseInt(turnOverPercentage),
-        turnOverAmount:parseInt(turnOverAmount),
+        turnOverPercentage: parseInt(turnOverPercentage),
+        turnOverAmount: parseInt(turnOverAmount),
         brandName,
         exitOptions,
         payoutMode,
@@ -86,8 +86,8 @@ export const updateInvestmentOpportunity = async (id, data) => {
       maxAmount: data.maxAmount ? parseFloat(data.maxAmount) : null,
       roiPercent: parseFloat(data.roiPercent),
       lockInMonths: parseInt(data.lockInMonths),
-      turnOverPercentage:parseInt(data.turnOverPercentage),
-      turnOverAmount:parseInt(data.turnOverAmount),
+      turnOverPercentage: parseInt(data.turnOverPercentage),
+      turnOverAmount: parseInt(data.turnOverAmount),
     };
 
     const updatedOpportunity = await prisma.investmentOpportunity.update({
