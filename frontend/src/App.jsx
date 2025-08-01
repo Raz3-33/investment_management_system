@@ -18,6 +18,7 @@ import InvestmentOpportunityManagement from "./pages/investmentOpportunityManage
 import InvestorManagement from "./pages/investorManagement/InvestorManagement";
 import InvestmentManagement from "./pages/InvestmentManagement/InvestmentManagement";
 import PayoutManagement from "./pages/PayoutManagement/PayoutManagement";
+import SalesManagement from "./pages/salesManagement/salesManagement";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -85,6 +86,11 @@ function App() {
         <Route
           path="/payout_management"
           element={<MainLayout children={<PayoutManagement />} />}
+        />
+
+        <Route
+          path="/sales_management"
+          element={<MainLayout children={<SalesManagement />} />}
         />
 
         {/* <Route

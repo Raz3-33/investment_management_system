@@ -1,4 +1,5 @@
 import { prisma } from "../config/db.js";
+import { calculateInvestorPayout } from "../helper/payout.helper.js";
 
 // Calculate the payout based on the investment details
 const calculatePayoutAmount = (investment, payoutMode) => {
@@ -58,7 +59,7 @@ export const createPayoutService = async ({
   const investment = await prisma.investment.findUnique({
     where: { id: investmentId },
     include: {
-      investor: true,
+      opportunity: true, // Include opportunity to get turnover and MG details
     },
   });
 
@@ -69,22 +70,26 @@ export const createPayoutService = async ({
   // Assuming you have a function to calculate payout based on ROI and payout mode
   const calculatedAmountDue = calculatePayoutAmount(investment, paymentMode);
 
+  // Calculate the payout amount based on total sales for the month
+  const payoutAmount = await calculateInvestorPayout(investment.id, dueDateObj.getMonth() + 1, dueDateObj.getFullYear());
+
   // Create the payout entry in the database
   const payout = await prisma.payout.create({
     data: {
       investmentId,
       dueDate: dueDateObj,
-      amountDue: calculatedAmountDue,
+      amountDue: payoutAmount, // Use the calculated payout amount based on sales
       amountPaid: paidAmount,
       paymentMode,
       receiptRef,
       notes,
-      paidDate: paidDateObj,
+      paidDate: paidDateObj, // Store paidDate
     },
   });
 
   return payout; // Return the created payout
 };
+
 
 // Get all payouts for a specific investment
 export const getPayoutsService = async () => {

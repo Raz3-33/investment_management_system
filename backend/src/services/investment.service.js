@@ -42,7 +42,9 @@ export const createInvestment = async (data) => {
     isNaN(contractEndDate.getTime()) ||
     contractEndDate <= contractStartDate
   ) {
-    throw new Error("Invalid contract dates: Ensure the contract end date is after the start date.");
+    throw new Error(
+      "Invalid contract dates: Ensure the contract end date is after the start date."
+    );
   }
   if (!paymentMethod) {
     throw new Error("Payment Method is required.");
@@ -79,7 +81,6 @@ export const createInvestment = async (data) => {
     throw new Error("Error creating investment: " + error.message);
   }
 };
-
 
 // Get all investments
 export const getAllInvestments = async () => {
@@ -159,7 +160,9 @@ export const updateInvestment = async (id, data) => {
     isNaN(contractEndDate.getTime()) ||
     contractEndDate <= contractStartDate
   ) {
-    throw new Error("Invalid contract dates: Ensure the contract end date is after the start date.");
+    throw new Error(
+      "Invalid contract dates: Ensure the contract end date is after the start date."
+    );
   }
   if (!paymentMethod) {
     throw new Error("Payment Method is required.");
@@ -178,7 +181,7 @@ export const updateInvestment = async (id, data) => {
     const updatedInvestment = await prisma.investment.update({
       where: { id },
       data: {
-        amount: amountFloat, 
+        amount: amountFloat,
         investorId,
         opportunityId,
         roiPercent: roiPercentFloat,
@@ -197,7 +200,6 @@ export const updateInvestment = async (id, data) => {
     throw new Error("Error updating investment: " + error.message);
   }
 };
-
 
 // Delete an investment
 export const deleteInvestment = async (id) => {

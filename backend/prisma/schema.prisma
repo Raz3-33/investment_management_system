@@ -197,20 +197,20 @@ model BusinessCategory {
 }
 
 model InvestmentOpportunity {
-  id           String   @id @default(uuid())
-  name         String
-  brandName    String
-  description  String
-  minAmount    Float
-  maxAmount    Float?
-  roiPercent   Float
-  turnOverPercentage  Float?
-  turnOverAmount   Float?
-  lockInMonths Int
-  exitOptions  String?
-  payoutMode   String // Monthly, Quarterly, etc.
-  isActive     Boolean  @default(true)
-  documents    String[] // Array of file URLs
+  id                 String   @id @default(uuid())
+  name               String
+  brandName          String
+  description        String
+  minAmount          Float
+  maxAmount          Float?
+  roiPercent         Float
+  turnOverPercentage Float?
+  turnOverAmount     Float?
+  lockInMonths       Int
+  exitOptions        String?
+  payoutMode         String // Monthly, Quarterly, etc.
+  isActive           Boolean  @default(true)
+  documents          String[] // Array of file URLs
 
   investmentTypeId String
   investmentType   InvestmentType @relation(fields: [investmentTypeId], references: [id])
@@ -219,6 +219,8 @@ model InvestmentOpportunity {
   businessCategory   BusinessCategory @relation(fields: [businessCategoryId], references: [id])
 
   investments Investment[]
+
+  sales              Sales[]      // Sales data linked to the opportunity
 }
 
 model Investment {
@@ -256,4 +258,14 @@ model Payout {
   notes        String?
 
   investment Investment @relation(fields: [investmentId], references: [id])
+}
+
+
+model Sales {
+  id            String      @id @default(uuid())
+  opportunityId String
+  amount        Float       // Amount of sales for the day
+  date          DateTime    // The date of the sale
+  
+  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
 }
