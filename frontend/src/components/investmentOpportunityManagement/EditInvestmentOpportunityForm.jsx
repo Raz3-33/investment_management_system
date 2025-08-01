@@ -37,7 +37,7 @@ export default function EditInvestmentOpportunityForm({
     payoutMode: opportunity?.payoutMode || "",
   });
 
-  console.log(formData,"formDataformDataformData")
+  console.log(formData, "formDataformDataformData")
 
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
@@ -256,9 +256,10 @@ export default function EditInvestmentOpportunityForm({
             type="text"
             placeholder="Lock-in Months"
             value={formData.lockInMonths}
-            onChange={(e) =>
-              setFormData({ ...formData, lockInMonths: e.target.value })
-            }
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              setFormData({ ...formData, lockInMonths: value });
+            }}
             className="border px-2 py-1 rounded-md w-full text-sm"
           />
         </div>

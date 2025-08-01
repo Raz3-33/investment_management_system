@@ -47,11 +47,12 @@ export default function AddInvestmentForm({ closeModal }) {
       paymentMethod,
     } = formData;
 
+
     if (
       !amount ||
       !investorId ||
       !opportunityId ||
-      !roiPercent ||
+      // !roiPercent ||
       !payoutMode ||
       !contractStart ||
       !contractEnd ||
@@ -64,6 +65,25 @@ export default function AddInvestmentForm({ closeModal }) {
     if (isNaN(amount) || isNaN(roiPercent)) {
       setErrorValidation("Amount and ROI Percent must be numbers.");
       return;
+    }
+
+    // Validate contractEnd date is not less than lock-in months from contractStart
+    const selectedOpportunity = investmentOpportunities.find(
+      (op) => op.id === opportunityId
+    );
+    if (selectedOpportunity && selectedOpportunity.lockInMonths) {
+      const startDate = new Date(contractStart);
+      const endDate = new Date(contractEnd);
+      // Add lockInMonths to startDate
+      const minEndDate = new Date(startDate);
+      minEndDate.setMonth(minEndDate.getMonth() + Number(selectedOpportunity.lockInMonths));
+      // contractEnd should be >= minEndDate
+      if (endDate < minEndDate) {
+        setErrorValidation(
+          `Contract end date must be at least ${selectedOpportunity.lockInMonths} month(s) after contract start date.`
+        );
+        return;
+      }
     }
 
     try {
@@ -87,6 +107,9 @@ export default function AddInvestmentForm({ closeModal }) {
     }
   };
 
+  console.log(investmentOpportunities, "investmentOpportunitiesinvestmentOpportunities")
+
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
@@ -105,7 +128,7 @@ export default function AddInvestmentForm({ closeModal }) {
         </div>
 
         {/* ROI Percentage */}
-        <div>
+        {/* <div>
           <label className="block mb-1">ROI Percentage</label>
           <input
             type="number"
@@ -114,7 +137,7 @@ export default function AddInvestmentForm({ closeModal }) {
             onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           />
-        </div>
+        </div> */}
 
         {/* Investor */}
         <div>

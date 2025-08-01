@@ -26,9 +26,9 @@ export const createInvestment = async (data) => {
   if (isNaN(amountFloat) || amountFloat <= 0) {
     throw new Error("Invalid amount: It should be a positive number.");
   }
-  if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
-    throw new Error("Invalid ROI Percent: It should be a positive number.");
-  }
+  // if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
+  //   throw new Error("Invalid ROI Percent: It should be a positive number.");
+  // }
   if (!investorId || !opportunityId) {
     throw new Error("Investor ID and Opportunity ID are required.");
   }
@@ -60,6 +60,7 @@ export const createInvestment = async (data) => {
 
   try {
     // Create a new investment record in the database
+    console.log(investorId,"investorIdinvestorIdinvestorId")
     const newInvestment = await prisma.investment.create({
       data: {
         amount: amountFloat,
