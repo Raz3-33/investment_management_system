@@ -26,24 +26,59 @@ export const calculateInvestorPayout = async (investmentId, month, year) => {
 
   if (!investment) throw new Error("Investment not found");
 
+  console.log(investment,"investmentinvestmentinvestmentinvestment");
+  
   const opportunity = investment.opportunity;
 
   // Calculate total sales for the opportunity in the given month
   const totalSales = await calculateTotalSales(opportunity.id, month, year);
 
-  // Check if the total sales reached the turnover amount
+  console.log(totalSales,"totalSalestotalSalestotalSalestotalSalestotalSales");
+  
+
+  // Determine how many days are left in the month (for partial month calculation)
+  const today = new Date();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const daysLeftInMonth = daysInMonth - today.getDate();
+
   let payoutAmount = 0;
   let payoutPercentage = 0;
 
-  // If total sales are greater than or equal to the turnover amount, calculate turnover percentage payout
+  // Check if the total sales reached the turnover amount
   if (totalSales >= (opportunity.turnOverAmount || 0)) {
     payoutPercentage = opportunity.turnOverPercentage || 0;
     payoutAmount = (payoutPercentage / 100) * totalSales; // Payout based on turnover percentage
   } else {
-    // Otherwise, use MG percentage
     payoutPercentage = opportunity.roiPercent || 0;
-    payoutAmount = (payoutPercentage / 100) * totalSales; // Payout based on MG percentage
+    payoutAmount = (payoutPercentage / 100) * investment.amount; // Payout based on MG percentage
   }
+
+  // If the payout mode is monthly, calculate based on the days left in the month
+  if (investment.payoutMode === "Monthly") {
+    console.log(daysInMonth,"dailyPayoutdailyPayoutdailyPayoutdailyPayoutdailyPayout");
+    console.log(payoutAmount,"payoutAmountpayoutAmountpayoutAmountpayoutAmountpayoutAmount");
+
+
+    const dailyPayout = payoutAmount / daysInMonth; // Calculate daily payout
+    console.log(dailyPayout,"dailyPayoutdailyPayoutdailyPayoutdailyPayoutdailyPayout");
+    
+    payoutAmount = dailyPayout * daysLeftInMonth; // Multiply by the number of days left
+  } 
+  // If the payout mode is quarterly
+  else if (investment.payoutMode === "Quarterly") {
+    const daysInQuarter = 90; // Approximation of quarter days
+    const dailyPayout = payoutAmount / daysInQuarter;
+    const daysLeftInQuarter = 90 - ((today.getDate() + (month - 1) * 30) % 90);
+    payoutAmount = dailyPayout * daysLeftInQuarter;
+  }
+  // If the payout mode is yearly
+  else if (investment.payoutMode === "Yearly") {
+    const daysInYear = 365; // Approximation of year days
+    const dailyPayout = payoutAmount / daysInYear;
+    const daysLeftInYear = 365 - today.getDay();
+    payoutAmount = dailyPayout * daysLeftInYear;
+  }
+console.log(payoutAmount,"payoutAmountpayoutAmountpayoutAmountpayoutAmountpayoutAmount");
 
   return payoutAmount;
 };

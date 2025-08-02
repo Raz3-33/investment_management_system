@@ -21,6 +21,7 @@ const calculatePayoutAmount = (investment, payoutMode) => {
   return amountDue;
 };
 
+// Create payout entry
 export const createPayoutService = async ({
   investmentId,
   dueDate,
@@ -67,29 +68,29 @@ export const createPayoutService = async ({
     throw new Error("Investment not found");
   }
 
-  // Assuming you have a function to calculate payout based on ROI and payout mode
-  const calculatedAmountDue = calculatePayoutAmount(investment, paymentMode);
-
-  // Calculate the payout amount based on total sales for the month
-  const payoutAmount = await calculateInvestorPayout(investment.id, dueDateObj.getMonth() + 1, dueDateObj.getFullYear());
+  // Calculate the payout amount based on the total sales for the month
+  const payoutAmount = await calculateInvestorPayout(
+    investment.id,
+    dueDateObj.getMonth() + 1,
+    dueDateObj.getFullYear()
+  );
 
   // Create the payout entry in the database
   const payout = await prisma.payout.create({
     data: {
       investmentId,
       dueDate: dueDateObj,
-      amountDue: payoutAmount, // Use the calculated payout amount based on sales
+      amountDue: payoutAmount,
       amountPaid: paidAmount,
       paymentMode,
       receiptRef,
       notes,
-      paidDate: paidDateObj, // Store paidDate
+      paidDate: paidDateObj,
     },
   });
 
-  return payout; // Return the created payout
+  return payout;
 };
-
 
 // Get all payouts for a specific investment
 export const getPayoutsService = async () => {
