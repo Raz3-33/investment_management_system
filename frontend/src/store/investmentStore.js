@@ -32,7 +32,7 @@ export const useInvestmentStore = create((set) => ({
     try {
       const response = await api.post("/investments", investmentData); // Send data to backend
       set({
-        investments: [...set.getState().investments, response.data.data], // Add new investment to state
+        // investments: [...set.getState().investments, response.data.data], // Add new investment to state
         investmentAdded: response.data.data,
         loading: false,
       });
@@ -72,9 +72,9 @@ export const useInvestmentStore = create((set) => ({
     try {
       await api.delete(`/investments/${id}`); // Send request to delete investment
       set({
-        investments: set
-          .getState()
-          .investments.filter((investment) => investment.id !== id), // Remove investment from state
+        // investments: set
+        //   .getState()
+        //   .investments.filter((investment) => investment.id !== id), // Remove investment from state
         investmentDeleted: id,
         loading: false,
       });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useMemo } from "react";
 import Button from "../../components/ui/Button.jsx";
 import { useInvestmentStore } from "../../store/investmentStore.js";
 import DataTable from "../../components/ui/table/DataTable.jsx";
@@ -24,7 +24,6 @@ const columns = [
   { key: "actions", label: "Actions", isAction: true },
 ];
 
-
 export default function InvestmentManagement() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,21 +32,37 @@ export default function InvestmentManagement() {
   const [editMode, setEditMode] = useState(false);
   const [editingInvestmentId, setEditingInvestmentId] = useState(null);
 
-  const { investments, fetchInvestments, loading, deleteInvestment } = useInvestmentStore((state) => state);
+  const {
+    investments,
+    fetchInvestments,
+    loading,
+    deleteInvestment,
+    investmentAdded,
+    investmentDeleted
+  } = useInvestmentStore((state) => state);
+
+
+  console.log(investmentAdded,"investmentAddedinvestmentAdded")
 
   useEffect(() => {
     fetchInvestments();
-  }, [fetchInvestments]);
+  }, [fetchInvestments, investmentAdded,investmentDeleted]);
 
   const handleDelete = async (id) => {
     await deleteInvestment(id);
   };
 
-  const filteredRows = investments.filter(
-    (row) =>
-      (row?.investor?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (row?.amount?.toString() || "").includes(search.toLowerCase())
-  );
+  const filteredRows = useMemo(() => {
+    if (investmentAdded) {
+      setIsModalOpen(false);
+    }
+    return investments.filter(
+      (row) =>
+        (row?.investor?.name?.toLowerCase() || "").includes(
+          search.toLowerCase()
+        ) || (row?.amount?.toString() || "").includes(search.toLowerCase())
+    );
+  }, [search, investments, investmentAdded,investmentDeleted]);
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const paginatedRows = filteredRows.slice(
@@ -55,8 +70,11 @@ export default function InvestmentManagement() {
     currentPage * rowsPerPage
   );
 
-  console.log(paginatedRows[0]?.investor.name,"paginatedRowspaginatedRowspaginatedRowspaginatedRowspaginatedRows");
-  
+  console.log(
+    paginatedRows[0]?.investor.name,
+    "paginatedRowspaginatedRowspaginatedRowspaginatedRowspaginatedRows"
+  );
+
   return (
     <main className="grow">
       <div className="p-4">
@@ -123,7 +141,10 @@ export default function InvestmentManagement() {
       >
         <div className="space-y-4">
           {editMode ? (
-            <EditInvestmentForm investmentId={editingInvestmentId} closeModal={() => setIsModalOpen(false)} />
+            <EditInvestmentForm
+              investmentId={editingInvestmentId}
+              closeModal={() => setIsModalOpen(false)}
+            />
           ) : (
             <AddInvestmentForm closeModal={() => setIsModalOpen(false)} />
           )}

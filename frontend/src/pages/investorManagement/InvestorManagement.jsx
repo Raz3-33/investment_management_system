@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useMemo } from "react";
 import Button from "../../components/ui/Button";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
@@ -42,11 +42,16 @@ export default function InvestorManagement() {
     await deleteInvestor(id);
   };
 
-  const filteredRows = investors.filter(
-    (row) =>
-      row?.name.toLowerCase().includes(search.toLowerCase()) ||
-      row?.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredRows = useMemo(() => {
+    if (investorAdd) {
+      setIsModalOpen(false);
+    }
+    return investors.filter(
+      (row) =>
+        row?.name.toLowerCase().includes(search.toLowerCase()) ||
+        row?.email.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search, investors, investorAdd,updateInvestor]);
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const paginatedRows = filteredRows.slice(

@@ -6,6 +6,8 @@ export const useSettingStore = create((set) => ({
   businessCategories: [],
   investmentTypes: [],
   businessCategoriesAdded:null,
+  investmentTypesAdded:null,
+  updateInvestmentTypes:null,
   loading: false,
   error: null,
 
@@ -63,7 +65,8 @@ export const useSettingStore = create((set) => ({
     try {
       const res = await api.post("/settings/investment-types", newType); // Adjust route
       set({
-        investmentTypes: [...set.getState().investmentTypes, res.data?.data], // Add to state
+        // investmentTypes: [...set.getState().investmentTypes, res.data?.data], // Add to state
+        investmentTypesAdded:res.data?.data,
       });
     } catch (err) {
       set({
@@ -95,9 +98,10 @@ export const useSettingStore = create((set) => ({
     try {
       const res = await api.put(`/settings/investment-types/${id}`, updatedType); // Adjust route
       set({
-        investmentTypes: set.getState().investmentTypes.map((type) =>
-          type.id === id ? res.data?.data : type
-        ),
+        // investmentTypes: set.getState().investmentTypes.map((type) =>
+        //   type.id === id ? res.data?.data : type
+        // ),
+        updateInvestmentTypes:res.data?.data
       });
     } catch (err) {
       set({

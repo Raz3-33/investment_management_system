@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Button from "../../components/ui/Button";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
@@ -30,6 +30,8 @@ export default function InvestmentOpportunityManagement() {
     fetchInvestmentOpportunities,
     loading,
     deleteInvestmentOpportunity,
+    addInvestmentOppurtunities,
+    
   } = useInvestmentOpportunityStore((state) => state);
 
   useEffect(() => {
@@ -38,17 +40,23 @@ export default function InvestmentOpportunityManagement() {
     fetchInvestmentOpportunities,
     investmentOpportunityUpdate,
     investmentOpportunityDelete,
+    addInvestmentOppurtunities,
   ]);
 
   const handleDelete = async (id) => {
     await deleteInvestmentOpportunity(id);
   };
 
-  const filteredRows = investmentOpportunities.filter(
-    (row) =>
-      (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (row?.description?.toLowerCase() || "").includes(search.toLowerCase())
-  );
+  const filteredRows = useMemo(() => {
+    if (addInvestmentOppurtunities) {
+      setIsModalOpen(false);
+    }
+    return investmentOpportunities.filter(
+      (row) =>
+        (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (row?.description?.toLowerCase() || "").includes(search.toLowerCase())
+    );
+  }, [search, investmentOpportunities, addInvestmentOppurtunities]);
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const paginatedRows = filteredRows.slice(

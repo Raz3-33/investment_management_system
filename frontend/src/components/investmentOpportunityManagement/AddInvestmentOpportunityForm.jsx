@@ -176,7 +176,7 @@ export default function AddInvestmentOpportunityForm() {
         {/* ROI Percentage */}
         <input
           type="text"
-          placeholder="Minimum Gurate %"
+          placeholder="Minimum Gurante %"
           value={formData.roiPercent}
           onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
           className="border px-3 py-2 rounded-md w-full"

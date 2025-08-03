@@ -3,6 +3,7 @@ import { api } from "../services/api"; // Your API service
 
 export const useInvestmentOpportunityStore = create((set) => ({
   investmentOpportunities: [],
+  addInvestmentOppurtunities:null,
   investmentOpportunityUpdate: null,
   investmentOpportunityDelete: null,
   loading: false,
@@ -30,10 +31,11 @@ export const useInvestmentOpportunityStore = create((set) => ({
     try {
       const res = await api.post("/investmentOpportunity", newOpportunity);
       set({
-        investmentOpportunities: [
-          ...set.getState().investmentOpportunities,
-          res.data?.data,
-        ],
+        // investmentOpportunities: [
+        //   ...set.getState().investmentOpportunities,
+        //   res.data?.data,
+        // ],
+        addInvestmentOppurtunities:res.data?.data,
         loading: false,
       });
     } catch (err) {

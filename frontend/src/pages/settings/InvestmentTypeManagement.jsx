@@ -24,25 +24,33 @@ export default function InvestmentTypeManagement() {
   const {
     investmentTypes,
     fetchInvestmentTypes,
+    investmentTypesAdded,
     loading,
     deleteInvestmentType,
+    updateInvestmentTypes
   } = useSettingStore((state) => state);
+
+
+  console.log(updateInvestmentTypes,"updateInvestmentTypeupdateInvestmentType")
 
   useEffect(() => {
     fetchInvestmentTypes();
-  }, [fetchInvestmentTypes]);
+  }, [fetchInvestmentTypes,investmentTypesAdded,updateInvestmentTypes]);
 
   const handleDelete = async (id) => {
     await deleteInvestmentType(id);
   };
 
   const filteredRows = useMemo(() => {
+    if (investmentTypesAdded) {
+      setIsModalOpen(false);
+    }
     return investmentTypes?.filter(
       (row) =>
         (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
         (row?.description?.toLowerCase() || "").includes(search.toLowerCase())
     );
-  }, [search, investmentTypes]);
+  }, [search, investmentTypes,investmentTypesAdded,updateInvestmentTypes]);
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const paginatedRows = useMemo(() => {
