@@ -97,14 +97,14 @@ export default function SalesManagement({ opportunityId }) {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    setEditMode(true);
-                    setEditingSalesId(row.id);
-                    setIsModalOpen(true);
+                   alert("Under Development")
                   }}
                 >
                   Edit
                 </Button>
-                <Button variant="danger" onClick={() => handleDelete(row.id)}>
+                {/* <Button variant="danger" onClick={() => handleDelete(row.id)}> */}
+                <Button variant="danger" onClick={() => alert("Under Development")}>
+                  
                   Delete
                 </Button>
               </>
