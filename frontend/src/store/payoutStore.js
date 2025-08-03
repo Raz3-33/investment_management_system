@@ -5,6 +5,7 @@ export const usePayoutStore = create((set) => ({
   payouts: [],
   addPayouts: null,
   editPayouts: null,
+  deletePayout:null,
   loading: false, // Loading state
   error: null, // Error state
 
@@ -54,7 +55,7 @@ export const usePayoutStore = create((set) => ({
     try {
       await api.delete(`/payouts/${payoutId}`);
       set({
-        payouts: state.payouts.filter((payout) => payout.id !== payoutId),
+        deletePayout: response?.data?.data,
         loading: false,
       });
     } catch (error) {

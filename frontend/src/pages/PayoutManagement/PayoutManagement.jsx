@@ -28,12 +28,14 @@ export default function PayoutManagement({ investmentId }) {
   const [editingPayoutId, setEditingPayoutId] = useState(null);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetchPayouts(investmentId);
-  }, [fetchPayouts, investmentId]);
+  console.log(addPayouts,"addPayoutsaddPayouts")
 
   useEffect(() => {
-    if ((addPayouts, editPayouts)) {
+    fetchPayouts(investmentId);
+  }, [fetchPayouts, addPayouts, editPayouts, deletePayout, investmentId]);
+
+  useEffect(() => {
+    if (addPayouts||editPayouts) {
       setIsModalOpen(false);
     }
   }, [addPayouts, editPayouts]);
