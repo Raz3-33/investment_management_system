@@ -5,7 +5,6 @@ export const createInvestment = async (data) => {
     amount,
     investorId,
     opportunityId,
-    roiPercent,
     payoutMode,
     contractStart,
     contractEnd,
@@ -14,21 +13,17 @@ export const createInvestment = async (data) => {
     status,
   } = data;
 
-  // Convert amount and roiPercent to proper types
+  // Convert amount to proper type
   const amountFloat = parseFloat(amount);
-  const roiPercentFloat = parseFloat(roiPercent);
 
   // Ensure the dates are valid Date objects
-  const contractStartDate = new Date(contractStart); // Convert to Date object
-  const contractEndDate = new Date(contractEnd); // Convert to Date object
+  const contractStartDate = new Date(contractStart);
+  const contractEndDate = new Date(contractEnd);
 
   // Validate input data
   if (isNaN(amountFloat) || amountFloat <= 0) {
     throw new Error("Invalid amount: It should be a positive number.");
   }
-  // if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
-  //   throw new Error("Invalid ROI Percent: It should be a positive number.");
-  // }
   if (!investorId || !opportunityId) {
     throw new Error("Investor ID and Opportunity ID are required.");
   }
@@ -59,21 +54,21 @@ export const createInvestment = async (data) => {
   }
 
   try {
-    // Create a new investment record in the database
-    console.log(investorId,"investorIdinvestorIdinvestorId")
+    console.log(investorId, "investorIdinvestorIdinvestorId");
+
+    // Create a new investment record in the database WITHOUT roiPercent
     const newInvestment = await prisma.investment.create({
       data: {
         amount: amountFloat,
-        investorId,
-        opportunityId,
-        roiPercent: roiPercentFloat,
+        investorId: investorId,
+        opportunityId: opportunityId,
         payoutMode,
-        contractStart: contractStartDate, // Store as Date object
-        contractEnd: contractEndDate, // Store as Date object
+        contractStart: contractStartDate,
+        contractEnd: contractEndDate,
         paymentMethod,
         agreementSigned,
         status,
-        date: new Date(), // Assuming this is the current date when creating the investment
+        date: new Date(),
       },
     });
 
@@ -124,7 +119,7 @@ export const updateInvestment = async (id, data) => {
     amount,
     investorId,
     opportunityId,
-    roiPercent,
+    // roiPercent,
     payoutMode,
     contractStart,
     contractEnd,
@@ -135,7 +130,7 @@ export const updateInvestment = async (id, data) => {
 
   // Convert amount and roiPercent to proper types
   const amountFloat = parseFloat(amount);
-  const roiPercentFloat = parseFloat(roiPercent);
+  // const roiPercentFloat = parseFloat(roiPercent);
 
   // Ensure the dates are valid Date objects
   const contractStartDate = new Date(contractStart); // Convert to Date object
@@ -145,9 +140,9 @@ export const updateInvestment = async (id, data) => {
   if (isNaN(amountFloat) || amountFloat <= 0) {
     throw new Error("Invalid amount: It should be a positive number.");
   }
-  if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
-    throw new Error("Invalid ROI Percent: It should be a positive number.");
-  }
+  // if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
+  //   throw new Error("Invalid ROI Percent: It should be a positive number.");
+  // }
   if (!investorId || !opportunityId) {
     throw new Error("Investor ID and Opportunity ID are required.");
   }
@@ -185,7 +180,7 @@ export const updateInvestment = async (id, data) => {
         amount: amountFloat,
         investorId,
         opportunityId,
-        roiPercent: roiPercentFloat,
+        // roiPercent: roiPercentFloat,
         payoutMode,
         contractStart: contractStartDate, // Store as Date object
         contractEnd: contractEndDate, // Store as Date object

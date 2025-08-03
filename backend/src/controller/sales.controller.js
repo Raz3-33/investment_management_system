@@ -34,10 +34,10 @@ export const createSales = async (req, res) => {
 
 // Get sales by opportunity
 export const getSales = async (req, res) => {
-  const { opportunityId } = req.params;
+  const { salesId } = req.params;
 
   try {
-    const sales = await getSalesService(opportunityId);
+    const sales = await getSalesService(salesId);
     res.status(200).json({ success: true, data: sales });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -59,10 +59,15 @@ export const getAllSales = async (req, res) => {
 // Update sales entry
 export const updateSales = async (req, res) => {
   const { salesId } = req.params;
-  const { amount, date } = req.body;
+  const { opportunityId, amount, date, paymentMode } = req.body;
 
   try {
-    const updatedSales = await updateSalesService(salesId, { amount, date });
+    const updatedSales = await updateSalesService(salesId, {
+      opportunityId,
+      amount,
+      date,
+      paymentMode,
+    });
     res.status(200).json({ success: true, data: updatedSales });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

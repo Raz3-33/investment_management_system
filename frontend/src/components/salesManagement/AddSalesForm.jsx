@@ -5,7 +5,7 @@ import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity
 
 const AddSalesForm = ({ closeModal }) => {
   const { addSales } = useSalesStore((state) => state);
-  const { investmentOpportunities, fetchInvestmentOpportunities } = useInvestmentOpportunityStore((state) => state); // Get investment opportunities
+  const { investmentOpportunities, fetchInvestmentOpportunities } = useInvestmentOpportunityStore((state) => state);
 
   const [formData, setFormData] = useState({
     opportunityId: "", // Track selected opportunity
@@ -16,7 +16,7 @@ const AddSalesForm = ({ closeModal }) => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchInvestmentOpportunities(); // Fetch investment opportunities when the form is loaded
+    fetchInvestmentOpportunities();
   }, [fetchInvestmentOpportunities]);
 
   const handleSubmit = async (e) => {

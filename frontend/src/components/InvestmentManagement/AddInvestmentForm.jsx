@@ -23,6 +23,7 @@ export default function AddInvestmentForm({ closeModal }) {
   });
 
   const [errorValidation, setErrorValidation] = useState("");
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
 
   useEffect(() => {
     fetchInvestors();
@@ -32,6 +33,14 @@ export default function AddInvestmentForm({ closeModal }) {
   useEffect(() => {
     if (error) setErrorValidation(error);
   }, [error]);
+
+  const handleOpportunityChange = (e) => {
+    const selectedOp = investmentOpportunities.find(
+      (op) => op.id === e.target.value
+    );
+    setSelectedOpportunity(selectedOp); // Set the selected opportunity
+    setFormData({ ...formData, opportunityId: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,12 +56,10 @@ export default function AddInvestmentForm({ closeModal }) {
       paymentMethod,
     } = formData;
 
-
     if (
       !amount ||
       !investorId ||
       !opportunityId ||
-      // !roiPercent ||
       !payoutMode ||
       !contractStart ||
       !contractEnd ||
@@ -67,17 +74,20 @@ export default function AddInvestmentForm({ closeModal }) {
       return;
     }
 
+    // Validate if the amount is greater than minAmount in the selected opportunity
+    if (selectedOpportunity && amount < selectedOpportunity.minAmount) {
+      setErrorValidation(
+        `Amount should be greater than the minimum amount of ${selectedOpportunity.minAmount}`
+      );
+      return;
+    }
+
     // Validate contractEnd date is not less than lock-in months from contractStart
-    const selectedOpportunity = investmentOpportunities.find(
-      (op) => op.id === opportunityId
-    );
     if (selectedOpportunity && selectedOpportunity.lockInMonths) {
       const startDate = new Date(contractStart);
       const endDate = new Date(contractEnd);
-      // Add lockInMonths to startDate
       const minEndDate = new Date(startDate);
       minEndDate.setMonth(minEndDate.getMonth() + Number(selectedOpportunity.lockInMonths));
-      // contractEnd should be >= minEndDate
       if (endDate < minEndDate) {
         setErrorValidation(
           `Contract end date must be at least ${selectedOpportunity.lockInMonths} month(s) after contract start date.`
@@ -107,9 +117,6 @@ export default function AddInvestmentForm({ closeModal }) {
     }
   };
 
-  console.log(investmentOpportunities, "investmentOpportunitiesinvestmentOpportunities")
-
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
@@ -126,18 +133,6 @@ export default function AddInvestmentForm({ closeModal }) {
             className="border px-3 py-2 rounded-md w-full"
           />
         </div>
-
-        {/* ROI Percentage */}
-        {/* <div>
-          <label className="block mb-1">ROI Percentage</label>
-          <input
-            type="number"
-            placeholder="ROI %"
-            value={formData.roiPercent}
-            onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
-          />
-        </div> */}
 
         {/* Investor */}
         <div>
@@ -161,7 +156,7 @@ export default function AddInvestmentForm({ closeModal }) {
           <label className="block mb-1">Investment Opportunity</label>
           <select
             value={formData.opportunityId}
-            onChange={(e) => setFormData({ ...formData, opportunityId: e.target.value })}
+            onChange={handleOpportunityChange}
             className="border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Opportunity</option>

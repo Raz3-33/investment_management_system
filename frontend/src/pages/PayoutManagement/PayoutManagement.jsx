@@ -91,7 +91,11 @@ export default function PayoutManagement({ investmentId }) {
           <>
             <DataTable
               columns={columns}
-              rows={payouts}
+              rows={payouts.map((p) => ({
+                ...p,
+                amountDue:
+                  p.amountDue != null ? Number(p.amountDue).toFixed(2) : "", // rounds to 2 decimals
+              }))}
               renderActions={renderActions}
             />
           </>

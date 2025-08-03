@@ -10,7 +10,7 @@ const columns = [
   { key: "opportunityName", label: "Opportunity Name" },
   { key: "date", label: "Date" },
   { key: "amount", label: "Amount" },
-  { key: "paymentMode", label: "Payment Mode" },
+  { key: "payoutMode", label: "Payout Mode" },
   { key: "actions", label: "Actions", isAction: true },
 ];
 
@@ -53,6 +53,14 @@ export default function SalesManagement({ opportunityId }) {
 
   const formatDate = (date) => new Date(date).toLocaleDateString(); // Format date
 
+  const tableRows = (allSales || []).map((row) => ({
+    ...row,
+    opportunityName: row.opportunity?.name || "Unknown Opportunity",
+    payoutMode: row.opportunity?.payoutMode || "—",
+    date: formatDate(row.date),
+    amount: row.amount?.toLocaleString("en-IN"),
+  }));
+
   return (
     <main className="grow">
       <div className="p-4">
@@ -83,7 +91,7 @@ export default function SalesManagement({ opportunityId }) {
         ) : (
           <DataTable
             columns={columns}
-            rows={allSales ? allSales : []}
+            rows={tableRows}
             renderActions={(row) => (
               <>
                 <Button

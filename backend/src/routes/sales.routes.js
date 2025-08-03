@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/", verifyToken, createSales);
 
 // Get all sales for an opportunity
-router.get("/:opportunityId", verifyToken, getSales);
+router.get("/:salesId", verifyToken, getSales);
 
 // Get all sales (without filtering by opportunity)
 router.get("/", verifyToken, getAllSales);  // New route to fetch all sales

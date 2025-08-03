@@ -225,11 +225,14 @@ model InvestmentOpportunity {
 
 model Investment {
   id            String  @id @default(uuid())
-  investorId    String
+  
+  investorId String
+  investor   Investor @relation(fields: [investorId], references: [id])
+
   opportunityId String
   createdById   String?
 
-  investor    Investor              @relation(fields: [investorId], references: [id])
+  // investor    Investor              @relation(fields: [investorId], references: [id])
   opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
   createdBy   User?                 @relation("UserInvestments", fields: [createdById], references: [id])
 

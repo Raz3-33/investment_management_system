@@ -14,9 +14,9 @@ export const createSalesService = async ({ opportunityId, amount, date }) => {
 };
 
 // Get sales by opportunity
-export const getSalesService = async (opportunityId) => {
-  const sales = await prisma.sales.findMany({
-    where: { opportunityId },
+export const getSalesService = async (salesId) => {
+  const sales = await prisma.sales.findUnique({
+    where: { id:salesId },
   });
 
   return sales;
@@ -34,6 +34,7 @@ export const getAllSalesService = async () => {
             name: true,
             brandName: true,
             description: true,
+            payoutMode: true,
           },
         },
       },
