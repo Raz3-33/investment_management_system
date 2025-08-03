@@ -25,25 +25,29 @@ export default function BusinessCategoryManagement() {
   const {
     businessCategories,
     fetchBusinessCategories,
+    businessCategoriesAdded,
     loading,
     deleteBusinessCategory,
   } = useSettingStore((state) => state);
 
   useEffect(() => {
     fetchBusinessCategories();
-  }, [fetchBusinessCategories]);
+  }, [fetchBusinessCategories,businessCategoriesAdded]);
 
   const handleDelete = async (id) => {
     await deleteBusinessCategory(id);
   };
 
   const filteredRows = useMemo(() => {
+    if (businessCategoriesAdded) {
+      setIsModalOpen(false);
+    }
     return businessCategories?.filter(
       (row) =>
         (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
         (row?.description?.toLowerCase() || "").includes(search.toLowerCase())
     );
-  }, [search, businessCategories]);
+  }, [search, businessCategories, businessCategoriesAdded]);
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const paginatedRows = useMemo(() => {

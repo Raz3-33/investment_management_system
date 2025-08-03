@@ -5,6 +5,7 @@ export const useSettingStore = create((set) => ({
   // State management for both businessCategory and investmentType
   businessCategories: [],
   investmentTypes: [],
+  businessCategoriesAdded:null,
   loading: false,
   error: null,
 
@@ -47,7 +48,7 @@ export const useSettingStore = create((set) => ({
     try {
       const res = await api.post("/settings/business-categories", newCategory); // Adjust route
       set({
-        businessCategories: [...set.getState().businessCategories, res.data?.data], // Add to state
+        businessCategoriesAdded: res.data?.data, // Add to state
       });
     } catch (err) {
       set({

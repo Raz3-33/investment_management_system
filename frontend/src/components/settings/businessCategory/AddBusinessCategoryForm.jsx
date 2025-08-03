@@ -13,6 +13,7 @@ export default function AddBusinessCategoryForm() {
   const { addBusinessCategory, error, businessCategories } = useSettingStore(
     (state) => state
   );
+  
 
   useEffect(() => {
     if (error) {
