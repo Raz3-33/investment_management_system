@@ -115,60 +115,7 @@ const tabs = [
     ),
     content: <InvestmentTypeManagement />,
   },
-  {
-    id: "contacts",
-    label: "Contacts",
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* <!-- Profile circle --> */}
-        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5" />
-
-        {/* <!-- Body shape --> */}
-        <path
-          d="M4 20c0-3.31 3.58-6 8-6s8 2.69 8 6"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-
-        {/* <!-- Address book lines --> */}
-        <line
-          x1="20"
-          y1="4"
-          x2="20"
-          y2="6"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-        <line
-          x1="20"
-          y1="9"
-          x2="20"
-          y2="11"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-        <line
-          x1="20"
-          y1="14"
-          x2="20"
-          y2="16"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
-    ),
-    content: <div>This is the Contacts tab content.</div>,
-  },
+  
 ];
 
 export default function Settings() {

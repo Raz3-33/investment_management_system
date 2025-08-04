@@ -10,6 +10,7 @@ export const createInvestment = async (data) => {
     contractEnd,
     paymentMethod,
     agreementSigned,
+    coolOffPeriod,
     status,
   } = data;
 
@@ -54,8 +55,6 @@ export const createInvestment = async (data) => {
   }
 
   try {
-    console.log(investorId, "investorIdinvestorIdinvestorId");
-
     // Create a new investment record in the database WITHOUT roiPercent
     const newInvestment = await prisma.investment.create({
       data: {
@@ -67,6 +66,7 @@ export const createInvestment = async (data) => {
         contractEnd: contractEndDate,
         paymentMethod,
         agreementSigned,
+        coolOffPeriod,
         status,
         date: new Date(),
       },
@@ -126,6 +126,7 @@ export const updateInvestment = async (id, data) => {
     paymentMethod,
     agreementSigned,
     status,
+    coolOffPeriod,
   } = data;
 
   // Convert amount and roiPercent to proper types
@@ -187,6 +188,7 @@ export const updateInvestment = async (id, data) => {
         paymentMethod,
         agreementSigned,
         status,
+        coolOffPeriod,
         date: new Date(), // Assuming this is the current date when updating the investment
       },
     });

@@ -20,7 +20,6 @@ export default function EditInvestmentOpportunityForm({
     (opp) => opp.id === opportunityId
   );
 
-
   const [formData, setFormData] = useState({
     name: opportunity?.name || "",
     description: opportunity?.description || "",
@@ -35,10 +34,10 @@ export default function EditInvestmentOpportunityForm({
     lockInMonths: opportunity?.lockInMonths || "",
     exitOptions: opportunity?.exitOptions || "",
     payoutMode: opportunity?.payoutMode || "",
+    renewalFee: opportunity?.renewalFee || "",
   });
 
-  console.log(formData, "formDataformDataformData")
-
+  console.log(formData, "formDataformDataformData");
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
 
@@ -60,11 +59,12 @@ export default function EditInvestmentOpportunityForm({
       !formData.brandName ||
       !formData.minAmount ||
       !formData.roiPercent ||
-      !formData.turnOverAmount ||
+      // !formData.turnOverAmount ||
       !formData.turnOverPercentage ||
       !formData.lockInMonths ||
       !formData.exitOptions ||
-      !formData.payoutMode
+      !formData.payoutMode ||
+      !formData.renewalFee
     ) {
       setErrorValidation("All fields are required.");
       return;
@@ -103,7 +103,9 @@ export default function EditInvestmentOpportunityForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
         {/* Opportunity Name */}
         <div>
-          <label className="block text-xs font-medium mb-0.5">Opportunity Name</label>
+          <label className="block text-xs font-medium mb-0.5">
+            Opportunity Name
+          </label>
           <input
             type="text"
             placeholder="Opportunity Name"
@@ -115,7 +117,9 @@ export default function EditInvestmentOpportunityForm({
 
         {/* Description */}
         <div>
-          <label className="block text-xs font-medium mb-0.5">Description</label>
+          <label className="block text-xs font-medium mb-0.5">
+            Description
+          </label>
           <input
             type="text"
             placeholder="Description"
@@ -143,7 +147,9 @@ export default function EditInvestmentOpportunityForm({
 
         {/* Investment Type */}
         <div>
-          <label className="block text-xs font-medium mb-0.5">Investment Type</label>
+          <label className="block text-xs font-medium mb-0.5">
+            Investment Type
+          </label>
           <select
             value={formData.investmentTypeId}
             onChange={(e) =>
@@ -162,7 +168,9 @@ export default function EditInvestmentOpportunityForm({
 
         {/* Business Category */}
         <div>
-          <label className="block text-xs font-medium mb-0.5">Business Category</label>
+          <label className="block text-xs font-medium mb-0.5">
+            Business Category
+          </label>
           <select
             value={formData.businessCategoryId}
             onChange={(e) =>
@@ -208,35 +216,49 @@ export default function EditInvestmentOpportunityForm({
         </div>
 
         {/* ROI Percentage */}
-        <div>
-          <label className="block text-xs font-medium mb-0.5">Minimum Gurante %</label>
-          <input
-            type="text"
-            placeholder="Minimum Gurante %"
-            value={formData.roiPercent}
-            onChange={(e) =>
-              setFormData({ ...formData, roiPercent: e.target.value })
-            }
-            className="border px-2 py-1 rounded-md w-full text-sm"
-          />
+        <div className="relative flex flex-col">
+          <label className="block text-xs font-medium mb-0.5">
+            Minimum Gurante %
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Minimum Gurante %"
+              value={formData.roiPercent}
+              onChange={(e) =>
+                setFormData({ ...formData, roiPercent: e.target.value })
+              }
+              className="border px-2 py-1 rounded-md w-full text-sm pr-6"
+            />
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">
+              %
+            </span>
+          </div>
         </div>
 
         {/* Turn over Percentage  */}
-        <div>
-          <label className="block text-xs font-medium mb-0.5">Turn Over Percentage</label>
-          <input
-            type="text"
-            placeholder="Turn Over Percentage"
-            value={formData.turnOverPercentage}
-            onChange={(e) =>
-              setFormData({ ...formData, turnOverPercentage: e.target.value })
-            }
-            className="border px-2 py-1 rounded-md w-full text-sm"
-          />
+        <div className="relative flex flex-col">
+          <label className="block text-xs font-medium mb-0.5">
+            Turn Over Percentage
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Turn Over Percentage"
+              value={formData.turnOverPercentage}
+              onChange={(e) =>
+                setFormData({ ...formData, turnOverPercentage: e.target.value })
+              }
+              className="border px-2 py-1 rounded-md w-full text-sm pr-6"
+            />
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">
+              %
+            </span>
+          </div>
         </div>
 
         {/* Turn over Amount */}
-        <div>
+        {/* <div>
           <label className="block text-xs font-medium mb-0.5">Turn Over Amount</label>
           <input
             type="text"
@@ -247,17 +269,19 @@ export default function EditInvestmentOpportunityForm({
             }
             className="border px-2 py-1 rounded-md w-full text-sm"
           />
-        </div>
+        </div> */}
 
         {/* Lock-in Months */}
         <div>
-          <label className="block text-xs font-medium mb-0.5">Lock-in Months</label>
+          <label className="block text-xs font-medium mb-0.5">
+            Lock-in Months
+          </label>
           <input
             type="text"
             placeholder="Lock-in Months"
             value={formData.lockInMonths}
             onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
+              const value = e.target.value.replace(/[^0-9]/g, "");
               setFormData({ ...formData, lockInMonths: value });
             }}
             className="border px-2 py-1 rounded-md w-full text-sm"
@@ -266,7 +290,9 @@ export default function EditInvestmentOpportunityForm({
 
         {/* Exit Options */}
         <div>
-          <label className="block text-xs font-medium mb-0.5">Exit Options</label>
+          <label className="block text-xs font-medium mb-0.5">
+            Exit Options
+          </label>
           <input
             type="text"
             placeholder="Exit Options"
@@ -280,7 +306,9 @@ export default function EditInvestmentOpportunityForm({
 
         {/* Payout Mode */}
         <div>
-          <label className="block text-xs font-medium mb-0.5">Payout Mode</label>
+          <label className="block text-xs font-medium mb-0.5">
+            Payout Mode
+          </label>
           <select
             value={formData.payoutMode}
             onChange={(e) =>
@@ -293,6 +321,22 @@ export default function EditInvestmentOpportunityForm({
             <option value="Quarterly">Quarterly</option>
             <option value="Yearly">Yearly</option>
           </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-0.5">
+            Renewal Fee
+          </label>
+          <input
+            type="text"
+            placeholder="Renewal Fee"
+            value={formData.renewalFee}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              setFormData({ ...formData, renewalFee: value });
+            }}
+            className="border px-2 py-1 rounded-md w-full text-sm"
+          />
         </div>
       </div>
 

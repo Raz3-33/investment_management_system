@@ -206,6 +206,7 @@ model InvestmentOpportunity {
   roiPercent         Float
   turnOverPercentage Float?
   turnOverAmount     Float?
+  renewalFee         Float?
   lockInMonths       Int
   exitOptions        String?
   payoutMode         String // Monthly, Quarterly, etc.
@@ -240,6 +241,7 @@ model Investment {
   date            DateTime
   roiPercent      Float?
   payoutMode      String
+  coolOffPeriod   String?
   contractStart   DateTime
   contractEnd     DateTime
   paymentMethod   String

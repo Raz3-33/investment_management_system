@@ -31,15 +31,16 @@ export const createInvestmentOpportunity = async (data) => {
     maxAmount,
     roiPercent,
     turnOverPercentage,
-    turnOverAmount,
+    // turnOverAmount,
     lockInMonths,
     brandName,
     exitOptions,
     payoutMode,
+    renewalFee
   } = data;
 
   // Validate that the investment type and business category exist
-  const investmentTypeExists = await prisma.investmentType.findUnique({ 
+  const investmentTypeExists = await prisma.investmentType.findUnique({
     where: { id: investmentTypeId },
   });
   const businessCategoryExists = await prisma.businessCategory.findUnique({
@@ -51,6 +52,17 @@ export const createInvestmentOpportunity = async (data) => {
   }
 
   try {
+    let calculatedRoiAmount = null;
+    if (roiPercent && minAmount) {
+      calculatedRoiAmount =
+        (parseFloat(roiPercent) / 100) * parseFloat(minAmount);
+    }
+
+    // // Add calculatedRoiAmount to turnOverAmount
+    // let finalTurnOverAmount = parseInt(turnOverAmount) || 0;
+    // if (calculatedRoiAmount !== null) {
+    //   finalTurnOverAmount += calculatedRoiAmount;
+    // }
     const newOpportunity = await prisma.investmentOpportunity.create({
       data: {
         name,
@@ -62,11 +74,12 @@ export const createInvestmentOpportunity = async (data) => {
         roiPercent: parseFloat(roiPercent),
         lockInMonths: parseInt(lockInMonths),
         turnOverPercentage: parseInt(turnOverPercentage),
-        turnOverAmount: parseInt(turnOverAmount),
+        turnOverAmount: calculatedRoiAmount,
         brandName,
         exitOptions,
         payoutMode,
         isActive: true,
+        renewalFee:parseFloat(renewalFee),
       },
     });
 
@@ -79,6 +92,12 @@ export const createInvestmentOpportunity = async (data) => {
 // Update an existing investment opportunity
 export const updateInvestmentOpportunity = async (id, data) => {
   try {
+    let calculatedRoiAmount = null;
+    if (data.roiPercent && data.minAmount) {
+      calculatedRoiAmount =
+        (parseFloat(data.roiPercent) / 100) * parseFloat(data.minAmount);
+    }
+
     // Convert numeric fields to appropriate types
     const updatedData = {
       ...data,
@@ -87,7 +106,9 @@ export const updateInvestmentOpportunity = async (id, data) => {
       roiPercent: parseFloat(data.roiPercent),
       lockInMonths: parseInt(data.lockInMonths),
       turnOverPercentage: parseInt(data.turnOverPercentage),
-      turnOverAmount: parseInt(data.turnOverAmount),
+      turnOverAmount: calculatedRoiAmount,
+      renewalFee:parseFloat(data.renewalFee),
+
     };
 
     const updatedOpportunity = await prisma.investmentOpportunity.update({

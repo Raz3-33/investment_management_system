@@ -4,10 +4,16 @@ import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity
 import { useSettingStore } from "../../store/settingStore"; // Importing setting store for investment types and business categories
 
 export default function AddInvestmentOpportunityForm() {
-  const { addInvestmentOpportunity, error } = useInvestmentOpportunityStore((state) => state);
-  const { investmentTypes, fetchInvestmentTypes, businessCategories, fetchBusinessCategories, loading } = useSettingStore(
+  const { addInvestmentOpportunity, error } = useInvestmentOpportunityStore(
     (state) => state
   );
+  const {
+    investmentTypes,
+    fetchInvestmentTypes,
+    businessCategories,
+    fetchBusinessCategories,
+    loading,
+  } = useSettingStore((state) => state);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +29,7 @@ export default function AddInvestmentOpportunityForm() {
     lockInMonths: "",
     exitOptions: "",
     payoutMode: "",
+    renewalFee:""
   });
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
@@ -54,17 +61,24 @@ export default function AddInvestmentOpportunityForm() {
       !formData.lockInMonths ||
       !formData.exitOptions ||
       !formData.payoutMode ||
-      !formData.turnOverAmount ||
-      !formData.turnOverPercentage
+      !formData.renewalFee ||
 
+      // !formData.turnOverAmount ||
+      !formData.turnOverPercentage
     ) {
       setErrorValidation("All fields are required.");
       return;
     }
 
     // Validate minAmount, roiPercent, and lockInMonths as numbers
-    if (isNaN(formData.minAmount) || isNaN(formData.roiPercent) || isNaN(formData.lockInMonths)) {
-      setErrorValidation("Min Amount, ROI Percent, and Lock-in Months must be numbers.");
+    if (
+      isNaN(formData.minAmount) ||
+      isNaN(formData.roiPercent) ||
+      isNaN(formData.lockInMonths)
+    ) {
+      setErrorValidation(
+        "Min Amount, ROI Percent, and Lock-in Months must be numbers."
+      );
       return;
     }
 
@@ -87,17 +101,22 @@ export default function AddInvestmentOpportunityForm() {
         lockInMonths: "",
         exitOptions: "",
         payoutMode: "",
+        renewalFee:""
       });
       setErrorValidation(""); // Clear any previous errors
     } catch (err) {
-      setErrorValidation("Failed to add investment opportunity: " + err.message);
+      setErrorValidation(
+        "Failed to add investment opportunity: " + err.message
+      );
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Display error message */}
-      {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
+      {errorValidation && (
+        <p className="text-red-500 text-sm">{errorValidation}</p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Opportunity Name */}
@@ -114,7 +133,9 @@ export default function AddInvestmentOpportunityForm() {
           type="text"
           placeholder="Description"
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         />
 
@@ -123,14 +144,18 @@ export default function AddInvestmentOpportunityForm() {
           type="text"
           placeholder="Brand Name"
           value={formData.brandName}
-          onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, brandName: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         />
 
         {/* Investment Type */}
         <select
           value={formData.investmentTypeId}
-          onChange={(e) => setFormData({ ...formData, investmentTypeId: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, investmentTypeId: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         >
           <option value="">Select Investment Type</option>
@@ -144,7 +169,9 @@ export default function AddInvestmentOpportunityForm() {
         {/* Business Category */}
         <select
           value={formData.businessCategoryId}
-          onChange={(e) => setFormData({ ...formData, businessCategoryId: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, businessCategoryId: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         >
           <option value="">Select Business Category</option>
@@ -160,7 +187,9 @@ export default function AddInvestmentOpportunityForm() {
           type="text"
           placeholder="Min Amount"
           value={formData.minAmount}
-          onChange={(e) => setFormData({ ...formData, minAmount: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, minAmount: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         />
 
@@ -169,33 +198,49 @@ export default function AddInvestmentOpportunityForm() {
           type="text"
           placeholder="Max Amount"
           value={formData.maxAmount}
-          onChange={(e) => setFormData({ ...formData, maxAmount: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, maxAmount: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         />
 
         {/* ROI Percentage */}
-        <input
-          type="text"
-          placeholder="Minimum Gurante %"
-          value={formData.roiPercent}
-          onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
-          className="border px-3 py-2 rounded-md w-full"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Minimum Gurante"
+            value={formData.roiPercent}
+            onChange={(e) => {
+              // Allow only numbers and dot, but let user clear the field
+              const value = e.target.value.replace(/[^0-9.]/g, "");
+              setFormData({ ...formData, roiPercent: value });
+            }}
+            className="border px-3 py-2 rounded-md w-full pr-8"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            %
+          </span>
+        </div>
 
         {/* Turn Over Percentage */}
-        <input
-          type="text"
-          placeholder="Turn Over Percentage"
-          value={formData.turnOverPercentage}
-          onChange={(e) => {
-            const value = e.target.value.replace(/[^0-9.]/g, '');
-            setFormData({ ...formData, turnOverPercentage: value });
-          }}
-          className="border px-3 py-2 rounded-md w-full"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Turn Over Percentage"
+            value={formData.turnOverPercentage}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9.]/g, "");
+              setFormData({ ...formData, turnOverPercentage: value });
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            %
+          </span>
+        </div>
 
         {/* Turn Over Amount */}
-        <input
+        {/* <input
           type="text"
           placeholder="Turn Over Amount"
           value={formData.turnOverAmount}
@@ -204,7 +249,7 @@ export default function AddInvestmentOpportunityForm() {
             setFormData({ ...formData, turnOverAmount: value });
           }}
           className="border px-3 py-2 rounded-md w-full"
-        />
+        /> */}
 
         {/* Lock-in Months */}
         <input
@@ -212,7 +257,7 @@ export default function AddInvestmentOpportunityForm() {
           placeholder="Lock-in Months"
           value={formData.lockInMonths}
           onChange={(e) => {
-            const value = e.target.value.replace(/[^0-9]/g, '');
+            const value = e.target.value.replace(/[^0-9]/g, "");
             setFormData({ ...formData, lockInMonths: value });
           }}
           className="border px-3 py-2 rounded-md w-full"
@@ -223,14 +268,18 @@ export default function AddInvestmentOpportunityForm() {
           type="text"
           placeholder="Exit Options"
           value={formData.exitOptions}
-          onChange={(e) => setFormData({ ...formData, exitOptions: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, exitOptions: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         />
 
         {/* Payout Mode */}
         <select
           value={formData.payoutMode}
-          onChange={(e) => setFormData({ ...formData, payoutMode: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, payoutMode: e.target.value })
+          }
           className="border px-3 py-2 rounded-md w-full"
         >
           <option value="">Select Payout Mode</option>
@@ -239,6 +288,17 @@ export default function AddInvestmentOpportunityForm() {
           <option value="Yearly">Yearly</option>
         </select>
 
+        
+        {/* Renewal Fee */}
+        <input
+          type="text"
+          placeholder="Renewal Fee"
+          value={formData.renewalFee}
+          onChange={(e) =>
+            setFormData({ ...formData, renewalFee: e.target.value })
+          }
+          className="border px-3 py-2 rounded-md w-full"
+        />
       </div>
 
       {/* Submit Button */}

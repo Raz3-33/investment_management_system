@@ -19,6 +19,7 @@ import InvestorManagement from "./pages/investorManagement/InvestorManagement";
 import InvestmentManagement from "./pages/InvestmentManagement/InvestmentManagement";
 import PayoutManagement from "./pages/PayoutManagement/PayoutManagement";
 import SalesManagement from "./pages/salesManagement/salesManagement";
+import ProfilePage from "./pages/settings/Profile";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -102,6 +103,12 @@ function App() {
         <Route
           path="/settings"
           element={<MainLayout children={<Settings />} />}
+        />
+
+        {/* Profile */}
+        <Route
+          path="/profile"
+          element={<MainLayout children={<ProfilePage />} />}
         />
       </Routes>
     </div>

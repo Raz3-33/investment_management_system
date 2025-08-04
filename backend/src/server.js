@@ -14,9 +14,11 @@ import investmentOpportunity from "./routes/investmentOpportunity.routes.js";
 import investorRouter from "./routes/investor.routes.js";
 import investmentRoutes from "./routes/investment.routes.js";
 import payoutsRoutes from "./routes/payout.routes.js";
-import salesRoutes from "./routes/sales.routes.js"
+import salesRoutes from "./routes/sales.routes.js";
 import settingRouter from "./routes/settings.routes.js";
 import authenticationRoute from "./routes/authentication.routes.js";
+import dashBoardRoute from "./routes/dashBoard.routes.js";
+import profileRoute from "./routes/profile.route.js";
 
 dotenv.config();
 
@@ -38,6 +40,9 @@ app.use(express.urlencoded({ extended: true }));
 // authentication
 app.use("/api/auth", authenticationRoute);
 
+// dashboard
+app.use("/api/dashboard", dashBoardRoute);
+
 // role Management
 app.use("/api/roles", roleRoutes);
 
@@ -46,6 +51,10 @@ app.use("/api/branches", branchRouter);
 
 // user management
 app.use("/api/users", userRouter);
+
+// Profile management
+
+app.use("/api/profile", profileRoute);
 
 // investment Opportunity
 app.use("/api/investmentOpportunity", investmentOpportunity);

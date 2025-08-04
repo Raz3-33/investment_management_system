@@ -7,13 +7,16 @@ import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity
 // Function to format ISO string into YYYY-MM-DD format
 const formatDateForInput = (dateString) => {
   const date = new Date(dateString);
-  return date.toISOString().split('T')[0]; // Convert to YYYY-MM-DD
+  return date.toISOString().split("T")[0]; // Convert to YYYY-MM-DD
 };
 
 export default function EditInvestmentForm({ investmentId, closeModal }) {
-  const { investments, updateInvestment } = useInvestmentStore((state) => state);
+  const { investments, updateInvestment } = useInvestmentStore(
+    (state) => state
+  );
   const { investors, fetchInvestors } = useInvestorStore((state) => state);
-  const { investmentOpportunities, fetchInvestmentOpportunities } = useInvestmentOpportunityStore((state) => state);
+  const { investmentOpportunities, fetchInvestmentOpportunities } =
+    useInvestmentOpportunityStore((state) => state);
 
   const investment = investments.find((inv) => inv.id === investmentId);
 
@@ -27,6 +30,7 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
     contractEnd: investment?.contractEnd || "",
     paymentMethod: investment?.paymentMethod || "",
     agreementSigned: investment?.agreementSigned || false,
+    coolOffPeriod: investment?.coolOffPeriod || "",
     status: investment?.status || "Ongoing",
   });
 
@@ -68,6 +72,7 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
       contractStart,
       contractEnd,
       paymentMethod,
+      coolOffPeriod,
     } = formData;
 
     if (
@@ -77,6 +82,7 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
       !payoutMode ||
       !contractStart ||
       !contractEnd ||
+      !coolOffPeriod ||
       !paymentMethod
     ) {
       setErrorValidation("All fields are required.");
@@ -101,7 +107,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
       const startDate = new Date(contractStart);
       const endDate = new Date(contractEnd);
       const minEndDate = new Date(startDate);
-      minEndDate.setMonth(minEndDate.getMonth() + Number(selectedOpportunity.lockInMonths));
+      minEndDate.setMonth(
+        minEndDate.getMonth() + Number(selectedOpportunity.lockInMonths)
+      );
       if (endDate < minEndDate) {
         setErrorValidation(
           `Contract end date must be at least ${selectedOpportunity.lockInMonths} month(s) after contract start date.`
@@ -121,7 +129,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
+      {errorValidation && (
+        <p className="text-red-500 text-sm">{errorValidation}</p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Amount */}
@@ -131,7 +141,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
             type="number"
             placeholder="Amount"
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, amount: e.target.value })
+            }
             className="border px-3 py-2 rounded-md w-full"
           />
         </div>
@@ -141,7 +153,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           <label className="block mb-1">Investor</label>
           <select
             value={formData.investorId}
-            onChange={(e) => setFormData({ ...formData, investorId: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, investorId: e.target.value })
+            }
             className="border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Investor</option>
@@ -187,7 +201,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           <label className="block mb-1">Payout Mode</label>
           <select
             value={formData.payoutMode}
-            onChange={(e) => setFormData({ ...formData, payoutMode: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, payoutMode: e.target.value })
+            }
             className="border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Mode</option>
@@ -203,7 +219,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
             type="text"
             placeholder="e.g., Bank Transfer"
             value={formData.paymentMethod}
-            onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, paymentMethod: e.target.value })
+            }
             className="border px-3 py-2 rounded-md w-full"
           />
         </div>
@@ -214,7 +232,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           <input
             type="date"
             value={formatDateForInput(formData.contractStart)}
-            onChange={(e) => setFormData({ ...formData, contractStart: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, contractStart: e.target.value })
+            }
             className="border px-3 py-2 rounded-md w-full"
           />
         </div>
@@ -225,7 +245,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           <input
             type="date"
             value={formatDateForInput(formData.contractEnd)}
-            onChange={(e) => setFormData({ ...formData, contractEnd: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, contractEnd: e.target.value })
+            }
             className="border px-3 py-2 rounded-md w-full"
           />
         </div>
@@ -235,7 +257,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           <label className="block mb-1">Status</label>
           <select
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, status: e.target.value })
+            }
             className="border px-3 py-2 rounded-md w-full"
           >
             <option value="Ongoing">Ongoing</option>
@@ -244,13 +268,34 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           </select>
         </div>
 
+         {/* Cooloff period */}
+         <div>
+          <label className="block mb-1">CoolOff Period</label>
+          <input
+            type="text"
+            placeholder="CoolOff Period"
+            value={formData.coolOffPeriod || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFormData((prev) => {
+                const updated = { ...prev, coolOffPeriod: value };
+                return updated;
+              });
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
+
         {/* Agreement Signed */}
         <div className="flex items-center mt-6">
           <input
             type="checkbox"
             checked={formData.agreementSigned}
             onChange={() =>
-              setFormData((prev) => ({ ...prev, agreementSigned: !prev.agreementSigned }))
+              setFormData((prev) => ({
+                ...prev,
+                agreementSigned: !prev.agreementSigned,
+              }))
             }
             className="mr-2"
           />
