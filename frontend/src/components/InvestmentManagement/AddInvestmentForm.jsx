@@ -103,6 +103,18 @@ export default function AddInvestmentForm({ closeModal }) {
       }
     }
 
+    // Validate that coolOffPeriod is not less than contractStart
+    {
+      const startDate = new Date(contractStart);
+      const coolOffDate = new Date(coolOffPeriod);
+      if (coolOffDate < startDate) {
+        setErrorValidation(
+          "CoolOff Period date cannot be before Contract Start date."
+        );
+        return;
+      }
+    }
+
     try {
       await addInvestment(formData);
       setFormData({
@@ -275,7 +287,7 @@ export default function AddInvestmentForm({ closeModal }) {
         <div>
           <label className="block mb-1">CoolOff Period</label>
           <input
-            type="text"
+            type="date"
             placeholder="CoolOff Period"
             value={formData.coolOffPeriod || ""}
             onChange={(e) => {

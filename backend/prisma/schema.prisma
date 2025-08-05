@@ -241,7 +241,7 @@ model Investment {
   date            DateTime
   roiPercent      Float?
   payoutMode      String
-  coolOffPeriod   String?
+  coolOffPeriod   DateTime?
   contractStart   DateTime
   contractEnd     DateTime
   paymentMethod   String

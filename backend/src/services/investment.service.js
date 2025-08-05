@@ -20,6 +20,8 @@ export const createInvestment = async (data) => {
   // Ensure the dates are valid Date objects
   const contractStartDate = new Date(contractStart);
   const contractEndDate = new Date(contractEnd);
+  const coolOffPeriodDate = new Date(coolOffPeriod); // Convert to Date object
+
 
   // Validate input data
   if (isNaN(amountFloat) || amountFloat <= 0) {
@@ -66,7 +68,7 @@ export const createInvestment = async (data) => {
         contractEnd: contractEndDate,
         paymentMethod,
         agreementSigned,
-        coolOffPeriod,
+        coolOffPeriod:coolOffPeriodDate,
         status,
         date: new Date(),
       },
@@ -136,6 +138,7 @@ export const updateInvestment = async (id, data) => {
   // Ensure the dates are valid Date objects
   const contractStartDate = new Date(contractStart); // Convert to Date object
   const contractEndDate = new Date(contractEnd); // Convert to Date object
+  const coolOffPeriodDate = new Date(coolOffPeriod); // Convert to Date object
 
   // Validate input data
   if (isNaN(amountFloat) || amountFloat <= 0) {
@@ -188,7 +191,7 @@ export const updateInvestment = async (id, data) => {
         paymentMethod,
         agreementSigned,
         status,
-        coolOffPeriod,
+        coolOffPeriod:coolOffPeriodDate,
         date: new Date(), // Assuming this is the current date when updating the investment
       },
     });

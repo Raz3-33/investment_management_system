@@ -20,6 +20,8 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
 
   const investment = investments.find((inv) => inv.id === investmentId);
 
+  console.log(investment?.coolOffPeriod,"investmentinvestmentinvestment")
+
   const [formData, setFormData] = useState({
     amount: investment?.amount || "",
     investorId: investment?.investorId || "",
@@ -114,6 +116,16 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
         setErrorValidation(
           `Contract end date must be at least ${selectedOpportunity.lockInMonths} month(s) after contract start date.`
         );
+        return;
+      }
+    }
+
+    // Validate that coolOffPeriod is not less than contractStart
+    {
+      const startDate = new Date(contractStart);
+      const coolOffDate = new Date(coolOffPeriod);
+      if (coolOffDate < startDate) {
+        setErrorValidation("CoolOff Period date cannot be before Contract Start date.");
         return;
       }
     }
@@ -272,15 +284,19 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
          <div>
           <label className="block mb-1">CoolOff Period</label>
           <input
-            type="text"
+            type="date"
             placeholder="CoolOff Period"
-            value={formData.coolOffPeriod || ""}
+            value={
+              formData.coolOffPeriod
+                ? formatDateForInput(formData.coolOffPeriod)
+                : ""
+            }
             onChange={(e) => {
               const value = e.target.value;
-              setFormData((prev) => {
-                const updated = { ...prev, coolOffPeriod: value };
-                return updated;
-              });
+              setFormData((prev) => ({
+                ...prev,
+                coolOffPeriod: value,
+              }));
             }}
             className="border px-3 py-2 rounded-md w-full"
           />
