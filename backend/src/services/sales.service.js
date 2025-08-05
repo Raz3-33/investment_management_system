@@ -9,7 +9,6 @@ export const createSalesService = async ({ opportunityId, amount, date }) => {
       date: new Date(date), // Ensure the date is properly converted to a Date object
     },
   });
-
   return sales;
 };
 

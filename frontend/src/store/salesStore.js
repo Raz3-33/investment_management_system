@@ -6,6 +6,7 @@ export const useSalesStore = create(
   persist(
     (set) => ({
       sales: null,
+      updateSales: null,
       allSales: [], // New state to hold all sales data
       loading: false,
       error: null,
@@ -18,7 +19,7 @@ export const useSalesStore = create(
           const response = await api.get(`/sales/${salesId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          set({ sales: response.data.data,loading: false })
+          set({ sales: response.data.data, loading: false });
         } catch (err) {
           set({ error: err.message, loading: false });
         }
@@ -54,14 +55,14 @@ export const useSalesStore = create(
             set({ error: "Authorization token missing", loading: false });
             return;
           }
-          await api.post(
+          const response = await api.post(
             `/sales`,
             { opportunityId, ...data },
             {
               headers: { Authorization: `Bearer ${token}` },
             }
           );
-          set({ sales: [...state.sales, data] });
+          set({ sales: response.data.data });
         } catch (err) {
           set({ error: err.message });
         }
@@ -70,15 +71,11 @@ export const useSalesStore = create(
       updateSales: async (salesId, data) => {
         try {
           const token = localStorage.getItem("token");
-          const response = await api.put(
-            `/sales/${salesId}`,
-            data,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+          const response = await api.put(`/sales/${salesId}`, data, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           set({
-            sales: get().sales.map((sale) =>
-              sale.id === salesId ? response.data.data : sale
-            ),
+            updateSales: response.data.data,
           });
         } catch (err) {
           set({ error: err.message });

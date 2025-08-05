@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Button from "../../components/ui/Button";
 import { useSalesStore } from "../../store/salesStore";
 import DataTable from "../../components/ui/table/DataTable";
@@ -17,6 +17,7 @@ const columns = [
 export default function SalesManagement({ opportunityId }) {
   const {
     sales,
+    updateSales,
     allSales,
     fetchSales,
     fetchAllSales,
@@ -30,6 +31,8 @@ export default function SalesManagement({ opportunityId }) {
   const [editingSalesId, setEditingSalesId] = useState(null);
   const [search, setSearch] = useState("");
 
+  console.log(sales, "salessalessalessales");
+
   // Fetch sales for opportunity or all sales
   useEffect(() => {
     if (opportunityId) {
@@ -37,7 +40,7 @@ export default function SalesManagement({ opportunityId }) {
     } else {
       fetchAllSales(); // Fetch all sales if no opportunityId is provided
     }
-  }, [fetchSales, fetchAllSales, opportunityId]);
+  }, [fetchSales, fetchAllSales, sales, updateSales, opportunityId]);
 
   const handleDelete = async (id) => {
     await deleteSales(id);
@@ -53,13 +56,16 @@ export default function SalesManagement({ opportunityId }) {
 
   const formatDate = (date) => new Date(date).toLocaleDateString(); // Format date
 
-  const tableRows = (allSales || []).map((row) => ({
-    ...row,
-    opportunityName: row.opportunity?.name || "Unknown Opportunity",
-    payoutMode: row.opportunity?.payoutMode || "—",
-    date: formatDate(row.date),
-    amount: row.amount?.toLocaleString("en-IN"),
-  }));
+  const tableRows = useMemo(() => {
+    if (!allSales) return [];
+    return allSales.map((row) => ({
+      ...row,
+      opportunityName: row.opportunity?.name || "Unknown Opportunity",
+      payoutMode: row.opportunity?.payoutMode || "—",
+      date: formatDate(row.date),
+      amount: row.amount?.toLocaleString("en-IN"),
+    }));
+  }, [allSales]);
 
   return (
     <main className="grow">
@@ -97,14 +103,16 @@ export default function SalesManagement({ opportunityId }) {
                 <Button
                   variant="primary"
                   onClick={() => {
-                   alert("Under Development")
+                    alert("Under Development");
                   }}
                 >
                   Edit
                 </Button>
                 {/* <Button variant="danger" onClick={() => handleDelete(row.id)}> */}
-                <Button variant="danger" onClick={() => alert("Under Development")}>
-                  
+                <Button
+                  variant="danger"
+                  onClick={() => alert("Under Development")}
+                >
                   Delete
                 </Button>
               </>
