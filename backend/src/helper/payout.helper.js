@@ -25,8 +25,6 @@ export const calculateInvestorPayout = async (investmentId, month, year) => {
   });
 
   if (!investment) throw new Error("Investment not found");
-
-  console.log(investment,"investmentinvestmentinvestmentinvestment");
   
   const opportunity = investment.opportunity;
 

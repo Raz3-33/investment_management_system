@@ -33,4 +33,7 @@ router.delete(
   investmentOpportunityController.deleteInvestmentOpportunity
 );
 
+router.get("/opportunityBranches/:opportunityId", investmentOpportunityController.getInvestmentOpportunityWithBranches);
+
+
 export default router;

@@ -12,7 +12,9 @@ export const createInvestment = async (data) => {
     agreementSigned,
     coolOffPeriod,
     status,
+    selectedBranchId, 
   } = data;
+console.log(data,"branchIdbranchIdbranchIdbranchIdbranchIdbranchIdbranchId");
 
   // Convert amount to proper type
   const amountFloat = parseFloat(amount);
@@ -21,7 +23,6 @@ export const createInvestment = async (data) => {
   const contractStartDate = new Date(contractStart);
   const contractEndDate = new Date(contractEnd);
   const coolOffPeriodDate = new Date(coolOffPeriod); // Convert to Date object
-
 
   // Validate input data
   if (isNaN(amountFloat) || amountFloat <= 0) {
@@ -56,8 +57,12 @@ export const createInvestment = async (data) => {
     );
   }
 
+  if (!selectedBranchId) {
+    throw new Error("Branch ID is required.");
+  }
+
   try {
-    // Create a new investment record in the database WITHOUT roiPercent
+    // Create a new investment record in the database
     const newInvestment = await prisma.investment.create({
       data: {
         amount: amountFloat,
@@ -68,9 +73,11 @@ export const createInvestment = async (data) => {
         contractEnd: contractEndDate,
         paymentMethod,
         agreementSigned,
-        coolOffPeriod:coolOffPeriodDate,
+        coolOffPeriod: coolOffPeriodDate,
         status,
         date: new Date(),
+        // Directly assign the selectedBranchId relation
+        branchId:selectedBranchId, // Connect the single branch
       },
     });
 
@@ -121,7 +128,6 @@ export const updateInvestment = async (id, data) => {
     amount,
     investorId,
     opportunityId,
-    // roiPercent,
     payoutMode,
     contractStart,
     contractEnd,
@@ -129,11 +135,11 @@ export const updateInvestment = async (id, data) => {
     agreementSigned,
     status,
     coolOffPeriod,
+    selectedBranchId, // Add branch ID field
   } = data;
 
-  // Convert amount and roiPercent to proper types
+  // Convert amount to proper type
   const amountFloat = parseFloat(amount);
-  // const roiPercentFloat = parseFloat(roiPercent);
 
   // Ensure the dates are valid Date objects
   const contractStartDate = new Date(contractStart); // Convert to Date object
@@ -144,9 +150,6 @@ export const updateInvestment = async (id, data) => {
   if (isNaN(amountFloat) || amountFloat <= 0) {
     throw new Error("Invalid amount: It should be a positive number.");
   }
-  // if (isNaN(roiPercentFloat) || roiPercentFloat <= 0) {
-  //   throw new Error("Invalid ROI Percent: It should be a positive number.");
-  // }
   if (!investorId || !opportunityId) {
     throw new Error("Investor ID and Opportunity ID are required.");
   }
@@ -176,6 +179,11 @@ export const updateInvestment = async (id, data) => {
     );
   }
 
+  // Validate that branchId is present (since it is required)
+  if (!selectedBranchId) {
+    throw new Error("Branch ID is required.");
+  }
+
   try {
     // Update the existing investment record in the database
     const updatedInvestment = await prisma.investment.update({
@@ -184,15 +192,15 @@ export const updateInvestment = async (id, data) => {
         amount: amountFloat,
         investorId,
         opportunityId,
-        // roiPercent: roiPercentFloat,
         payoutMode,
         contractStart: contractStartDate, // Store as Date object
         contractEnd: contractEndDate, // Store as Date object
         paymentMethod,
         agreementSigned,
         status,
-        coolOffPeriod:coolOffPeriodDate,
+        coolOffPeriod: coolOffPeriodDate,
         date: new Date(), // Assuming this is the current date when updating the investment
+        branchId: selectedBranchId, // Update the branch ID as well
       },
     });
 
@@ -201,6 +209,7 @@ export const updateInvestment = async (id, data) => {
     throw new Error("Error updating investment: " + error.message);
   }
 };
+
 
 // Delete an investment
 export const deleteInvestment = async (id) => {

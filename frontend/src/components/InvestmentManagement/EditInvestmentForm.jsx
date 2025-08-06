@@ -11,41 +11,46 @@ const formatDateForInput = (dateString) => {
 };
 
 export default function EditInvestmentForm({ investmentId, closeModal }) {
-  const { investments, updateInvestment } = useInvestmentStore(
-    (state) => state
-  );
+  const { investments, updateInvestment } = useInvestmentStore((state) => state);
   const { investors, fetchInvestors } = useInvestorStore((state) => state);
-  const { investmentOpportunities, fetchInvestmentOpportunities } =
-    useInvestmentOpportunityStore((state) => state);
+  const {
+    investmentOpportunities,
+    fetchInvestmentOpportunities,
+    fetchInvestmentOpportunityWithBranches,
+    investmentOpportunitiesWithBranch,
+  } = useInvestmentOpportunityStore((state) => state);
 
   const investment = investments.find((inv) => inv.id === investmentId);
-
-  console.log(investment?.coolOffPeriod,"investmentinvestmentinvestment")
 
   const [formData, setFormData] = useState({
     amount: investment?.amount || "",
     investorId: investment?.investorId || "",
     opportunityId: investment?.opportunityId || "",
-    // roiPercent: investment?.roiPercent || "",
     payoutMode: investment?.payoutMode || "",
     contractStart: investment?.contractStart || "",
     contractEnd: investment?.contractEnd || "",
     paymentMethod: investment?.paymentMethod || "",
     agreementSigned: investment?.agreementSigned || false,
-    coolOffPeriod: investment?.coolOffPeriod || "",
     status: investment?.status || "Ongoing",
+    selectedBranchId: investment?.branchId || "", // Store selected branch ID
+    coolOffPeriod: investment?.coolOffPeriod || "", // Store cool off period date
   });
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
 
   useEffect(() => {
-    fetchInvestors(); // Fetch investors on component mount
-    fetchInvestmentOpportunities(); // Fetch investment opportunities on component mount
+    fetchInvestors();
+    fetchInvestmentOpportunities();
+    // Fetch associated branches for the selected opportunity
+    fetchInvestmentOpportunityWithBranches(formData?.opportunityId);
   }, [fetchInvestors, fetchInvestmentOpportunities]);
 
   useEffect(() => {
-    // Pre-select the opportunity if it's available
+    fetchInvestmentOpportunityWithBranches(formData?.opportunityId);
+  }, [fetchInvestmentOpportunities]);
+
+  useEffect(() => {
     if (investment?.opportunityId) {
       const selectedOp = investmentOpportunities.find(
         (op) => op.id === investment.opportunityId
@@ -54,12 +59,38 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
     }
   }, [investmentOpportunities, investment?.opportunityId]);
 
-  const handleOpportunityChange = (e) => {
+  useEffect(() => {
+  console.log(investmentOpportunitiesWithBranch, "investmentOpportunitiesWithBranch");
+  // Find the selected opportunity from the list
+  if (investment?.branchId) {
+    setFormData((prev) => ({
+      ...prev,
+      selectedBranchId: investment.branchId, // Pre-set the branch ID
+    }));
+  }
+}, [investment, investmentOpportunitiesWithBranch]);
+
+
+  // Handle when opportunity changes
+  const handleOpportunityChange = async (e) => {
+    const selectedId = e.target.value;
+    setFormData((prev) => {
+      const selectedOp = investmentOpportunities.find(
+        (op) => op.id === selectedId
+      );
+      return {
+        ...prev,
+        opportunityId: selectedId,
+        amount: selectedOp ? selectedOp.minAmount : "",
+        payoutMode: selectedOp ? selectedOp.payoutMode || "" : prev.payoutMode,
+      };
+    });
+
+    // Find selected opportunity from the list
     const selectedOp = investmentOpportunities.find(
-      (op) => op.id === e.target.value
+      (op) => op.id === selectedId
     );
-    setSelectedOpportunity(selectedOp); // Set the selected opportunity
-    setFormData({ ...formData, opportunityId: e.target.value });
+    setSelectedOpportunity(selectedOp);
   };
 
   const handleSubmit = async (e) => {
@@ -69,14 +100,15 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
       amount,
       investorId,
       opportunityId,
-      // roiPercent,
       payoutMode,
       contractStart,
       contractEnd,
       paymentMethod,
+      selectedBranchId,
       coolOffPeriod,
     } = formData;
 
+    // Validate required fields
     if (
       !amount ||
       !investorId ||
@@ -84,23 +116,16 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
       !payoutMode ||
       !contractStart ||
       !contractEnd ||
-      !coolOffPeriod ||
-      !paymentMethod
+      !paymentMethod ||
+      !selectedBranchId || // Ensure a branch is selected
+      !coolOffPeriod // Ensure cool off period is selected
     ) {
       setErrorValidation("All fields are required.");
       return;
     }
 
-    // if (isNaN(amount) || isNaN(roiPercent)) {
-    //   setErrorValidation("Amount and ROI Percent must be numbers.");
-    //   return;
-    // }
-
-    // Validate if the amount is greater than minAmount in the selected opportunity
-    if (selectedOpportunity && amount < selectedOpportunity.minAmount) {
-      setErrorValidation(
-        `Amount should be greater than the minimum amount of ${selectedOpportunity.minAmount}`
-      );
+    if (isNaN(amount)) {
+      setErrorValidation("Amount must be a number.");
       return;
     }
 
@@ -125,7 +150,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
       const startDate = new Date(contractStart);
       const coolOffDate = new Date(coolOffPeriod);
       if (coolOffDate < startDate) {
-        setErrorValidation("CoolOff Period date cannot be before Contract Start date.");
+        setErrorValidation(
+          "CoolOff Period date cannot be before Contract Start date."
+        );
         return;
       }
     }
@@ -141,9 +168,7 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {errorValidation && (
-        <p className="text-red-500 text-sm">{errorValidation}</p>
-      )}
+      {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Amount */}
@@ -186,6 +211,7 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
             value={formData.opportunityId}
             onChange={handleOpportunityChange}
             className="border px-3 py-2 rounded-md w-full"
+            disabled
           >
             <option value="">Select Opportunity</option>
             {investmentOpportunities?.map((opp) => (
@@ -195,18 +221,6 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
             ))}
           </select>
         </div>
-
-        {/* ROI Percentage */}
-        {/* <div>
-          <label className="block mb-1">ROI Percentage</label>
-          <input
-            type="number"
-            placeholder="ROI Percentage"
-            value={formData.roiPercent}
-            onChange={(e) => setFormData({ ...formData, roiPercent: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
-          />
-        </div> */}
 
         {/* Payout Mode */}
         <div>
@@ -264,6 +278,40 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           />
         </div>
 
+        {/* CoolOff Period */}
+        <div>
+          <label className="block mb-1">CoolOff Period</label>
+          <input
+            type="date"
+            value={formatDateForInput(formData.coolOffPeriod || "")}
+            onChange={(e) => {
+              setFormData({ ...formData, coolOffPeriod: e.target.value });
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
+
+        {/* Branch Selection */}
+        <div>
+          <label className="block mb-1">Select Branch</label>
+          <select
+            value={formData.selectedBranchId}
+            onChange={(e) =>
+              setFormData({ ...formData, selectedBranchId: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Branch</option>
+            {investmentOpportunitiesWithBranch?.opportunityBranches?.map(
+              (items) => (
+                <option key={items?.branch.id} value={items?.branch?.id}>
+                  {items?.branch?.name}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
         {/* Status */}
         <div>
           <label className="block mb-1">Status</label>
@@ -278,28 +326,6 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
             <option value="Completed">Completed</option>
             <option value="Canceled">Canceled</option>
           </select>
-        </div>
-
-         {/* Cooloff period */}
-         <div>
-          <label className="block mb-1">CoolOff Period</label>
-          <input
-            type="date"
-            placeholder="CoolOff Period"
-            value={
-              formData.coolOffPeriod
-                ? formatDateForInput(formData.coolOffPeriod)
-                : ""
-            }
-            onChange={(e) => {
-              const value = e.target.value;
-              setFormData((prev) => ({
-                ...prev,
-                coolOffPeriod: value,
-              }));
-            }}
-            className="border px-3 py-2 rounded-md w-full"
-          />
         </div>
 
         {/* Agreement Signed */}

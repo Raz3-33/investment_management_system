@@ -9,7 +9,6 @@ export default function EditPayoutForm({ payoutId, closeModal }) {
     (state) => state
   ); // Fetch investments
 
-  // Find the payout to edit
   const payout = payouts.find((p) => p.id === payoutId);
 
   // Formatting the dueDate and paidDate for input[type="date"]
@@ -110,94 +109,111 @@ export default function EditPayoutForm({ payoutId, closeModal }) {
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       {/* Investment Selector */}
-      <select
-        value={formData.investmentId} // Bind the value to formData.investmentId
-        onChange={handleInvestmentChange}
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Investment</option>
-        {investments?.map((investment) => (
-          <option key={investment.id} value={investment.id}>
-            {investment.opportunity.name} - {investment.amount}{" "}
-            {/* Displaying opportunity name and amount */}
-          </option>
-        ))}
-      </select>
+      <div>
+        <label className="block mb-1">Investment</label>
+        <select
+          value={formData.investmentId} // Bind the value to formData.investmentId
+          onChange={handleInvestmentChange}
+          className="border px-3 py-2 rounded-md w-full"
+        >
+          <option value="">Select Investment</option>
+          {investments?.map((investment) => (
+            <option key={investment.id} value={investment.id}>
+              {investment.opportunity.name} - {investment.amount}{" "}
+              {/* Displaying opportunity name and amount */}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Due Date */}
-      <input
-        type="date"
-        placeholder="Due Date"
-        value={formData.dueDate}
-        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div>
+        <label className="block mb-1">Due Date</label>
+        <input
+          type="date"
+          value={formData.dueDate}
+          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
+      </div>
 
       {/* Paid Date */}
-      <input
-        type="date"
-        placeholder="Paid Date"
-        value={formData.paidDate}
-        onChange={(e) =>
-          setFormData({ ...formData, paidDate: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div>
+        <label className="block mb-1">Paid Date</label>
+        <input
+          type="date"
+          value={formData.paidDate}
+          onChange={(e) =>
+            setFormData({ ...formData, paidDate: e.target.value })
+          }
+          className="border px-3 py-2 rounded-md w-full"
+        />
+      </div>
 
       {/* Amount Due */}
-      <input
-        type="number"
-        placeholder="Amount Due"
-        value={formData.amountDue}
-        onChange={(e) =>
-          setFormData({ ...formData, amountDue: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-        disabled={selectedInvestment && selectedInvestment.amount} // Disable if investment is selected
-      />
+      <div>
+        <label className="block mb-1">Amount Due</label>
+        <input
+          type="number"
+          value={formData.amountDue}
+          onChange={(e) =>
+            setFormData({ ...formData, amountDue: e.target.value })
+          }
+          className="border px-3 py-2 rounded-md w-full"
+        />
+      </div>
 
       {/* Amount Paid */}
-      <input
-        type="number"
-        placeholder="Amount Paid"
-        value={formData.amountPaid}
-        onChange={(e) =>
-          setFormData({ ...formData, amountPaid: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div>
+        <label className="block mb-1">Amount Paid</label>
+        <input
+          type="number"
+          value={formData.amountPaid}
+          onChange={(e) =>
+            setFormData({ ...formData, amountPaid: e.target.value })
+          }
+          className="border px-3 py-2 rounded-md w-full"
+        />
+      </div>
 
       {/* Payment Mode */}
-      <select
-        value={formData.paymentMode}
-        onChange={(e) =>
-          setFormData({ ...formData, paymentMode: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      >
-        <option value="">Select Payment Mode</option>
-        <option value="Bank Transfer">Bank Transfer</option>
-        <option value="Check">Check</option>
-      </select>
+      <div>
+        <label className="block mb-1">Payment Mode</label>
+        <select
+          value={formData.paymentMode}
+          onChange={(e) =>
+            setFormData({ ...formData, paymentMode: e.target.value })
+          }
+          className="border px-3 py-2 rounded-md w-full"
+        >
+          <option value="">Select Payment Mode</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Check">Check</option>
+        </select>
+      </div>
 
       {/* Receipt Reference */}
-      <input
-        type="text"
-        placeholder="Receipt Ref"
-        value={formData.receiptRef}
-        onChange={(e) =>
-          setFormData({ ...formData, receiptRef: e.target.value })
-        }
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div>
+        <label className="block mb-1">Receipt Ref</label>
+        <input
+          type="text"
+          value={formData.receiptRef}
+          onChange={(e) =>
+            setFormData({ ...formData, receiptRef: e.target.value })
+          }
+          className="border px-3 py-2 rounded-md w-full"
+        />
+      </div>
 
       {/* Notes */}
-      <textarea
-        placeholder="Notes"
-        value={formData.notes}
-        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-        className="border px-3 py-2 rounded-md w-full"
-      />
+      <div>
+        <label className="block mb-1">Notes</label>
+        <textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          className="border px-3 py-2 rounded-md w-full"
+        />
+      </div>
 
       {/* Submit Button */}
       <div className="flex justify-center">

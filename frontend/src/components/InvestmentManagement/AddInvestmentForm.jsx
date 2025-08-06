@@ -7,8 +7,12 @@ import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity
 export default function AddInvestmentForm({ closeModal }) {
   const { addInvestment, error } = useInvestmentStore((state) => state);
   const { investors, fetchInvestors } = useInvestorStore((state) => state);
-  const { investmentOpportunities, fetchInvestmentOpportunities } =
-    useInvestmentOpportunityStore((state) => state);
+  const {
+    investmentOpportunities,
+    fetchInvestmentOpportunities,
+    fetchInvestmentOpportunityWithBranches,
+    investmentOpportunitiesWithBranch, // Store for branches related to selected opportunity
+  } = useInvestmentOpportunityStore((state) => state);
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -21,6 +25,8 @@ export default function AddInvestmentForm({ closeModal }) {
     paymentMethod: "",
     agreementSigned: false,
     status: "Ongoing",
+    selectedBranchId: "", // Store selected branch ID
+    coolOffPeriod: "", // Store cool off period date
   });
 
   const [errorValidation, setErrorValidation] = useState("");
@@ -35,14 +41,38 @@ export default function AddInvestmentForm({ closeModal }) {
     if (error) setErrorValidation(error);
   }, [error]);
 
-  const handleOpportunityChange = (e) => {
+  // Handle when opportunity changes
+  const handleOpportunityChange = async (e) => {
+    const selectedId = e.target.value;
+
+    setFormData((prev) => {
+      // Find the selected opportunity
+      const selectedOpp = investmentOpportunities.find(
+        (opp) => opp.id === selectedId
+      );
+      // If found, auto-fill amount with minAmount and payoutMode, else keep previous values
+      return {
+        ...prev,
+        opportunityId: selectedId,
+        amount: selectedOpp ? selectedOpp.minAmount : "",
+        payoutMode: selectedOpp
+          ? selectedOpp.payoutMode || ""
+          : prev.payoutMode,
+      };
+    });
+    // setFormData({ ...formData, opportunityId: selectedId });
+
+    // Fetch associated branches for the selected opportunity
+    await fetchInvestmentOpportunityWithBranches(selectedId);
+
+    // Find selected opportunity from the list
     const selectedOp = investmentOpportunities.find(
-      (op) => op.id === e.target.value
+      (op) => op.id === selectedId
     );
-    setSelectedOpportunity(selectedOp); // Set the selected opportunity
-    setFormData({ ...formData, opportunityId: e.target.value });
+    setSelectedOpportunity(selectedOp);
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -55,9 +85,11 @@ export default function AddInvestmentForm({ closeModal }) {
       contractStart,
       contractEnd,
       paymentMethod,
+      selectedBranchId,
       coolOffPeriod,
     } = formData;
 
+    // Validate required fields
     if (
       !amount ||
       !investorId ||
@@ -65,25 +97,16 @@ export default function AddInvestmentForm({ closeModal }) {
       !payoutMode ||
       !contractStart ||
       !contractEnd ||
-      !coolOffPeriod ||
-      !paymentMethod
+      !paymentMethod ||
+      !selectedBranchId || // Ensure a branch is selected
+      !coolOffPeriod // Ensure cool off period is selected
     ) {
       setErrorValidation("All fields are required.");
       return;
     }
 
-    console.log(coolOffPeriod, "coolOffPeriodcoolOffPeriodcoolOffPeriod");
-
     if (isNaN(amount) || isNaN(roiPercent)) {
       setErrorValidation("Amount and ROI Percent must be numbers.");
-      return;
-    }
-
-    // Validate if the amount is greater than minAmount in the selected opportunity
-    if (selectedOpportunity && amount < selectedOpportunity.minAmount) {
-      setErrorValidation(
-        `Amount should be greater than the minimum amount of ${selectedOpportunity.minAmount}`
-      );
       return;
     }
 
@@ -126,7 +149,8 @@ export default function AddInvestmentForm({ closeModal }) {
         contractStart: "",
         contractEnd: "",
         paymentMethod: "",
-        coolOffPeriod: "",
+        selectedBranchId: "", // Reset the selected branch ID
+        coolOffPeriod: "", // Reset coolOffPeriod
         agreementSigned: false,
         status: "Ongoing",
       });
@@ -149,24 +173,7 @@ export default function AddInvestmentForm({ closeModal }) {
           <label className="block mb-1">Investment Opportunity</label>
           <select
             value={formData.opportunityId}
-            onChange={(e) => {
-              const selectedId = e.target.value;
-              setFormData((prev) => {
-                // Find the selected opportunity
-                const selectedOpp = investmentOpportunities.find(
-                  (opp) => opp.id === selectedId
-                );
-                // If found, auto-fill amount with minAmount and payoutMode, else keep previous values
-                return {
-                  ...prev,
-                  opportunityId: selectedId,
-                  amount: selectedOpp ? selectedOpp.minAmount : "",
-                  payoutMode: selectedOpp
-                    ? selectedOpp.payoutMode || ""
-                    : prev.payoutMode,
-                };
-              });
-            }}
+            onChange={handleOpportunityChange}
             className="border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Opportunity</option>
@@ -208,6 +215,27 @@ export default function AddInvestmentForm({ closeModal }) {
                 {investor.name} - {investor.type}
               </option>
             ))}
+          </select>
+        </div>
+
+        {/* Branch Selection */}
+        <div>
+          <label className="block mb-1">Select Branch</label>
+          <select
+            value={formData.selectedBranchId}
+            onChange={(e) =>
+              setFormData({ ...formData, selectedBranchId: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Branch</option>
+            {investmentOpportunitiesWithBranch?.opportunityBranches?.map(
+              (items) => (
+                <option key={items?.branch.id} value={items?.branch?.id}>
+                  {items?.branch?.name}
+                </option>
+              )
+            )}
           </select>
         </div>
 
@@ -267,6 +295,19 @@ export default function AddInvestmentForm({ closeModal }) {
           />
         </div>
 
+        {/* CoolOff Period */}
+        <div>
+          <label className="block mb-1">CoolOff Period</label>
+          <input
+            type="date"
+            value={formData.coolOffPeriod || ""}
+            onChange={(e) => {
+              setFormData({ ...formData, coolOffPeriod: e.target.value });
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        </div>
+
         {/* Status */}
         <div>
           <label className="block mb-1">Status</label>
@@ -281,24 +322,6 @@ export default function AddInvestmentForm({ closeModal }) {
             <option value="Completed">Completed</option>
             <option value="Canceled">Canceled</option>
           </select>
-        </div>
-
-        {/* Cooloff period */}
-        <div>
-          <label className="block mb-1">CoolOff Period</label>
-          <input
-            type="date"
-            placeholder="CoolOff Period"
-            value={formData.coolOffPeriod || ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFormData((prev) => {
-                const updated = { ...prev, coolOffPeriod: value };
-                return updated;
-              });
-            }}
-            className="border px-3 py-2 rounded-md w-full"
-          />
         </div>
 
         {/* Agreement Signed */}

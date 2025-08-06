@@ -26,6 +26,22 @@ export const useInvestmentStore = create((set) => ({
     }
   },
 
+  // fetchInvestmentsById: async (id) => {
+  //   set({ loading: true, error: null });
+  //   try {
+  //     const response = await api.get(`/investments/${id}`); // Fetch all investments
+  //     set({
+  //       investments: response.data.data,
+  //       loading: false,
+  //     });
+  //   } catch (err) {
+  //     set({
+  //       error: err.response?.data?.message || "Failed to fetch investments",
+  //       loading: false,
+  //     });
+  //   }
+  // },
+
   // Add a new investment
   addInvestment: async (investmentData) => {
     set({ loading: true, error: null });

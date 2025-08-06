@@ -3,6 +3,8 @@ import { api } from "../services/api"; // Your API service
 
 export const useInvestmentOpportunityStore = create((set) => ({
   investmentOpportunities: [],
+  investmentOpportunity:null,
+  investmentOpportunitiesWithBranch:[],
   addInvestmentOppurtunities:null,
   investmentOpportunityUpdate: null,
   investmentOpportunityDelete: null,
@@ -15,6 +17,21 @@ export const useInvestmentOpportunityStore = create((set) => ({
     try {
       const res = await api.get("/investmentOpportunity");
       set({ investmentOpportunities: res.data?.data || [], loading: false });
+    } catch (err) {
+      set({
+        error:
+          err.response?.data?.message ||
+          "Failed to fetch investment opportunities",
+        loading: false,
+      });
+    }
+  },
+
+  fetchInvestmentsById: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get(`/investmentOpportunity/${id}`);
+      set({ investmentOpportunity: res.data?.data || [], loading: false });
     } catch (err) {
       set({
         error:
@@ -100,6 +117,24 @@ export const useInvestmentOpportunityStore = create((set) => ({
         error:
           err.response?.data?.message ||
           "Failed to delete investment opportunity",
+        loading: false,
+      });
+    }
+  },
+
+  // Fetch investment opportunity along with branches
+  fetchInvestmentOpportunityWithBranches: async (opportunityId) => {
+    set({ loading: true, error: null });
+
+    try {
+      const response = await api.get(`/investmentOpportunity/opportunityBranches/${opportunityId}`);
+      set({
+        investmentOpportunitiesWithBranch: response.data.data,
+        loading: false,
+      });
+    } catch (err) {
+      set({
+        error: err.response?.data?.message || "Failed to fetch opportunity with branches",
         loading: false,
       });
     }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
 import { useSettingStore } from "../../store/settingStore"; // Importing setting store for investment types and business categories
+import { useBranchStore } from "../../store/branchStore"; // Importing the branch store
 
 export default function AddInvestmentOpportunityForm() {
   const { addInvestmentOpportunity, error } = useInvestmentOpportunityStore(
@@ -12,8 +13,8 @@ export default function AddInvestmentOpportunityForm() {
     fetchInvestmentTypes,
     businessCategories,
     fetchBusinessCategories,
-    loading,
   } = useSettingStore((state) => state);
+  const { branches, fetchBranches } = useBranchStore((state) => state); // Fetch branches
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,15 +30,17 @@ export default function AddInvestmentOpportunityForm() {
     lockInMonths: "",
     exitOptions: "",
     payoutMode: "",
-    renewalFee:""
+    renewalFee: "",
+    selectedBranchIds: [], // Initialize selected branches as an empty array
   });
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
 
   useEffect(() => {
-    fetchInvestmentTypes(); // Fetch investment types on component mount
-    fetchBusinessCategories(); // Fetch business categories on component mount
-  }, [fetchInvestmentTypes, fetchBusinessCategories]);
+    fetchInvestmentTypes(); // Fetch investment types
+    fetchBusinessCategories(); // Fetch business categories
+    fetchBranches(); // Fetch branches
+  }, [fetchInvestmentTypes, fetchBusinessCategories, fetchBranches]);
 
   useEffect(() => {
     if (error) {
@@ -62,11 +65,9 @@ export default function AddInvestmentOpportunityForm() {
       !formData.exitOptions ||
       !formData.payoutMode ||
       !formData.renewalFee ||
-
-      // !formData.turnOverAmount ||
-      !formData.turnOverPercentage
+      formData.selectedBranchIds.length === 0 // Ensure at least one branch is selected
     ) {
-      setErrorValidation("All fields are required.");
+      setErrorValidation("All fields are required and at least one branch must be selected.");
       return;
     }
 
@@ -101,7 +102,8 @@ export default function AddInvestmentOpportunityForm() {
         lockInMonths: "",
         exitOptions: "",
         payoutMode: "",
-        renewalFee:""
+        renewalFee: "",
+        selectedBranchIds: [], // Reset selected branches
       });
       setErrorValidation(""); // Clear any previous errors
     } catch (err) {
@@ -239,18 +241,6 @@ export default function AddInvestmentOpportunityForm() {
           </span>
         </div>
 
-        {/* Turn Over Amount */}
-        {/* <input
-          type="text"
-          placeholder="Turn Over Amount"
-          value={formData.turnOverAmount}
-          onChange={(e) => {
-            const value = e.target.value.replace(/[^0-9.]/g, '');
-            setFormData({ ...formData, turnOverAmount: value });
-          }}
-          className="border px-3 py-2 rounded-md w-full"
-        /> */}
-
         {/* Lock-in Months */}
         <input
           type="text"
@@ -288,8 +278,9 @@ export default function AddInvestmentOpportunityForm() {
           <option value="Yearly">Yearly</option>
         </select>
 
-        
         {/* Renewal Fee */}
+        <div>
+
         <input
           type="text"
           placeholder="Renewal Fee"
@@ -299,6 +290,27 @@ export default function AddInvestmentOpportunityForm() {
           }
           className="border px-3 py-2 rounded-md w-full"
         />
+        </div>
+
+        {/* Branches Selection */}
+        <div>
+          <label className="block mb-1">Select Branches</label>
+          <select
+            multiple
+            value={formData.selectedBranchIds}
+            onChange={(e) => {
+              const selected = Array.from(e.target.selectedOptions, option => option.value);
+              setFormData({ ...formData, selectedBranchIds: selected });
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            {branches?.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Submit Button */}

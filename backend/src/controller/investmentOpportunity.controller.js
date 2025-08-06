@@ -1,5 +1,7 @@
 import { body, validationResult } from "express-validator";
+import asyncHandler from "express-async-handler";
 import * as investmentOpportunityService from "../services/investmentOpportunity.service.js";
+
 
 
 // Validation logic for creating and updating investment opportunities
@@ -71,3 +73,18 @@ export const deleteInvestmentOpportunity = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// Controller to get an investment opportunity with its branches
+export const getInvestmentOpportunityWithBranches = asyncHandler(async (req, res) => {
+  const opportunityId = req.params.opportunityId;
+
+  // Get the opportunity with its related branches
+  const opportunity = await investmentOpportunityService.getInvestmentOpportunityWithBranchesService(opportunityId);
+
+  if (!opportunity) {
+    res.status(404).json({ success: false, message: "Opportunity not found" });
+    return;
+  }
+
+  res.status(200).json({ success: true, data: opportunity });
+});

@@ -14,9 +14,18 @@ export const getAllInvestmentOpportunities = async () => {
 export const getInvestmentOpportunityById = async (id) => {
   return prisma.investmentOpportunity.findUnique({
     where: { id },
+    // include: {
+    //   investmentType: true,
+    //   businessCategory: true,
+    // },
     include: {
       investmentType: true,
       businessCategory: true,
+      opportunityBranches: {
+        include: {
+          branch: true, // Include the branch associated with the opportunity
+        },
+      },
     },
   });
 };
@@ -36,7 +45,8 @@ export const createInvestmentOpportunity = async (data) => {
     brandName,
     exitOptions,
     payoutMode,
-    renewalFee
+    renewalFee,
+    selectedBranchIds,
   } = data;
 
   // Validate that the investment type and business category exist
@@ -58,11 +68,7 @@ export const createInvestmentOpportunity = async (data) => {
         (parseFloat(roiPercent) / 100) * parseFloat(minAmount);
     }
 
-    // // Add calculatedRoiAmount to turnOverAmount
-    // let finalTurnOverAmount = parseInt(turnOverAmount) || 0;
-    // if (calculatedRoiAmount !== null) {
-    //   finalTurnOverAmount += calculatedRoiAmount;
-    // }
+    // Create the new investment opportunity
     const newOpportunity = await prisma.investmentOpportunity.create({
       data: {
         name,
@@ -79,9 +85,21 @@ export const createInvestmentOpportunity = async (data) => {
         exitOptions,
         payoutMode,
         isActive: true,
-        renewalFee:parseFloat(renewalFee),
+        renewalFee: parseFloat(renewalFee),
       },
     });
+
+    // After creating the opportunity, create the opportunity-branch relationship
+    if (selectedBranchIds && selectedBranchIds.length > 0) {
+      const opportunityBranches = selectedBranchIds.map((branchId) => ({
+        opportunityId: newOpportunity.id, // Use the new opportunity ID
+        branchId,
+      }));
+
+      await prisma.opportunityBranch.createMany({
+        data: opportunityBranches,
+      });
+    }
 
     return newOpportunity;
   } catch (error) {
@@ -89,35 +107,84 @@ export const createInvestmentOpportunity = async (data) => {
   }
 };
 
-// Update an existing investment opportunity
 export const updateInvestmentOpportunity = async (id, data) => {
+  const {
+    name,
+    description,
+    investmentTypeId,
+    businessCategoryId,
+    minAmount,
+    maxAmount,
+    roiPercent,
+    turnOverPercentage,
+    lockInMonths,
+    brandName,
+    exitOptions,
+    payoutMode,
+    renewalFee,
+    selectedBranchIds,
+  } = data;
+  
   try {
     let calculatedRoiAmount = null;
-    if (data.roiPercent && data.minAmount) {
+    if (roiPercent && minAmount) {
       calculatedRoiAmount =
-        (parseFloat(data.roiPercent) / 100) * parseFloat(data.minAmount);
+        (parseFloat(roiPercent) / 100) * parseFloat(minAmount);
     }
 
     // Convert numeric fields to appropriate types
     const updatedData = {
-      ...data,
-      minAmount: parseFloat(data.minAmount),
-      maxAmount: data.maxAmount ? parseFloat(data.maxAmount) : null,
-      roiPercent: parseFloat(data.roiPercent),
-      lockInMonths: parseInt(data.lockInMonths),
-      turnOverPercentage: parseInt(data.turnOverPercentage),
+      name,
+      description,
+      brandName,
+      minAmount: parseFloat(minAmount),
+      maxAmount: maxAmount ? parseFloat(maxAmount) : null,
+      roiPercent: parseFloat(roiPercent),
+      lockInMonths: parseInt(lockInMonths),
+      turnOverPercentage: parseInt(turnOverPercentage),
       turnOverAmount: calculatedRoiAmount,
-      renewalFee:parseFloat(data.renewalFee),
+      exitOptions,
+      payoutMode,
+      renewalFee: parseFloat(renewalFee),
+      isActive: true, // Assuming you want to keep it active by default
 
+      // Correctly reference the nested relations for investmentType and businessCategory
+      investmentType: {
+        connect: { id: investmentTypeId }, // Correct way to update relations
+      },
+      businessCategory: {
+        connect: { id: businessCategoryId }, // Correct way to update relations
+      },
     };
 
+    // Update the investment opportunity
     const updatedOpportunity = await prisma.investmentOpportunity.update({
       where: { id },
       data: updatedData,
     });
 
+    // If branch IDs are provided, update the associated branches
+    if (selectedBranchIds && selectedBranchIds.length > 0) {
+      
+      // First, delete any existing relationships between the opportunity and branches
+      await prisma.opportunityBranch.deleteMany({
+        where: { opportunityId: id },
+      });
+      
+      // Create the new relationship between opportunity and branches
+      const opportunityBranches = selectedBranchIds.map((branchId) => ({
+        opportunityId: updatedOpportunity.id, // Use the updated opportunity ID
+        branchId,
+      }));
+      await prisma.opportunityBranch.createMany({
+        data: opportunityBranches,
+      });
+    }
+
     return updatedOpportunity;
   } catch (error) {
+    console.log(error);
+    
     throw new Error("Error updating investment opportunity: " + error.message);
   }
 };
@@ -143,5 +210,33 @@ export const deleteInvestmentOpportunity = async (id) => {
     });
   } catch (error) {
     throw new Error("Error deleting investment opportunity: " + error.message);
+  }
+};
+
+// Function to get an investment opportunity with its related branches
+export const getInvestmentOpportunityWithBranchesService = async (
+  opportunityId
+) => {
+  try {
+    const opportunity = await prisma.investmentOpportunity.findUnique({
+      where: { id: opportunityId },
+      include: {
+        opportunityBranches: {
+          include: {
+            branch: true, // Include the branch associated with the opportunity
+          },
+        },
+      },
+    });
+
+    if (!opportunity) {
+      throw new Error("Opportunity not found");
+    }
+
+    return opportunity;
+  } catch (error) {
+    throw new Error(
+      "Error fetching opportunity with branches: " + error.message
+    );
   }
 };

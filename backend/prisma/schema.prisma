@@ -152,6 +152,7 @@ model RolePermission {
   @@unique([roleId, permissionId, access])
 }
 
+// Branch model
 model Branch {
   id        String   @id @default(uuid())
   name      String   @unique
@@ -159,6 +160,14 @@ model Branch {
   users     User[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Many-to-many relationship with InvestmentOpportunity
+  investmentOpportunities InvestmentOpportunity[] @relation("OpportunityBranches")
+
+  // Many-to-many relation with OpportunityBranch
+  opportunityBranches OpportunityBranch[]
+
+  investments Investment[]
 }
 
 model Investor {
@@ -196,6 +205,7 @@ model BusinessCategory {
   opportunities InvestmentOpportunity[]
 }
 
+// Investment Opportunity model
 model InvestmentOpportunity {
   id                 String   @id @default(uuid())
   name               String
@@ -221,19 +231,35 @@ model InvestmentOpportunity {
 
   investments Investment[]
 
-  sales              Sales[]      // Sales data linked to the opportunity
+  sales Sales[] // Sales data linked to the opportunity
+
+  // Many-to-many relationship with Branch
+  branches Branch[] @relation("OpportunityBranches")
+
+  opportunityBranches OpportunityBranch[]
 }
 
+// New Model to store the selected branches for an opportunity
+model OpportunityBranch {
+  id            String                @id @default(uuid())
+  opportunityId String
+  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  branchId      String
+  branch        Branch                @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Investment model
 model Investment {
-  id            String  @id @default(uuid())
-  
+  id         String   @id @default(uuid())
   investorId String
   investor   Investor @relation(fields: [investorId], references: [id])
 
   opportunityId String
   createdById   String?
 
-  // investor    Investor              @relation(fields: [investorId], references: [id])
   opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
   createdBy   User?                 @relation("UserInvestments", fields: [createdById], references: [id])
 
@@ -245,10 +271,13 @@ model Investment {
   contractStart   DateTime
   contractEnd     DateTime
   paymentMethod   String
-  agreementSigned Boolean  @default(false)
-  status          String   @default("Ongoing")
+  agreementSigned Boolean   @default(false)
+  status          String    @default("Ongoing")
 
   payouts Payout[]
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id]) // One investment belongs to one branch
 }
 
 model Payout {
@@ -265,12 +294,11 @@ model Payout {
   investment Investment @relation(fields: [investmentId], references: [id])
 }
 
-
 model Sales {
-  id            String      @id @default(uuid())
+  id            String   @id @default(uuid())
   opportunityId String
-  amount        Float       // Amount of sales for the day
-  date          DateTime    // The date of the sale
-  
-  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  amount        Float // Amount of sales for the day
+  date          DateTime // The date of the sale
+
+  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
 }
