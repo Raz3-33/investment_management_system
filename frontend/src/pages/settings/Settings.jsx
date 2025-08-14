@@ -1,6 +1,7 @@
 // App.js
 
 import Branch from "../../components/settings/branch/Branch";
+import TerritoryManagement from "../../components/settings/territory/TerritoryManagement";
 import Tabs from "../../components/ui/tab/Tabs";
 import BusinessCategoryManagement from "./BusinessCategoryManagement";
 import InvestmentTypeManagement from "./InvestmentTypeManagement";
@@ -115,7 +116,40 @@ const tabs = [
     ),
     content: <InvestmentTypeManagement />,
   },
-  
+  {
+    id: "territory",
+    label: "Territory",
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* <!-- Left node --> */}
+        <circle cx="6" cy="6" r="2" stroke="currentColor" stroke-width="1.5" />
+        {/* <!-- Right node --> */}
+        <circle cx="18" cy="6" r="2" stroke="currentColor" stroke-width="1.5" />
+        {/* <!-- Bottom node --> */}
+        <circle
+          cx="12"
+          cy="18"
+          r="2"
+          stroke="currentColor"
+          stroke-width="1.5"
+        />
+
+        {/* <!-- Connections --> */}
+        <path
+          d="M6 6V10C6 13 9 15 12 15C15 15 18 13 18 10V6"
+          stroke="currentColor"
+          stroke-width="1.5"
+        />
+      </svg>
+    ),
+    content: <TerritoryManagement />,
+  },
 ];
 
 export default function Settings() {

@@ -1,20 +1,26 @@
 import { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
-import { useSettingStore } from "../../store/settingStore"; // Importing setting store for investment types and business categories
-import { useBranchStore } from "../../store/branchStore"; // Importing the branch store
+import { useSettingStore } from "../../store/settingStore";
+import { useBranchStore } from "../../store/branchStore";
+import { useTerritoryStore } from "../../store/territoryStore"; 
 
 export default function AddInvestmentOpportunityForm() {
   const { addInvestmentOpportunity, error } = useInvestmentOpportunityStore(
-    (state) => state
+    (s) => s
   );
+
   const {
     investmentTypes,
     fetchInvestmentTypes,
     businessCategories,
     fetchBusinessCategories,
-  } = useSettingStore((state) => state);
-  const { branches, fetchBranches } = useBranchStore((state) => state); // Fetch branches
+  } = useSettingStore((s) => s);
+
+  const { branches, fetchBranches } = useBranchStore((s) => s);
+
+  // NEW: territories
+  const { territories, fetchTerritories } = useTerritoryStore((s) => s);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,28 +37,36 @@ export default function AddInvestmentOpportunityForm() {
     exitOptions: "",
     payoutMode: "",
     renewalFee: "",
-    selectedBranchIds: [], // Initialize selected branches as an empty array
+    selectedBranchIds: [],
+    // NEW FIELDS:
+    isStore: false, // controls whether store-wise territories apply
+    selectedTerritoryIds: [], // multi-select territories
+    isSignature: false, // Signature store checkbox state
+    signatureStoreLocation: "", // signatureStoreLocation field for signature store
   });
 
-  const [errorValidation, setErrorValidation] = useState(""); // Error message state
+  const [errorValidation, setErrorValidation] = useState("");
 
   useEffect(() => {
-    fetchInvestmentTypes(); // Fetch investment types
-    fetchBusinessCategories(); // Fetch business categories
-    fetchBranches(); // Fetch branches
-  }, [fetchInvestmentTypes, fetchBusinessCategories, fetchBranches]);
+    fetchInvestmentTypes();
+    fetchBusinessCategories();
+    fetchBranches();
+    fetchTerritories(); // <-- NEW
+  }, [
+    fetchInvestmentTypes,
+    fetchBusinessCategories,
+    fetchBranches,
+    fetchTerritories,
+  ]);
 
   useEffect(() => {
-    if (error) {
-      setErrorValidation(error);
-    }
+    if (error) setErrorValidation(error);
   }, [error]);
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation for required fields
+    // Required fields
     if (
       !formData.name ||
       !formData.description ||
@@ -65,29 +79,57 @@ export default function AddInvestmentOpportunityForm() {
       !formData.exitOptions ||
       !formData.payoutMode ||
       !formData.renewalFee ||
-      formData.selectedBranchIds.length === 0 // Ensure at least one branch is selected
+      formData.selectedBranchIds.length === 0
     ) {
-      setErrorValidation("All fields are required and at least one branch must be selected.");
+      setErrorValidation(
+        "All fields are required and at least one branch must be selected."
+      );
       return;
     }
 
-    // Validate minAmount, roiPercent, and lockInMonths as numbers
+    // If Store is checked, at least one territory must be chosen
+    if (formData.isStore && formData.selectedTerritoryIds.length === 0) {
+      setErrorValidation(
+        "Please select at least one territory when Store is enabled."
+      );
+      return;
+    }
+
+    // If Signature Store is enabled, signatureStoreLocation is required
+    if (formData.isSignature && !formData.signatureStoreLocation) {
+      setErrorValidation("Please enter the location for Signature Store.");
+      return;
+    }
+
+    // Numeric validations
     if (
       isNaN(formData.minAmount) ||
+      (formData.maxAmount && isNaN(formData.maxAmount)) ||
       isNaN(formData.roiPercent) ||
-      isNaN(formData.lockInMonths)
+      isNaN(formData.lockInMonths) ||
+      (formData.turnOverPercentage && isNaN(formData.turnOverPercentage)) ||
+      (formData.turnOverAmount && isNaN(formData.turnOverAmount)) ||
+      isNaN(formData.renewalFee)
     ) {
       setErrorValidation(
-        "Min Amount, ROI Percent, and Lock-in Months must be numbers."
+        "Amounts, percentages, and months must be valid numbers."
       );
       return;
     }
 
     try {
-      // Call the store's addInvestmentOpportunity function to send data to the backend
-      await addInvestmentOpportunity(formData);
+      // Prepare payload with territories only if isStore is true
+      const payload = {
+        ...formData,
+        selectedBranchIds: formData.selectedBranchIds,
+        selectedTerritoryIds: formData.isStore
+          ? formData.selectedTerritoryIds
+          : [],
+      };
 
-      // Reset form data after successful submission
+      await addInvestmentOpportunity(payload);
+
+      // Reset form data
       setFormData({
         name: "",
         description: "",
@@ -103,7 +145,11 @@ export default function AddInvestmentOpportunityForm() {
         exitOptions: "",
         payoutMode: "",
         renewalFee: "",
-        selectedBranchIds: [], // Reset selected branches
+        selectedBranchIds: [],
+        isStore: false,
+        isSignature: false, // Reset signature store checkbox
+        selectedTerritoryIds: [],
+        signatureStoreLocation: "", // Reset signatureStoreLocation
       });
       setErrorValidation(""); // Clear any previous errors
     } catch (err) {
@@ -115,7 +161,6 @@ export default function AddInvestmentOpportunityForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Display error message */}
       {errorValidation && (
         <p className="text-red-500 text-sm">{errorValidation}</p>
       )}
@@ -161,9 +206,9 @@ export default function AddInvestmentOpportunityForm() {
           className="border px-3 py-2 rounded-md w-full"
         >
           <option value="">Select Investment Type</option>
-          {investmentTypes?.map((type) => (
-            <option key={type.id} value={type.id}>
-              {type.name}
+          {investmentTypes?.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
             </option>
           ))}
         </select>
@@ -177,46 +222,53 @@ export default function AddInvestmentOpportunityForm() {
           className="border px-3 py-2 rounded-md w-full"
         >
           <option value="">Select Business Category</option>
-          {businessCategories?.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
+          {businessCategories?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>
 
-        {/* Minimum Amount */}
+        {/* Min Amount */}
         <input
           type="text"
           placeholder="Min Amount"
           value={formData.minAmount}
           onChange={(e) =>
-            setFormData({ ...formData, minAmount: e.target.value })
+            setFormData({
+              ...formData,
+              minAmount: e.target.value.replace(/[^0-9.]/g, ""),
+            })
           }
           className="border px-3 py-2 rounded-md w-full"
         />
 
-        {/* Maximum Amount */}
+        {/* Max Amount */}
         <input
           type="text"
           placeholder="Max Amount"
           value={formData.maxAmount}
           onChange={(e) =>
-            setFormData({ ...formData, maxAmount: e.target.value })
+            setFormData({
+              ...formData,
+              maxAmount: e.target.value.replace(/[^0-9.]/g, ""),
+            })
           }
           className="border px-3 py-2 rounded-md w-full"
         />
 
-        {/* ROI Percentage */}
+        {/* ROI % */}
         <div className="relative">
           <input
             type="text"
-            placeholder="Minimum Gurante"
+            placeholder="Minimum Guarantee (%)"
             value={formData.roiPercent}
-            onChange={(e) => {
-              // Allow only numbers and dot, but let user clear the field
-              const value = e.target.value.replace(/[^0-9.]/g, "");
-              setFormData({ ...formData, roiPercent: value });
-            }}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                roiPercent: e.target.value.replace(/[^0-9.]/g, ""),
+              })
+            }
             className="border px-3 py-2 rounded-md w-full pr-8"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -224,17 +276,19 @@ export default function AddInvestmentOpportunityForm() {
           </span>
         </div>
 
-        {/* Turn Over Percentage */}
+        {/* Turn Over % */}
         <div className="relative">
           <input
             type="text"
             placeholder="Turn Over Percentage"
             value={formData.turnOverPercentage}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9.]/g, "");
-              setFormData({ ...formData, turnOverPercentage: value });
-            }}
-            className="border px-3 py-2 rounded-md w-full"
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                turnOverPercentage: e.target.value.replace(/[^0-9.]/g, ""),
+              })
+            }
+            className="border px-3 py-2 rounded-md w-full pr-8"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
             %
@@ -246,10 +300,12 @@ export default function AddInvestmentOpportunityForm() {
           type="text"
           placeholder="Lock-in Months"
           value={formData.lockInMonths}
-          onChange={(e) => {
-            const value = e.target.value.replace(/[^0-9]/g, "");
-            setFormData({ ...formData, lockInMonths: value });
-          }}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              lockInMonths: e.target.value.replace(/[^0-9]/g, ""),
+            })
+          }
           className="border px-3 py-2 rounded-md w-full"
         />
 
@@ -278,42 +334,132 @@ export default function AddInvestmentOpportunityForm() {
           <option value="Yearly">Yearly</option>
         </select>
 
-        {/* Renewal Fee */}
         <div>
-
-        <input
-          type="text"
-          placeholder="Renewal Fee"
-          value={formData.renewalFee}
-          onChange={(e) =>
-            setFormData({ ...formData, renewalFee: e.target.value })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        />
+          {/* Renewal Fee */}
+          <input
+            type="text"
+            placeholder="Renewal Fee"
+            value={formData.renewalFee}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                renewalFee: e.target.value.replace(/[^0-9.]/g, ""),
+              })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          />
         </div>
-
-        {/* Branches Selection */}
+        {/* Branches */}
         <div>
           <label className="block mb-1">Select Branches</label>
           <select
             multiple
             value={formData.selectedBranchIds}
             onChange={(e) => {
-              const selected = Array.from(e.target.selectedOptions, option => option.value);
+              const selected = Array.from(
+                e.target.selectedOptions,
+                (o) => o.value
+              );
               setFormData({ ...formData, selectedBranchIds: selected });
             }}
             className="border px-3 py-2 rounded-md w-full"
           >
-            {branches?.map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.name}
+            {branches?.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
               </option>
             ))}
           </select>
         </div>
+
+        {/* NEW: Store checkbox */}
+        <div className="flex items-center gap-2">
+          <input
+            id="isStore"
+            type="checkbox"
+            checked={formData.isStore}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                isStore: checked,
+                // if unchecked, clear territories to avoid stale selections
+                selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
+                isSignature: false, // Disable signature store checkbox
+              }));
+            }}
+            className="h-4 w-4"
+          />
+          <label htmlFor="isStore" className="text-sm select-none">
+            Master Franchise
+          </label>
+        </div>
+
+        {/* NEW: Signature Store checkbox */}
+        <div className="flex items-center gap-2">
+          <input
+            id="isSignature"
+            type="checkbox"
+            checked={formData.isSignature}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                isSignature: checked,
+                signatureStoreLocation: checked ? prev.signatureStoreLocation : "",
+                selectedTerritoryIds: [], // Clear territories
+                isStore: false, // Disable Store checkbox
+              }));
+            }}
+            className="h-4 w-4"
+          />
+          <label htmlFor="isSignature" className="text-sm select-none">
+            Signature Store
+          </label>
+        </div>
+
+        {/* signatureStoreLocation for Signature Store */}
+        {formData.isSignature && (
+          <input
+            type="text"
+            placeholder="Location"
+            value={formData.signatureStoreLocation}
+            onChange={(e) =>
+              setFormData({ ...formData, signatureStoreLocation: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        )}
+
+        {/* NEW: Territories multiselect (only when Store is checked) */}
+        {formData.isStore && (
+          <div className="md:col-span-1">
+            <label className="block mb-1">Select Territories</label>
+            <select
+              multiple
+              value={formData.selectedTerritoryIds}
+              onChange={(e) => {
+                const selected = Array.from(
+                  e.target.selectedOptions,
+                  (o) => o.value
+                );
+                setFormData({ ...formData, selectedTerritoryIds: selected });
+              }}
+              className="border px-3 py-2 rounded-md w-full"
+            >
+              {territories?.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Hold Ctrl/Cmd to select multiple territories.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Submit Button */}
       <div className="flex justify-center">
         <Button
           type="submit"

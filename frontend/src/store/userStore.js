@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { api } from "../services/api"; // Your API service
+import { api } from "../services/api";
 
 export const useUserStore = create(
   persist(
@@ -10,19 +10,19 @@ export const useUserStore = create(
       userAdd: null,
       loading: false,
       error: null,
-      token: localStorage.getItem("token") || null, // Load the token from localStorage if available
+      token: localStorage.getItem("token") ?? localStorage.getItem("token"),
 
-      // Fetch users from API
+      // Fetch all users
       fetchUsers: async () => {
         const token = get().token;
         set({ loading: true, error: null });
         try {
           const res = await api.get("/users", {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token to the request
+              authorization: `Bearer ${token || localStorage.getItem("token")}`,
             },
           });
-          set({ users: res.data?.data, loading: false });
+          set({ users: res.data?.data || [], loading: false });
         } catch (err) {
           set({
             error: err.response?.data?.message || "Failed to fetch users",
@@ -31,39 +31,43 @@ export const useUserStore = create(
         }
       },
 
+      // Get a single user by ID (from local state)
+      getUserById: (id) => {
+        return get().users.find((u) => u.id === id) || null;
+      },
+
       // Add a new user
       addUser: async (newUser) => {
         const token = get().token;
         try {
           const res = await api.post("/users", newUser, {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token to the request
+              authorization: `Bearer ${token || localStorage.getItem("token")}`,
             },
           });
-          set({
-            userAdd: res.data?.data, // Add the new user to the state
-          });
+          set((state) => ({
+            users: [...state.users, res.data?.data],
+            userAdd: res.data?.data,
+          }));
         } catch (err) {
           set({
             error: err.response?.data?.message || "Failed to add user",
-            loading: false,
           });
           console.error("Add user failed", err);
         }
       },
 
-      // Update an existing user
+      // Update a user
       updateUser: async (id, updatedUser) => {
-        const token = get().token;
+        // const token = get().token;
         try {
           const res = await api.put(`/users/${id}`, updatedUser, {
-            headers: {
-              Authorization: `Bearer ${token}`, // Attach token to the request
-            },
+            headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
           });
-          set({
+          set((state) => ({
+            users: state.users.map((u) => (u.id === id ? res.data?.data : u)),
             userEdit: res.data?.data,
-          });
+          }));
         } catch (err) {
           console.error("Update user failed", err);
         }
@@ -74,33 +78,31 @@ export const useUserStore = create(
         const token = get().token;
         try {
           await api.delete(`/users/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`, // Attach token to the request
-            },
+            headers: { authorization: `Bearer ${token}` },
           });
-          set({
-            users: get().users.filter((user) => user.id !== id), // Remove the deleted user
-          });
+          set((state) => ({
+            users: state.users.filter((u) => u.id !== id),
+          }));
         } catch (err) {
           console.error("Delete user failed", err);
         }
       },
 
-      // Function to store the token in the state and localStorage
+      // Store token
       setToken: (token) => {
-        localStorage.setItem("token", token); // Save token in localStorage
-        set({ token }); // Set token in Zustand state
+        localStorage.setItem("token", token);
+        set({ token });
       },
 
-      // Function to remove token from the state and localStorage (logout)
+      // Remove token (logout)
       logout: () => {
         localStorage.removeItem("token");
         set({ token: null });
       },
     }),
     {
-      name: "user-store", // Persisted store name
-      partialize: (state) => ({ token: state.token, users: state.users }), // Persist only token and users
+      name: "user-store",
+      partialize: (state) => ({ token: state.token, users: state.users }),
     }
   )
 );

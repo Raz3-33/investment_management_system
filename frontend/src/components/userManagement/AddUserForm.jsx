@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CountryList from "country-list-with-dial-code-and-flag";
 import Button from "../ui/Button";
 import { useUserStore } from "../../store/userStore";
 import { useRoleStore } from "../../store/roleStore";
@@ -8,78 +9,91 @@ export default function AddUserForm() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    password: "",
-    roleId: "",
+    phone: "",
+    countryCode: "+91",
     branchId: "",
+    roleId: "",
+    designation: "",
+    headId: "",
+    managerId: "",
+    userType: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  const [errorValidation, setErrorValidation] = useState(""); // Error message state
+  const [errorValidation, setErrorValidation] = useState("");
+  const [countries, setCountries] = useState([]);
 
-  const { addUser, error,userAdd } = useUserStore((state) => state);
+  const { addUser, error, userAdd, users, fetchUsers } = useUserStore(
+    (state) => state
+  );
   const { branches, fetchBranches } = useBranchStore((state) => state);
   const { roles, fetchRoles } = useRoleStore((s) => s);
 
   useEffect(() => {
-    if (error) {
-      setErrorValidation(error);
-    }
+    setCountries(CountryList.getAll());
+  }, []);
+
+  useEffect(() => {
+    if (error) setErrorValidation(error);
   }, [error]);
-  // Fetch roles when component mounts or on updates
+
   useEffect(() => {
     fetchRoles();
-  }, [fetchRoles,userAdd]);
-
-  // Fetch branches when component mounts or on updates
-  useEffect(() => {
     fetchBranches();
-  }, [fetchBranches,userAdd]);
+    fetchUsers();
+  }, [fetchRoles, fetchBranches, fetchUsers, userAdd]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation for required fields
     if (
-      !formData?.name ||
-      !formData?.email ||
-      !formData?.password ||
-      !formData?.roleId ||
-      !formData?.branchId
+      !formData.name ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.branchId ||
+      !formData.roleId
     ) {
-      setErrorValidation("All fields are required.");
+      setErrorValidation("Please fill all required fields.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorValidation("Passwords do not match.");
       return;
     }
 
     try {
-      // Call the store's addUser function, which will send data to the backend
       await addUser(formData);
-
-      // Reset form data after successful submission
       setFormData({
         name: "",
         email: "",
-        password: "",
-        roleId: "",
+        phone: "",
+        countryCode: "+91",
         branchId: "",
+        roleId: "",
+        designation: "",
+        headId: "",
+        managerId: "",
+        userType: "",
+        password: "",
+        confirmPassword: "",
       });
-      setErrorValidation(""); // Clear any previous errors
+      setErrorValidation("");
     } catch (err) {
-      // Show error if there's an issue with user creation
       setErrorValidation("Failed to add user: " + err.message);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Error message */}
-
-      {error && (
-        <p className="text-red-500 text-sm">{error}</p>
-      )}
+    <form onSubmit={handleSubmit} className="space-y-6">
       {errorValidation && (
         <p className="text-red-500 text-sm">{errorValidation}</p>
       )}
-      {/* First row with two inputs side-by-side */}
+
+      {/* Grid Container */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Name */}
         <input
           type="text"
           placeholder="Name"
@@ -87,6 +101,8 @@ export default function AddUserForm() {
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           className="border px-3 py-2 rounded-md w-full"
         />
+
+        {/* Email */}
         <input
           type="email"
           placeholder="Email"
@@ -94,10 +110,161 @@ export default function AddUserForm() {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="border px-3 py-2 rounded-md w-full"
         />
-      </div>
 
-      {/* Second row with password and role selection */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Phone (Country Code + Phone) */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium mb-2">Phone</label>
+          <div className="grid grid-cols-12 gap-2">
+            <select
+              value={formData.countryCode}
+              onChange={(e) =>
+                setFormData({ ...formData, countryCode: e.target.value })
+              }
+              className="col-span-3 sm:col-span-2 md:col-span-4 border px-3 py-2 rounded-md"
+            >
+              <option value="">Code</option>
+              {countries.map((c) => (
+                <option key={c.code} value={c.dial_code}>
+                  {c.flag || c.code} {c.name} ({c.dial_code})
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="tel"
+              placeholder="Phone number"
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
+              className="col-span-7 sm:col-span-8 md:col-span-8 border px-3 py-2 rounded-md"
+            />
+          </div>
+        </div>
+
+        {/* Branch */}
+        <select
+          value={formData.branchId}
+          onChange={(e) =>
+            setFormData({ ...formData, branchId: e.target.value })
+          }
+          className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+        >
+          <option value="">Select Branch</option>
+          {branches?.map((branch) => (
+            <option key={branch.id} value={branch.id}>
+              {branch.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Role */}
+        <select
+          value={formData.roleId}
+          onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
+          className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+        >
+          <option value="">Select Role</option>
+          {roles.map((role) => (
+            <option key={role.id} value={role.id}>
+              {role.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Designation */}
+        <input
+          type="text"
+          placeholder="Designation (Optional)"
+          value={formData.designation}
+          onChange={(e) =>
+            setFormData({ ...formData, designation: e.target.value })
+          }
+          className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+        />
+
+        {/* User type */}
+        <div className="md:col-span-2 flex flex-wrap gap-6">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="userType"
+              value="head"
+              checked={formData.userType === "head"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  userType: e.target.value,
+                  managerId: "",
+                })
+              }
+            />
+            Head
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="userType"
+              value="manager"
+              checked={formData.userType === "manager"}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  userType: e.target.value,
+                  headId: "",
+                })
+              }
+            />
+            Manager
+          </label>
+        </div>
+
+        {/* Head Dropdown */}
+        {formData.userType !== "head" && (
+          <select
+            value={formData.headId}
+            onChange={(e) =>
+              setFormData({ ...formData, headId: e.target.value })
+            }
+            className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Head</option>
+            {users
+              ?.filter((u) => u.isHead)
+              .map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+          </select>
+        )}
+
+        {/* Manager Dropdown */}
+        {formData.userType !== "manager" && (
+          <select
+            value={formData.managerId}
+            onChange={(e) =>
+              setFormData({ ...formData, managerId: e.target.value })
+            }
+            className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Manager</option>
+            {users
+              ?.filter((u) => u.isManager)
+              .map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+          </select>
+        )}
+        {/* <div className="grid grid-cols-1 md:grid-cols-1">
+          <h3 className="font-semibold text-gray-700 mt-4">
+            Login Credentials
+          </h3>
+        </div> */}
+
+        {/* Password */}
         <input
           type="password"
           placeholder="Password"
@@ -107,43 +274,24 @@ export default function AddUserForm() {
           }
           className="border px-3 py-2 rounded-md w-full"
         />
-        <select
-          value={formData.roleId}
-          onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-          className="border px-3 py-2 rounded-md w-full"
-        >
-          <option value="">Select Role</option>
-          {roles.map((role) => (
-            <option key={role.id} value={role.id}>
-              {role.name}
-            </option>
-          ))}
-        </select>
-      </div>
 
-      {/* Third row with branch selection */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <select
-          value={formData.branchId}
+        {/* Confirm Password */}
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={formData.confirmPassword}
           onChange={(e) =>
-            setFormData({ ...formData, branchId: e.target.value })
+            setFormData({ ...formData, confirmPassword: e.target.value })
           }
           className="border px-3 py-2 rounded-md w-full"
-        >
-          <option value="">Select Branch</option>
-          {branches?.map((branch) => (
-            <option key={branch.id} value={branch.id}>
-              {branch.name}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       {/* Submit Button */}
       <div className="flex justify-center">
         <Button
           type="submit"
-          className="bg-blue-600 text-white hover:bg-blue-700 transition duration-300 w-8 h-8 md:w-auto"
+          className="bg-blue-600 text-white hover:bg-blue-700 transition duration-300 w-40 h-11"
         >
           Add User
         </Button>

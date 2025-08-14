@@ -90,36 +90,54 @@ datasource db {
 }
 
 model User {
-  id        String  @id @default(uuid())
-  UserID    String? @unique
-  name      String
-  email     String  @unique
-  password  String
-  phone     String?
-  image_url String?
+  id          String  @id @default(uuid())
+  UserID      String? @unique
+  name        String
+  email       String  @unique
+  password    String
+  phone       String?
+  image_url   String?
+  designation String?
+  countryCode String?
 
+  // Role Relation
   roleId String?
   role   Role?   @relation(fields: [roleId], references: [id])
 
+  // Branch Relation
   branchId String?
   branch   Branch? @relation(fields: [branchId], references: [id])
 
+  // Investments
   investments Investment[] @relation("UserInvestments")
 
+  // Manager Relation
   managerId    String?
   manager      User?   @relation("UserManager", fields: [managerId], references: [id])
   subordinates User[]  @relation("UserManager")
 
+  // Head Relation (new)
+  headId   String?
+  head     User?   @relation("UserHead", fields: [headId], references: [id])
+  headTeam User[]  @relation("UserHead")
+
+  // Performance
   salesTarget   Float? @default(0)
   salesAchieved Float? @default(0)
   incentive     Float? @default(0)
 
-  isActive  Boolean  @default(true)
-  isLogin   Boolean  @default(false)
-  isAdmin   Boolean  @default(false) // New field added to check if user is an admin
+  // Status
+  isActive  Boolean @default(true)
+  isLogin   Boolean @default(false)
+  isAdmin   Boolean @default(false)
+  isHead    Boolean @default(false)
+  isManager Boolean @default(false)
+
+  // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Assigned Investors
   assignedInvestors Investor[]
 }
 
@@ -207,37 +225,56 @@ model BusinessCategory {
 
 // Investment Opportunity model
 model InvestmentOpportunity {
-  id                 String   @id @default(uuid())
-  name               String
-  brandName          String
-  description        String
-  minAmount          Float
-  maxAmount          Float?
-  roiPercent         Float
-  turnOverPercentage Float?
-  turnOverAmount     Float?
-  renewalFee         Float?
-  lockInMonths       Int
-  exitOptions        String?
-  payoutMode         String // Monthly, Quarterly, etc.
-  isActive           Boolean  @default(true)
-  documents          String[] // Array of file URLs
+  id                   String            @id @default(uuid())
+  name                 String
+  brandName            String
+  description          String
+  minAmount            Float
+  maxAmount            Float?
+  roiPercent           Float
+  turnOverPercentage   Float?
+  turnOverAmount       Float?
+  renewalFee           Float?
+  lockInMonths         Int
+  exitOptions          String?
+  payoutMode           String // Monthly, Quarterly, etc.
+  isActive             Boolean @default(true)
+  documents            String[] // Array of file URLs
 
-  investmentTypeId String
-  investmentType   InvestmentType @relation(fields: [investmentTypeId], references: [id])
+  investmentTypeId     String
+  investmentType       InvestmentType @relation(fields: [investmentTypeId], references: [id])
 
-  businessCategoryId String
-  businessCategory   BusinessCategory @relation(fields: [businessCategoryId], references: [id])
+  businessCategoryId   String
+  businessCategory     BusinessCategory @relation(fields: [businessCategoryId], references: [id])
 
-  investments Investment[]
+  investments          Investment[]
 
-  sales Sales[] // Sales data linked to the opportunity
+  sales                Sales[] // Sales data linked to the opportunity
 
-  // Many-to-many relationship with Branch
-  branches Branch[] @relation("OpportunityBranches")
+  branches             Branch[] @relation("OpportunityBranches")
 
-  opportunityBranches OpportunityBranch[]
+  opportunityBranches  OpportunityBranch[]
+
+  isMasterFranchise    Boolean @default(false)
+  isSignature          Boolean @default(false)
+  signatureStoreLocation String?
+
+  // NEW Relation with territories
+  territoryMasters     TerritoryMaster[] // New relation for territories
 }
+
+
+model TerritoryMaster {
+  id             String             @id @default(uuid())
+  opportunityId  String
+  opportunity    InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  territoryId    String
+  territory      Territory            @relation(fields: [territoryId], references: [id])
+
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
 
 // New Model to store the selected branches for an opportunity
 model OpportunityBranch {
@@ -301,4 +338,14 @@ model Sales {
   date          DateTime // The date of the sale
 
   opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+}
+
+model Territory {
+  id     String @id @default(uuid())
+  name   String @unique
+  region String
+  // Optional relation if you link Territories to Branches:
+  // branches Branch[]
+  territoryMasters  TerritoryMaster[]
+  @@map("territories")
 }

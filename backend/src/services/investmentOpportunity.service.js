@@ -14,21 +14,61 @@ export const getAllInvestmentOpportunities = async () => {
 export const getInvestmentOpportunityById = async (id) => {
   return prisma.investmentOpportunity.findUnique({
     where: { id },
-    // include: {
-    //   investmentType: true,
-    //   businessCategory: true,
-    // },
-    include: {
-      investmentType: true,
-      businessCategory: true,
-      opportunityBranches: {
-        include: {
-          branch: true, // Include the branch associated with the opportunity
-        },
+    select: {
+      id: true,
+      name: true,
+      brandName: true,
+      description: true,
+      minAmount: true,
+      maxAmount: true,
+      roiPercent: true,
+      turnOverPercentage: true,
+      turnOverAmount: true,
+      renewalFee: true,
+      lockInMonths: true,
+      exitOptions: true,
+      payoutMode: true,
+      isActive: true,
+      documents: true,
+      isMasterFranchise: true, // Scalar field
+      isSignature: true, // Scalar field
+      signatureStoreLocation: true, // Scalar field
+      investmentType: {
+        select: {
+          id: true,
+          name: true
+        }
       },
+      businessCategory: {
+        select: {
+          id: true,
+          name: true
+        }
+      },
+      opportunityBranches: {
+        select: {
+          branch: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      },
+      territoryMasters: {
+        select: {
+          territory: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      }
     },
   });
 };
+
 
 export const createInvestmentOpportunity = async (data) => {
   const {
@@ -40,14 +80,18 @@ export const createInvestmentOpportunity = async (data) => {
     maxAmount,
     roiPercent,
     turnOverPercentage,
-    // turnOverAmount,
     lockInMonths,
     brandName,
     exitOptions,
     payoutMode,
     renewalFee,
     selectedBranchIds,
+    isMasterFranchise, // New field
+    isSignature, // New field
+    signatureStoreLocation, // New field
+    selectedTerritoryIds, // New field for territories
   } = data;
+console.log(data);
 
   // Validate that the investment type and business category exist
   const investmentTypeExists = await prisma.investmentType.findUnique({
@@ -86,6 +130,9 @@ export const createInvestmentOpportunity = async (data) => {
         payoutMode,
         isActive: true,
         renewalFee: parseFloat(renewalFee),
+        isMasterFranchise, 
+        isSignature, 
+        signatureStoreLocation,
       },
     });
 
@@ -101,11 +148,28 @@ export const createInvestmentOpportunity = async (data) => {
       });
     }
 
+    // Handle the relationship between opportunity and territories (for Master Franchise)
+    if (
+      isMasterFranchise &&
+      selectedTerritoryIds &&
+      selectedTerritoryIds.length > 0
+    ) {
+      const territoryMasters = selectedTerritoryIds.map((territoryId) => ({
+        opportunityId: newOpportunity.id,
+        territoryId,
+      }));
+
+      await prisma.territoryMaster.createMany({
+        data: territoryMasters,
+      });
+    }
+
     return newOpportunity;
   } catch (error) {
     throw new Error("Error creating investment opportunity: " + error.message);
   }
 };
+
 
 export const updateInvestmentOpportunity = async (id, data) => {
   const {
@@ -123,8 +187,12 @@ export const updateInvestmentOpportunity = async (id, data) => {
     payoutMode,
     renewalFee,
     selectedBranchIds,
+    isMasterFranchise, // New field for Master Franchise
+    isSignature, // New field for Signature Store
+    signatureStoreLocation, // New field for Signature Store location
+    selectedTerritoryIds, // New field for Territory IDs
   } = data;
-  
+
   try {
     let calculatedRoiAmount = null;
     if (roiPercent && minAmount) {
@@ -147,6 +215,9 @@ export const updateInvestmentOpportunity = async (id, data) => {
       payoutMode,
       renewalFee: parseFloat(renewalFee),
       isActive: true, // Assuming you want to keep it active by default
+      isMasterFranchise, // Update Master Franchise flag
+      isSignature, // Update Signature Store flag
+      signatureStoreLocation, // Update Signature Store location
 
       // Correctly reference the nested relations for investmentType and businessCategory
       investmentType: {
@@ -165,12 +236,11 @@ export const updateInvestmentOpportunity = async (id, data) => {
 
     // If branch IDs are provided, update the associated branches
     if (selectedBranchIds && selectedBranchIds.length > 0) {
-      
       // First, delete any existing relationships between the opportunity and branches
       await prisma.opportunityBranch.deleteMany({
         where: { opportunityId: id },
       });
-      
+
       // Create the new relationship between opportunity and branches
       const opportunityBranches = selectedBranchIds.map((branchId) => ({
         opportunityId: updatedOpportunity.id, // Use the updated opportunity ID
@@ -181,10 +251,31 @@ export const updateInvestmentOpportunity = async (id, data) => {
       });
     }
 
+    // Handle the relationship between opportunity and territories (for Master Franchise)
+    if (
+      isMasterFranchise &&
+      selectedTerritoryIds &&
+      selectedTerritoryIds.length > 0
+    ) {
+      // First, delete any existing territory relations
+      await prisma.territoryMaster.deleteMany({
+        where: { opportunityId: updatedOpportunity.id },
+      });
+
+      // Create new relationships for territories if it's a Master Franchise
+      const territoryMasters = selectedTerritoryIds.map((territoryId) => ({
+        opportunityId: updatedOpportunity.id,
+        territoryId,
+      }));
+
+      await prisma.territoryMaster.createMany({
+        data: territoryMasters,
+      });
+    }
+
     return updatedOpportunity;
   } catch (error) {
     console.log(error);
-    
     throw new Error("Error updating investment opportunity: " + error.message);
   }
 };

@@ -14,7 +14,7 @@ export const useRoleStore = create(
       error: null,
 
       // Initially load the token directly from localStorage
-      token: localStorage.getItem("token") || null, // Directly load token from localStorage
+      token: localStorage.getItem("token") ?? JSON.parse(localStorage.getItem("token")), // Directly load token from localStorage
 
       fetchRoles: async () => {
         const token = get().token || localStorage.getItem("token"); // Ensure token is available
@@ -27,7 +27,7 @@ export const useRoleStore = create(
         try {
           const res = await api.get("/roles", {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token for authentication
+              authorization: `Bearer ${token}`, // Attach token for authentication
             },
           });
           set({ roles: res.data, loading: false });
@@ -45,7 +45,7 @@ export const useRoleStore = create(
         try {
           const res = await api.get(`/roles/role/${roleId}`, {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token for authentication
+              authorization: `Bearer ${token}`, // Attach token for authentication
             },
           });
           set({ roleDetail: res.data.data });
@@ -64,7 +64,7 @@ export const useRoleStore = create(
         try {
           const res = await api.post("/roles", newRole, {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token for authentication
+              authorization: `Bearer ${token}`, // Attach token for authentication
             },
           });
           set((state) => ({
@@ -80,7 +80,7 @@ export const useRoleStore = create(
         try {
           const res = await api.put(`/roles/${roleId}`, updatedRole, {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token for authentication
+              authorization: `Bearer ${token}`, // Attach token for authentication
             },
           });
           set((state) => ({
@@ -96,7 +96,7 @@ export const useRoleStore = create(
         try {
           await api.delete(`/roles/${id}`, {
             headers: {
-              Authorization: `Bearer ${token}`, // Attach token for authentication
+              authorization: `Bearer ${token}`, // Attach token for authentication
             },
           });
           set((state) => ({

@@ -3,6 +3,7 @@ import Button from "../ui/Button";
 import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
 import { useSettingStore } from "../../store/settingStore"; // Importing setting store for investment types and business categories
 import { useBranchStore } from "../../store/branchStore"; // Importing branch store for branches
+import { useTerritoryStore } from "../../store/territoryStore"; // Importing territory store for territories
 
 export default function EditInvestmentOpportunityForm({
   opportunityId,
@@ -20,33 +21,29 @@ export default function EditInvestmentOpportunityForm({
     fetchBusinessCategories,
   } = useSettingStore((state) => state);
   const { branches, fetchBranches } = useBranchStore((state) => state); // Fetch branches for selection
-
-  // const opportunity = investmentOpportunities.find(
-  //   (opp) => opp.id === opportunityId
-  // );
-
-  console.log(
-    investmentOpportunity,
-    "investmentOpportunityinvestmentOpportunityinvestmentOpportunityinvestmentOpportunity"
-  );
+  const { territories, fetchTerritories } = useTerritoryStore((state) => state); // Fetch territories for Store selection
 
   // Initial form data setup
   const [formData, setFormData] = useState({
-    name: investmentOpportunity?.name || "",
-    description: investmentOpportunity?.description || "",
-    investmentTypeId: investmentOpportunity?.investmentTypeId || "",
-    businessCategoryId: investmentOpportunity?.businessCategoryId || "",
-    brandName: investmentOpportunity?.brandName || "",
-    minAmount: investmentOpportunity?.minAmount || "",
-    maxAmount: investmentOpportunity?.maxAmount || "",
-    roiPercent: investmentOpportunity?.roiPercent || "",
-    turnOverPercentage: investmentOpportunity?.turnOverPercentage || "",
-    turnOverAmount: investmentOpportunity?.turnOverAmount || "",
-    lockInMonths: investmentOpportunity?.lockInMonths || "",
-    exitOptions: investmentOpportunity?.exitOptions || "",
-    payoutMode: investmentOpportunity?.payoutMode || "",
-    renewalFee: investmentOpportunity?.renewalFee || "",
-    selectedBranchIds: branches?.map((branch) => branch.id) || [], // Store selected branch IDs
+    name: "",
+    description: "",
+    investmentTypeId: "",
+    businessCategoryId: "",
+    brandName: "",
+    minAmount: "",
+    maxAmount: "",
+    roiPercent: "",
+    turnOverPercentage: "",
+    turnOverAmount: "",
+    lockInMonths: "",
+    exitOptions: "",
+    payoutMode: "",
+    renewalFee: "",
+    selectedBranchIds: [],
+    isStore: false, // Store checkbox
+    selectedTerritoryIds: [], // Multi-select territories
+    isSignatureStore: false, // Signature store checkbox
+    location: "", // Location for signature store
   });
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
@@ -56,8 +53,8 @@ export default function EditInvestmentOpportunityForm({
       setFormData({
         name: investmentOpportunity?.name || "",
         description: investmentOpportunity?.description || "",
-        investmentTypeId: investmentOpportunity?.investmentTypeId || "",
-        businessCategoryId: investmentOpportunity?.businessCategoryId || "",
+        investmentTypeId: investmentOpportunity?.investmentType?.id || "",
+        businessCategoryId: investmentOpportunity?.businessCategory?.id || "",
         brandName: investmentOpportunity?.brandName || "",
         minAmount: investmentOpportunity?.minAmount || "",
         maxAmount: investmentOpportunity?.maxAmount || "",
@@ -68,7 +65,17 @@ export default function EditInvestmentOpportunityForm({
         exitOptions: investmentOpportunity?.exitOptions || "",
         payoutMode: investmentOpportunity?.payoutMode || "",
         renewalFee: investmentOpportunity?.renewalFee || "",
-        selectedBranchIds: branches?.map((branch) => branch.id) || [], // Store selected branch IDs
+        selectedBranchIds:
+          investmentOpportunity?.opportunityBranches?.map(
+            (branch) => branch?.branch?.id
+          ) || [], // Store selected branch IDs
+        isStore: investmentOpportunity?.isMasterFranchise || false, // If it's a Master Franchise
+        selectedTerritoryIds:
+          investmentOpportunity?.territoryMasters?.map(
+            (territory) => territory?.territory?.id
+          ) || [], // If there are territories
+        isSignatureStore: investmentOpportunity?.isSignature || false, // If it's a Signature Store
+        location: investmentOpportunity?.signatureStoreLocation || "", // Signature store location
       });
     }
   }, [investmentOpportunity]);
@@ -77,8 +84,14 @@ export default function EditInvestmentOpportunityForm({
     fetchInvestmentTypes(); // Fetch investment types on component mount
     fetchBusinessCategories(); // Fetch business categories on component mount
     fetchBranches(); // Fetch branches for selection
-    fetchInvestmentsById(opportunityId);
-  }, [fetchInvestmentTypes, fetchBusinessCategories, fetchBranches]);
+    fetchTerritories(); // Fetch territories for Store selection
+    fetchInvestmentsById(opportunityId); // Fetch the investment opportunity by ID
+  }, [
+    fetchInvestmentTypes,
+    fetchBusinessCategories,
+    fetchBranches,
+    fetchTerritories,
+  ]);
 
   useEffect(() => {
     if (errorValidation) {
@@ -97,7 +110,6 @@ export default function EditInvestmentOpportunityForm({
       businessCategoryId,
       brandName,
       minAmount,
-      maxAmount,
       roiPercent,
       turnOverPercentage,
       lockInMonths,
@@ -105,6 +117,10 @@ export default function EditInvestmentOpportunityForm({
       payoutMode,
       renewalFee,
       selectedBranchIds,
+      isStore,
+      selectedTerritoryIds,
+      isSignatureStore,
+      location,
     } = formData;
 
     // Basic validation for required fields
@@ -123,6 +139,24 @@ export default function EditInvestmentOpportunityForm({
       !renewalFee ||
       selectedBranchIds.length === 0 // Ensure at least one branch is selected
     ) {
+      console.log(selectedBranchIds, "selectedBranchIdsselectedBranchIds");
+
+      console.log({
+        name: name,
+        description: description,
+        investmentTypeId: investmentTypeId,
+        businessCategoryId: businessCategoryId,
+        brandName: brandName,
+        minAmount: minAmount,
+        roiPercent: roiPercent,
+        turnOverPercentage: turnOverPercentage,
+        lockInMonths: lockInMonths,
+        exitOptions: exitOptions,
+        payoutMode: payoutMode,
+        renewalFee: renewalFee,
+        selectedBranchIds: !selectedBranchIds.length === 0,
+      });
+
       setErrorValidation(
         "All fields are required and at least one branch must be selected."
       );
@@ -137,9 +171,33 @@ export default function EditInvestmentOpportunityForm({
       return;
     }
 
+    // If Store is checked, at least one territory must be chosen
+    if (isStore && selectedTerritoryIds.length === 0) {
+      setErrorValidation(
+        "Please select at least one territory when Store is enabled."
+      );
+      return;
+    }
+
+    // If Signature Store is enabled, location is required
+    if (isSignatureStore && !location) {
+      setErrorValidation("Please enter the location for Signature Store.");
+      return;
+    }
+
     try {
+      // Prepare payload with territories only if isStore is true
+      const payload = {
+        ...formData,
+        selectedBranchIds,
+        selectedTerritoryIds: isStore ? selectedTerritoryIds : [],
+        isMasterFranchise: isStore, // Master Franchise flag
+        isSignature: isSignatureStore, // Signature Store flag
+        signatureStoreLocation: isSignatureStore ? location : "", // Signature Store location
+      };
+
       // Call the store's updateInvestmentOpportunity function to send data to the backend
-      await updateInvestmentOpportunity(opportunityId, formData);
+      await updateInvestmentOpportunity(opportunityId, payload);
 
       // Reset form data after successful submission
       setFormData({
@@ -157,8 +215,13 @@ export default function EditInvestmentOpportunityForm({
         exitOptions: "",
         payoutMode: "",
         renewalFee: "",
-        selectedBranchIds: [], // Reset selected branches
+        selectedBranchIds: [],
+        isStore: false,
+        selectedTerritoryIds: [],
+        isSignatureStore: false, // Reset signature store checkbox
+        location: "", // Reset location
       });
+
       setErrorValidation(""); // Clear any previous errors
       closeModal(); // Close modal after successful update
     } catch (err) {
@@ -175,6 +238,18 @@ export default function EditInvestmentOpportunityForm({
       (option) => option.value
     );
     setFormData((prev) => ({ ...prev, selectedBranchIds: selectedBranches }));
+  };
+
+  // Handle territory selection (multiple)
+  const handleTerritorySelection = (e) => {
+    const selectedTerritories = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+    setFormData((prev) => ({
+      ...prev,
+      selectedTerritoryIds: selectedTerritories,
+    }));
   };
 
   return (
@@ -280,7 +355,10 @@ export default function EditInvestmentOpportunityForm({
             placeholder="Min Amount"
             value={formData.minAmount}
             onChange={(e) =>
-              setFormData({ ...formData, minAmount: e.target.value })
+              setFormData({
+                ...formData,
+                minAmount: e.target.value.replace(/[^0-9.]/g, ""),
+              })
             }
             className="border px-2 py-1 rounded-md w-full text-sm"
           />
@@ -294,7 +372,10 @@ export default function EditInvestmentOpportunityForm({
             placeholder="Max Amount"
             value={formData.maxAmount}
             onChange={(e) =>
-              setFormData({ ...formData, maxAmount: e.target.value })
+              setFormData({
+                ...formData,
+                maxAmount: e.target.value.replace(/[^0-9.]/g, ""),
+              })
             }
             className="border px-2 py-1 rounded-md w-full text-sm"
           />
@@ -420,6 +501,87 @@ export default function EditInvestmentOpportunityForm({
             ))}
           </select>
         </div>
+
+        {/* Master Franchise Checkbox */}
+        <div className="flex items-center gap-2">
+          <input
+            id="isStore"
+            type="checkbox"
+            checked={formData.isStore}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                isStore: checked,
+                // if unchecked, clear territories to avoid stale selections
+                selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
+                isSignatureStore: false, // Disable signature store checkbox
+              }));
+            }}
+            className="h-4 w-4"
+          />
+          <label htmlFor="isStore" className="text-sm select-none">
+            Master Franchise
+          </label>
+        </div>
+
+        {/* Signature Store Checkbox */}
+        <div className="flex items-center gap-2">
+          <input
+            id="isSignatureStore"
+            type="checkbox"
+            checked={formData.isSignatureStore}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                isSignatureStore: checked,
+                location: checked ? prev.location : "",
+                selectedTerritoryIds: [], // Clear territories
+                isStore: false, // Disable Store checkbox
+              }));
+            }}
+            className="h-4 w-4"
+          />
+          <label htmlFor="isSignatureStore" className="text-sm select-none">
+            Signature Store
+          </label>
+        </div>
+
+        {/* Location for Signature Store */}
+        {formData.isSignatureStore && (
+          <input
+            type="text"
+            placeholder="Location"
+            value={formData.location}
+            onChange={(e) =>
+              setFormData({ ...formData, location: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          />
+        )}
+
+        {/* Territories multiselect (only when Store is checked) */}
+        {formData.isStore && (
+          <div className="md:col-span-1">
+            <label className="block mb-1">Select Territories</label>
+            <select
+              multiple
+              value={formData.selectedTerritoryIds}
+              onChange={handleTerritorySelection}
+              className="border px-3 py-2 rounded-md w-full"
+            >
+              {territories?.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Hold Ctrl/Cmd to select multiple territories.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Submit Button */}

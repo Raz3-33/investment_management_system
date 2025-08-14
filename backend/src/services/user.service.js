@@ -2,6 +2,10 @@ import bcrypt from "bcryptjs"; // Import bcryptjs to hash the password
 import { prisma } from "../config/db.js"; // Prisma setup
 
 export const getAllUsers = async () => {
+  console.log(
+    "=============================alajdfl+============================"
+  );
+
   return prisma.user.findMany({
     include: {
       role: true,
@@ -21,37 +25,98 @@ export const getUserById = async (id) => {
 };
 
 export const createUser = async (data) => {
-  const { name, email, password, roleId, branchId } = data;
+  const {
+    name,
+    email,
+    password,
+    roleId,
+    designation,
+    branchId,
+    managerId,
+    headId,
+    countryCode,
+    phone,
+    userType,
+    image_url,
+    salesTarget,
+    salesAchieved,
+    incentive,
+    isActive,
+    isLogin,
+    isAdmin,
+  } = data;
 
-  // Validate roleId exists in the database
-  const roleExists = await prisma.role.findUnique({
-    where: { id: roleId },
-  });
+  // Validate roleId exists
+  if (roleId) {
+    const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
+    if (!roleExists) {
+      throw new Error("Invalid roleId. The specified role does not exist.");
+    }
+  }
 
-  if (!roleExists) {
-    throw new Error("Invalid roleId. The specified role does not exist.");
+  // Validate branchId exists
+  if (branchId) {
+    const branchExists = await prisma.branch.findUnique({
+      where: { id: branchId },
+    });
+    if (!branchExists) {
+      throw new Error("Invalid branchId. The specified branch does not exist.");
+    }
+  }
+
+  // Validate managerId exists (if provided)
+  if (managerId) {
+    const managerExists = await prisma.user.findUnique({
+      where: { id: managerId },
+    });
+    if (!managerExists) {
+      throw new Error(
+        "Invalid managerId. The specified manager does not exist."
+      );
+    }
+  }
+
+  // Validate headId exists (if provided)
+  if (headId) {
+    const headExists = await prisma.user.findUnique({ where: { id: headId } });
+    if (!headExists) {
+      throw new Error("Invalid headId. The specified head does not exist.");
+    }
   }
 
   // Validate that email is unique
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-
+  const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new Error("A user with this email already exists.");
   }
 
-  // Hash the password before storing it
+  //  Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
+    const cleanId = (value) => (value && value.trim() !== "" ? value : null);
+
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
-        password: hashedPassword, // Use hashed password
+        password: hashedPassword,
         roleId,
+        designation,
         branchId,
+        managerId: cleanId(managerId),
+        headId: cleanId(headId),
+        countryCode,
+        phone,
+        isHead: userType === "head" ? true : false,
+        isManager: userType === "manager" ? true : false,
+        image_url,
+        salesTarget: salesTarget ?? 0,
+        salesAchieved: salesAchieved ?? 0,
+        incentive: incentive ?? 0,
+        isActive: isActive ?? true,
+        isLogin: isLogin ?? false,
+        isAdmin: isAdmin ?? false,
       },
     });
 
@@ -63,35 +128,64 @@ export const createUser = async (data) => {
 
 export const updateUser = async (id, data) => {
   try {
+    const {
+      name,
+      email,
+      countryCode,
+      phone,
+      roleId,
+      designation,
+      branchId,
+      headId,
+      managerId,
+      userType,
+    } = data;
+
     // Validate required fields
-    if (!data.name || !data.email || !data.roleId || !data.branchId) {
+    if (!name || !email || !roleId || !branchId) {
       throw new Error(
-        "All fields (name, email, role, and branch) are required."
+        "All required fields (name, email, roleId, branchId) must be provided."
       );
     }
 
-    // Check if the email is unique (if updated)
-    if (data.email) {
-      const existingUser = await prisma.user.findUnique({
-        where: { email: data.email },
-      });
-
-      // If an existing user with this email is found, check if it's the same user being updated
-      if (existingUser && existingUser.id !== id) {
-        throw new Error("A user with this email already exists.");
-      }
+    // Check if role exists
+    const roleExists = await prisma.role.findUnique({
+      where: { id: roleId },
+    });
+    if (!roleExists) {
+      throw new Error("Invalid roleId. The specified role does not exist.");
     }
 
-    // If password is being updated, hash the password
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10); // Hash the new password
+    // Check if email is unique (ignore current user)
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingUser && existingUser.id !== id) {
+      throw new Error("A user with this email already exists.");
     }
 
-    // Perform the update in the database
+    // If password is provided, hash it
+    // let hashedPassword;
+    // if (password) {
+    //   hashedPassword = await bcrypt.hash(password, 10);
+    // }
+
+    // Update user
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
-        ...data, // Spread the other fields
+        name,
+        email,
+        countryCode,
+        phone,
+        // password: hashedPassword || undefined, // Only update if provided
+        roleId,
+        designation,
+        branchId,
+        headId: headId || null, // Optional
+        managerId: managerId || null, // Optional
+        isHead: userType === "head" ? true : false,
+        isManager: userType === "manager" ? true : false,
       },
     });
 

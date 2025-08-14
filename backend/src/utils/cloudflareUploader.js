@@ -15,7 +15,7 @@ export const uploadToCloudflare = async (filePath, originalName) => {
       formData,
       {
         headers: {
-          Authorization: `Bearer ${sanitizedConfig.CLOUDFLARE_API_TOKEN}`,
+          authorization: `Bearer ${sanitizedConfig.CLOUDFLARE_API_TOKEN}`,
           ...formData.getHeaders(),
         },
       }

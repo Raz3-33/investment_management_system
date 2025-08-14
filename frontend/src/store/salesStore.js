@@ -17,7 +17,7 @@ export const useSalesStore = create(
         try {
           const token = localStorage.getItem("token");
           const response = await api.get(`/sales/${salesId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { authorization: `Bearer ${token}` },
           });
           set({ sales: response.data.data, loading: false });
         } catch (err) {
@@ -32,11 +32,11 @@ export const useSalesStore = create(
           const token = localStorage.getItem("token");
           if (!token) {
             console.log("No authorization token found");
-            set({ error: "Authorization token missing", loading: false });
+            set({ error: "authorization token missing", loading: false });
             return;
           }
           const response = await api.get(`/sales`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { authorization: `Bearer ${token}` },
           });
           console.log(response);
           set({ allSales: response.data.data, loading: false });
@@ -52,14 +52,14 @@ export const useSalesStore = create(
           const token = localStorage.getItem("token");
           if (!token) {
             console.log("No authorization token found");
-            set({ error: "Authorization token missing", loading: false });
+            set({ error: "authorization token missing", loading: false });
             return;
           }
           const response = await api.post(
             `/sales`,
             { opportunityId, ...data },
             {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { authorization: `Bearer ${token}` },
             }
           );
           set({ sales: response.data.data });
@@ -72,7 +72,7 @@ export const useSalesStore = create(
         try {
           const token = localStorage.getItem("token");
           const response = await api.put(`/sales/${salesId}`, data, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { authorization: `Bearer ${token}` },
           });
           set({
             updateSales: response.data.data,
