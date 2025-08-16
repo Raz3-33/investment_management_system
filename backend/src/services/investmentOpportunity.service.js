@@ -132,7 +132,7 @@ console.log(selectedTerritoryIds,"selectedTerritoryIdsselectedTerritoryIdsselect
         payoutMode,
         isActive: true,
         renewalFee: parseFloat(renewalFee),
-        isStore, 
+        isMasterFranchise:isStore, 
         isSignature, 
         signatureStoreLocation,
       },
@@ -152,7 +152,7 @@ console.log(selectedTerritoryIds,"selectedTerritoryIdsselectedTerritoryIdsselect
 
     // Handle the relationship between opportunity and territories (for Master Franchise)
     if (
-      isStore &&
+      isMasterFranchise &&
       selectedTerritoryIds &&
       selectedTerritoryIds.length > 0
     ) {
