@@ -152,7 +152,7 @@ console.log(selectedTerritoryIds,"selectedTerritoryIdsselectedTerritoryIdsselect
 
     // Handle the relationship between opportunity and territories (for Master Franchise)
     if (
-      isMasterFranchise &&
+      isStore &&
       selectedTerritoryIds &&
       selectedTerritoryIds.length > 0
     ) {
