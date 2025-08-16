@@ -384,7 +384,7 @@ export default function AddInvestmentOpportunityForm() {
                 ...prev,
                 isStore: checked,
                 // if unchecked, clear territories to avoid stale selections
-                selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
+                // selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
                 isSignature: false, // Disable signature store checkbox
               }));
             }}

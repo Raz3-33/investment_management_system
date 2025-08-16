@@ -86,12 +86,14 @@ export const createInvestmentOpportunity = async (data) => {
     payoutMode,
     renewalFee,
     selectedBranchIds,
-    isMasterFranchise, // New field
+    isStore, // New field
     isSignature, // New field
     signatureStoreLocation, // New field
     selectedTerritoryIds, // New field for territories
   } = data;
 console.log(data);
+console.log(selectedTerritoryIds,"selectedTerritoryIdsselectedTerritoryIdsselectedTerritoryIdsselectedTerritoryIds");
+
 
   // Validate that the investment type and business category exist
   const investmentTypeExists = await prisma.investmentType.findUnique({
@@ -130,7 +132,7 @@ console.log(data);
         payoutMode,
         isActive: true,
         renewalFee: parseFloat(renewalFee),
-        isMasterFranchise, 
+        isStore, 
         isSignature, 
         signatureStoreLocation,
       },
@@ -150,7 +152,7 @@ console.log(data);
 
     // Handle the relationship between opportunity and territories (for Master Franchise)
     if (
-      isMasterFranchise &&
+      isStore &&
       selectedTerritoryIds &&
       selectedTerritoryIds.length > 0
     ) {
