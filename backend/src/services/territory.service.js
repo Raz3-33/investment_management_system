@@ -2,18 +2,33 @@ import { prisma } from "../config/db.js";
 import { v4 as uuidv4 } from "uuid";
 
 // Optional: centralize simple validation
-const validate = ({ name, region }) => {
-  const errors = [];
-  if (!name || !name.trim()) errors.push("Name is required");
-  if (name && name.trim().length < 3) errors.push("Name must be at least 3 characters");
-  if (!region || !region.trim()) errors.push("Region is required");
-  if (errors.length) throw new Error(`Validation failed: ${errors.join(", ")}`);
+const validate = (data) => {
+  if (!data.opportunityId) throw new Error("opportunityId is required");
+  if (!data.assignmentType) throw new Error("assignmentType is required");
+
+  if (data.assignmentType.toUpperCase() === "MANUALLY") {
+    if (!data.locations || data.locations.length === 0) {
+      throw new Error(
+        "At least one location is required for MANUALLY assignment"
+      );
+    }
+  }
+
+  if (data.assignmentType.toUpperCase() === "AUTOMATICALLY") {
+    if (!data.pincodes || data.pincodes.length === 0) {
+      throw new Error(
+        "At least one pincode is required for AUTOMATICALLY assignment"
+      );
+    }
+  }
 };
 
 export const getAll = async () => {
   try {
     return await prisma.territory.findMany({
-      orderBy: { name: "asc" },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
   } catch (error) {
     throw new Error("Error fetching territories: " + error.message);
@@ -31,16 +46,65 @@ export const getById = async (id) => {
 export const create = async (data) => {
   try {
     validate(data);
-    const name = data.name.trim();
-    const region = data.region.trim();
 
-    const existing = await prisma.territory.findFirst({ where: { name } });
-    if (existing) throw new Error("Territory with the same name already exists");
+    const { opportunityId, assignmentType } = data;
+    const type = assignmentType.toUpperCase();
 
-    const created = await prisma.territory.create({
-      data: { id: uuidv4(), name, region },
-    });
-    return created;
+    let createdRecords = [];
+
+    if (type === "MANUALLY") {
+      for (const loc of data.locations) {
+        const created = await prisma.territory.create({
+          data: {
+            id: uuidv4(),
+            investmentOpportunityId: opportunityId,
+            assignmentType: type,
+            location: loc.trim(),
+            pincode: null,
+            city: null,
+          },
+        });
+        createdRecords.push(created);
+      }
+    }
+
+    if (type === "AUTOMATICALLY") {
+      if (!Array.isArray(data.pincodes) || data.pincodes.length === 0) {
+        throw new Error(
+          "At least one pincode is required for AUTOMATICALLY assignment type"
+        );
+      }
+
+      for (const pin of data.pincodes) {
+        const created = await prisma.territory.create({
+          data: {
+            id: uuidv4(),
+            investmentOpportunityId: opportunityId,
+            assignmentType: type,
+            location: null,
+            pincode: pin.code, // use the code from payload
+            city: pin.city || null, // use city from payload
+          },
+        });
+        createdRecords.push(created);
+      }
+    }
+
+    if (type === "USER") {
+      const created = await prisma.territory.create({
+        data: {
+          id: uuidv4(),
+          investmentOpportunityId: opportunityId,
+          assignmentType: type,
+          location: null,
+          pincode: null,
+          city: null,
+        },
+      });
+      createdRecords.push(created);
+    }
+
+    return createdRecords;
   } catch (error) {
     throw new Error("Error creating territory: " + error.message);
   }

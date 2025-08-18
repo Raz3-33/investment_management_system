@@ -3,7 +3,7 @@ import Button from "../ui/Button";
 import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
 import { useSettingStore } from "../../store/settingStore";
 import { useBranchStore } from "../../store/branchStore";
-import { useTerritoryStore } from "../../store/territoryStore"; 
+import { useTerritoryStore } from "../../store/territoryStore";
 
 export default function AddInvestmentOpportunityForm() {
   const { addInvestmentOpportunity, error } = useInvestmentOpportunityStore(
@@ -78,28 +78,26 @@ export default function AddInvestmentOpportunityForm() {
       !formData.lockInMonths ||
       !formData.exitOptions ||
       !formData.payoutMode ||
-      !formData.renewalFee ||
-      formData.selectedBranchIds.length === 0
+      !formData.renewalFee
+      // formData.selectedBranchIds.length === 0
     ) {
-      setErrorValidation(
-        "All fields are required and at least one branch must be selected."
-      );
+      setErrorValidation("All fields are required .");
       return;
     }
 
     // If Store is checked, at least one territory must be chosen
-    if (formData.isStore && formData.selectedTerritoryIds.length === 0) {
-      setErrorValidation(
-        "Please select at least one territory when Store is enabled."
-      );
-      return;
-    }
+    // if (formData.isStore && formData.selectedTerritoryIds.length === 0) {
+    //   setErrorValidation(
+    //     "Please select at least one territory when Store is enabled."
+    //   );
+    //   return;
+    // }
 
     // If Signature Store is enabled, signatureStoreLocation is required
-    if (formData.isSignature && !formData.signatureStoreLocation) {
-      setErrorValidation("Please enter the location for Signature Store.");
-      return;
-    }
+    // if (formData.isSignature && !formData.signatureStoreLocation) {z
+    //   setErrorValidation("Please enter the location for Signature Store.");
+    //   return;
+    // }
 
     // Numeric validations
     if (
@@ -121,10 +119,10 @@ export default function AddInvestmentOpportunityForm() {
       // Prepare payload with territories only if isStore is true
       const payload = {
         ...formData,
-        selectedBranchIds: formData.selectedBranchIds,
-        selectedTerritoryIds: formData.isStore
-          ? formData.selectedTerritoryIds
-          : [],
+        // selectedBranchIds: formData.selectedBranchIds,
+        // selectedTerritoryIds: formData.isStore
+        //   ? formData.selectedTerritoryIds
+        //   : [],
       };
 
       await addInvestmentOpportunity(payload);
@@ -350,7 +348,7 @@ export default function AddInvestmentOpportunityForm() {
           />
         </div>
         {/* Branches */}
-        <div>
+        {/* <div>
           <label className="block mb-1">Select Branches</label>
           <select
             multiple
@@ -370,7 +368,7 @@ export default function AddInvestmentOpportunityForm() {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* NEW: Store checkbox */}
         <div className="flex items-center gap-2">
@@ -406,7 +404,9 @@ export default function AddInvestmentOpportunityForm() {
               setFormData((prev) => ({
                 ...prev,
                 isSignature: checked,
-                signatureStoreLocation: checked ? prev.signatureStoreLocation : "",
+                signatureStoreLocation: checked
+                  ? prev.signatureStoreLocation
+                  : "",
                 selectedTerritoryIds: [], // Clear territories
                 isStore: false, // Disable Store checkbox
               }));
@@ -419,7 +419,7 @@ export default function AddInvestmentOpportunityForm() {
         </div>
 
         {/* signatureStoreLocation for Signature Store */}
-        {formData.isSignature && (
+        {/* {formData.isSignature && (
           <input
             type="text"
             placeholder="Location"
@@ -429,10 +429,10 @@ export default function AddInvestmentOpportunityForm() {
             }
             className="border px-3 py-2 rounded-md w-full"
           />
-        )}
+        )} */}
 
         {/* NEW: Territories multiselect (only when Store is checked) */}
-        {formData.isStore && (
+        {/* {formData.isStore && (
           <div className="md:col-span-1">
             <label className="block mb-1">Select Territories</label>
             <select
@@ -457,7 +457,7 @@ export default function AddInvestmentOpportunityForm() {
               Hold Ctrl/Cmd to select multiple territories.
             </p>
           </div>
-        )}
+        )} */}
       </div>
 
       <div className="flex justify-center">

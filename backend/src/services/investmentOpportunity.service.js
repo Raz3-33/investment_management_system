@@ -36,39 +36,38 @@ export const getInvestmentOpportunityById = async (id) => {
       investmentType: {
         select: {
           id: true,
-          name: true
-        }
+          name: true,
+        },
       },
       businessCategory: {
         select: {
           id: true,
-          name: true
-        }
+          name: true,
+        },
       },
       opportunityBranches: {
         select: {
           branch: {
             select: {
               id: true,
-              name: true
-            }
-          }
-        }
+              name: true,
+            },
+          },
+        },
       },
       territoryMasters: {
         select: {
           territory: {
             select: {
               id: true,
-              name: true
-            }
-          }
-        }
-      }
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 };
-
 
 export const createInvestmentOpportunity = async (data) => {
   const {
@@ -88,12 +87,10 @@ export const createInvestmentOpportunity = async (data) => {
     selectedBranchIds,
     isStore, // New field
     isSignature, // New field
-    signatureStoreLocation, // New field
-    selectedTerritoryIds, // New field for territories
+    // signatureStoreLocation, // New field
+    // selectedTerritoryIds, // New field for territories
   } = data;
-console.log(data);
-console.log(selectedTerritoryIds,"selectedTerritoryIdsselectedTerritoryIdsselectedTerritoryIdsselectedTerritoryIds");
-
+  console.log(data);
 
   // Validate that the investment type and business category exist
   const investmentTypeExists = await prisma.investmentType.findUnique({
@@ -132,46 +129,45 @@ console.log(selectedTerritoryIds,"selectedTerritoryIdsselectedTerritoryIdsselect
         payoutMode,
         isActive: true,
         renewalFee: parseFloat(renewalFee),
-        isMasterFranchise:isStore, 
-        isSignature, 
-        signatureStoreLocation,
+        isMasterFranchise: isStore,
+        isSignature,
+        // signatureStoreLocation,
       },
     });
 
     // After creating the opportunity, create the opportunity-branch relationship
-    if (selectedBranchIds && selectedBranchIds.length > 0) {
-      const opportunityBranches = selectedBranchIds.map((branchId) => ({
-        opportunityId: newOpportunity.id, // Use the new opportunity ID
-        branchId,
-      }));
+    // if (selectedBranchIds && selectedBranchIds.length > 0) {
+    //   const opportunityBranches = selectedBranchIds.map((branchId) => ({
+    //     opportunityId: newOpportunity.id, // Use the new opportunity ID
+    //     branchId,
+    //   }));
 
-      await prisma.opportunityBranch.createMany({
-        data: opportunityBranches,
-      });
-    }
+    //   await prisma.opportunityBranch.createMany({
+    //     data: opportunityBranches,
+    //   });
+    // }
 
     // Handle the relationship between opportunity and territories (for Master Franchise)
-    if (
-      isStore &&
-      selectedTerritoryIds &&
-      selectedTerritoryIds.length > 0
-    ) {
-      const territoryMasters = selectedTerritoryIds.map((territoryId) => ({
-        opportunityId: newOpportunity.id,
-        territoryId,
-      }));
+    // if (
+    //   isStore &&
+    //   selectedTerritoryIds &&
+    //   selectedTerritoryIds.length > 0
+    // ) {
+    //   const territoryMasters = selectedTerritoryIds.map((territoryId) => ({
+    //     opportunityId: newOpportunity.id,
+    //     territoryId,
+    //   }));
 
-      await prisma.territoryMaster.createMany({
-        data: territoryMasters,
-      });
-    }
+    //   await prisma.territoryMaster.createMany({
+    //     data: territoryMasters,
+    //   });
+    // }
 
     return newOpportunity;
   } catch (error) {
     throw new Error("Error creating investment opportunity: " + error.message);
   }
 };
-
 
 export const updateInvestmentOpportunity = async (id, data) => {
   const {

@@ -4,11 +4,14 @@ import Button from "../../ui/Button";
 import PaginationControls from "../../ui/PaginationContrls";
 import Modal from "../../ui/Modal/Modal";
 import ToastNotification from "../../ui/ToastNotification.jsx";
-import { useTerritoryStore } from "../../../store/territoryStore"; // NEW
+import { useTerritoryStore } from "../../../store/territoryStore";
+import { useInvestmentOpportunityStore } from "../../../store/investmentOpportunity.store.js";
+import axios from "axios"; // For fetching pincode info
 
 const columns = [
-  { key: "name", label: "Territory Name" },
-  { key: "region", label: "Region" },
+  { key: "opportunity", label: "Opportunity" },
+  { key: "assignmentType", label: "Assignment Type" },
+  { key: "locationInfo", label: "Location / Pincode" },
   { key: "actions", label: "Actions", isAction: true },
 ];
 
@@ -16,7 +19,15 @@ export default function TerritoryManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(3);
   const [search, setSearch] = useState("");
-  const [formData, setFormData] = useState({ name: "", region: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    region: "",
+    opportunityId: "",
+    assignmentType: "", // Manually / Automatically / User
+    locations: [], // for multiple manual locations
+    pincodes: [], // for multiple pincodes { code, city }
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -27,6 +38,8 @@ export default function TerritoryManagement() {
   const [showToast, setShowToast] = useState(false);
   const [toastType, setToastType] = useState("success");
   const [toastMessage, setToastMessage] = useState("");
+  const [newLocation, setNewLocation] = useState("");
+  const [newPincode, setNewPincode] = useState("");
 
   const {
     territories,
@@ -40,9 +53,20 @@ export default function TerritoryManagement() {
     loading,
   } = useTerritoryStore((s) => s);
 
+  // Opportunities
+  const { investmentOpportunities, fetchInvestmentOpportunities } =
+    useInvestmentOpportunityStore((state) => state);
+
   useEffect(() => {
     fetchTerritories();
-  }, [fetchTerritories, territoryAdded, territoryUpdated, territoryDeleted]);
+    fetchInvestmentOpportunities(); // fetch dropdown data
+  }, [
+    fetchTerritories,
+    fetchInvestmentOpportunities,
+    territoryAdded,
+    territoryUpdated,
+    territoryDeleted,
+  ]);
 
   useEffect(() => {
     if (territoryAdded) {
@@ -62,39 +86,115 @@ export default function TerritoryManagement() {
     }
   }, [territoryAdded, territoryUpdated, territoryDeleted]);
 
-  // Basic form validation
+  // 📌 Fetch city/place by Pincode
+  const fetchCityByPincode = async (pincode) => {
+    try {
+      const res = await axios.get(
+        `https://api.postalpincode.in/pincode/${pincode}`
+      );
+      const data = res.data[0];
+      if (data.Status === "Success") {
+        const place = data.PostOffice[0].District;
+        setFormData((prev) => ({ ...prev, city: place }));
+      } else {
+        setFormData((prev) => ({ ...prev, city: "Invalid Pincode" }));
+      }
+    } catch (err) {
+      setFormData((prev) => ({ ...prev, city: "Error fetching" }));
+    }
+  };
+
+  // Add Location (Manually)
+  const addLocation = (loc) => {
+    if (loc.trim() && !formData?.locations.includes(loc)) {
+      setFormData((prev) => ({ ...prev, locations: [...prev.locations, loc] }));
+    }
+  };
+
+  // Remove Location
+  const removeLocation = (loc) => {
+    setFormData((prev) => ({
+      ...prev,
+      locations: prev.locations.filter((l) => l !== loc),
+    }));
+  };
+
+  // Add Pincode (Automatically)
+  const addPincode = async (code) => {
+    if (code.length === 6 && !formData.pincodes.some((p) => p.code === code)) {
+      try {
+        const res = await axios.get(
+          `https://api.postalpincode.in/pincode/${code}`
+        );
+        const data = res.data[0];
+        if (data.Status === "Success") {
+          const city = data.PostOffice[0].District;
+          setFormData((prev) => ({
+            ...prev,
+            pincodes: [...prev.pincodes, { code, city }],
+          }));
+        }
+      } catch (err) {
+        console.error("Invalid pincode", err);
+      }
+    }
+  };
+
+  // Remove Pincode
+  const removePincode = (code) => {
+    setFormData((prev) => ({
+      ...prev,
+      pincodes: prev.pincodes.filter((p) => p.code !== code),
+    }));
+  };
+
+  // Validation
   const validate = (data) => {
     const e = {};
-    const name = (data.name || "").trim();
-    const region = (data.region || "").trim();
-    if (!name) e.name = "Name is required.";
-    else if (name.length < 3) e.name = "Name must be at least 3 characters.";
-    if (!region) e.region = "Region is required.";
+    if (!data.opportunityId) e.opportunityId = "Select an Opportunity.";
+    if (!data.assignmentType) e.assignmentType = "Select assignment type.";
+
+    if (data.assignmentType === "Manually" && data.locations.length === 0) {
+      e.locations = "At least one location is required.";
+    }
+    if (data.assignmentType === "Automatically" && data.pincodes.length === 0) {
+      e.pincodes = "At least one pincode is required.";
+    }
     return e;
   };
 
   const handleCreateOrUpdate = async () => {
     const v = validate(formData);
+    console.log(v);
+
     setErrors(v);
     if (Object.keys(v).length) return;
 
+    alert("asdjfhgaksj");
     setIsSubmitting(true);
     try {
-      const payload = {
-        name: formData.name.trim(),
-        region: formData.region.trim(),
-      };
+      const payload = { ...formData };
       if (editMode) {
         await updateTerritory(editingId, payload);
       } else {
         await addTerritory(payload);
       }
-      setFormData({ name: "", region: "" });
+      setFormData({
+        name: "",
+        region: "",
+        opportunityId: "",
+        assignmentType: "",
+        locations: [],
+        pincodes: [],
+        city: "",
+      });
       setIsModalOpen(false);
       setEditMode(false);
     } catch (err) {
       setToastType("error");
-      setToastMessage(err?.message || "Something went wrong. Please try again.");
+      setToastMessage(
+        err?.message || "Something went wrong. Please try again."
+      );
       setShowToast(true);
     } finally {
       setIsSubmitting(false);
@@ -104,45 +204,80 @@ export default function TerritoryManagement() {
   const handleDelete = async (id) => {
     try {
       await deleteTerritory(id);
-    } catch (err) {
+    } catch {
       setToastType("error");
       setToastMessage("Failed to delete the territory.");
       setShowToast(true);
     }
   };
 
-  const filteredRows = useMemo(() => {
+  const displayRows = useMemo(() => {
     if (!Array.isArray(territories)) return [];
-    return territories.filter(
-      (row) =>
-        (row?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (row?.region?.toLowerCase() || "").includes(search.toLowerCase())
-    );
-  }, [territories, search]);
 
-  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+    return territories.map((t) => {
+      const opportunity = investmentOpportunities.find(
+        (o) => o.id === t.investmentOpportunityId
+      );
+
+      let locationInfo = "";
+      if (t.assignmentType === "MANUALLY") {
+        locationInfo = t.location || "-";
+      } else if (t.assignmentType === "AUTOMATICALLY") {
+        locationInfo = t.pincode ? `${t.pincode} (${t.city || "-"})` : "-";
+      }
+
+      return {
+        id: t.id,
+        opportunity: opportunity ? opportunity.name : "N/A",
+        assignmentType: t.assignmentType,
+        locationInfo,
+      };
+    });
+  }, [territories, investmentOpportunities]);
+
+  const totalPages = Math.ceil(displayRows.length / rowsPerPage);
   const paginatedRows = useMemo(() => {
     const start = (currentPage - 1) * rowsPerPage;
-    return filteredRows.slice(start, start + rowsPerPage);
-  }, [filteredRows, currentPage, rowsPerPage]);
+    return displayRows.slice(start, start + rowsPerPage);
+  }, [displayRows, currentPage, rowsPerPage]);
 
   const handleEdit = (row) => {
     setEditMode(true);
     setEditingId(row.id);
     setIsModalOpen(true);
-    setFormData({ name: row.name, region: row.region || "" });
+    setFormData(row);
     setErrors({});
   };
 
+  //Assignment options based on selected Opportunity
+  const selectedOpportunity = investmentOpportunities.find(
+    (o) => o.id === formData.opportunityId
+  );
+
+  let assignmentOptions = [];
+  if (selectedOpportunity) {
+    if (selectedOpportunity.isMasterFranchise) {
+      assignmentOptions = ["Manually", "Automatically"];
+    } else if (
+      !selectedOpportunity.isMasterFranchise &&
+      selectedOpportunity.isSignature
+    ) {
+      assignmentOptions = ["User"];
+    }
+  }
+
   return (
     <main className="grow">
+      {/* Toast */}
       <ToastNotification
         type={toastType}
         message={toastMessage}
         show={showToast}
         onClose={() => setShowToast(false)}
       />
+
       <div className="p-4">
+        {/* Search + Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
           <input
             type="text"
@@ -156,7 +291,16 @@ export default function TerritoryManagement() {
             variant="primary"
             onClick={() => {
               setEditMode(false);
-              setFormData({ name: "", region: "" });
+              setFormData({
+                name: "",
+                region: "",
+                opportunityId: "",
+                assignmentType: "",
+                locations: [],
+                pincodes: [],
+                city: "",
+              });
+
               setErrors({});
               setIsModalOpen(true);
             }}
@@ -173,7 +317,10 @@ export default function TerritoryManagement() {
           <>
             <DataTable
               columns={columns}
-              rows={paginatedRows}
+              rows={displayRows.slice(
+                (currentPage - 1) * rowsPerPage,
+                currentPage * rowsPerPage
+              )}
               renderActions={(row) => (
                 <>
                   <Button variant="primary" onClick={() => handleEdit(row)}>
@@ -185,6 +332,7 @@ export default function TerritoryManagement() {
                 </>
               )}
             />
+
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
@@ -194,45 +342,148 @@ export default function TerritoryManagement() {
         )}
       </div>
 
+      {/* Modal */}
+      {/* Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editMode ? "Edit Territory" : "Create Territory"}
       >
         <div className="space-y-4">
+          {/* Opportunity Dropdown */}
           <div>
-            <input
-              type="text"
-              placeholder="Territory Name"
-              value={formData.name}
+            <select
+              value={formData.opportunityId}
               onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+                setFormData({
+                  ...formData,
+                  opportunityId: e.target.value,
+                  assignmentType: "",
+                })
               }
               className={`border px-3 py-2 rounded-md w-full dark:bg-gray-800 dark:text-white ${
-                errors.name ? "border-red-500" : ""
+                errors.opportunityId ? "border-red-500" : ""
               }`}
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            >
+              <option value="">Select Opportunity</option>
+              {investmentOpportunities.map((op) => (
+                <option key={op.id} value={op.id}>
+                  {op.name}
+                </option>
+              ))}
+            </select>
+            {errors.opportunityId && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.opportunityId}
+              </p>
             )}
           </div>
 
-          <div>
-            <input
-              type="text"
-              placeholder="Region"
-              value={formData.region}
-              onChange={(e) =>
-                setFormData({ ...formData, region: e.target.value })
-              }
-              className={`border px-3 py-2 rounded-md w-full dark:bg-gray-800 dark:text-white ${
-                errors.region ? "border-red-500" : ""
-              }`}
-            />
-            {errors.region && (
-              <p className="text-red-500 text-sm mt-1">{errors.region}</p>
-            )}
-          </div>
+          {/* Assignment Type */}
+          {assignmentOptions.length > 0 && (
+            <div>
+              <select
+                value={formData.assignmentType}
+                onChange={(e) =>
+                  setFormData({ ...formData, assignmentType: e.target.value })
+                }
+                className={`border px-3 py-2 rounded-md w-full dark:bg-gray-800 dark:text-white ${
+                  errors.assignmentType ? "border-red-500" : ""
+                }`}
+              >
+                <option value="">Select Assignment Type</option>
+                {assignmentOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              {errors.assignmentType && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.assignmentType}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Conditional Fields */}
+          {formData.assignmentType === "Manually" && (
+            <div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter Location"
+                  value={newLocation}
+                  onChange={(e) => setNewLocation(e.target.value)}
+                  className="border px-3 py-2 rounded-md flex-1 dark:bg-gray-800 dark:text-white"
+                />
+                <Button
+                  onClick={() => {
+                    addLocation(newLocation);
+                    setNewLocation("");
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.locations.map((loc, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-blue-500 text-white rounded-full flex items-center gap-2"
+                  >
+                    {loc}
+                    <button
+                      onClick={() => removeLocation(loc)}
+                      className="text-sm"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {formData.assignmentType === "Automatically" && (
+            <div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter Pincode"
+                  value={newPincode}
+                  onChange={(e) => setNewPincode(e.target.value)}
+                  className="border px-3 py-2 rounded-md flex-1 dark:bg-gray-800 dark:text-white"
+                />
+                <Button
+                  onClick={() => {
+                    addPincode(newPincode);
+                    setNewPincode("");
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.pincodes.map((pin, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-green-500 text-white rounded-full flex items-center gap-2"
+                  >
+                    {pin.code} ({pin.city})
+                    <button
+                      onClick={() => removePincode(pin.code)}
+                      className="text-sm"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end pt-2">
             <Button
