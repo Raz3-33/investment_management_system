@@ -39,11 +39,11 @@ export default function EditInvestmentOpportunityForm({
     exitOptions: "",
     payoutMode: "",
     renewalFee: "",
-    selectedBranchIds: [],
+    // selectedBranchIds: [],
     isStore: false, // Store checkbox
-    selectedTerritoryIds: [], // Multi-select territories
+    // selectedTerritoryIds: [], // Multi-select territories
     isSignatureStore: false, // Signature store checkbox
-    location: "", // Location for signature store
+    // location: "", // Location for signature store
   });
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
@@ -65,17 +65,17 @@ export default function EditInvestmentOpportunityForm({
         exitOptions: investmentOpportunity?.exitOptions || "",
         payoutMode: investmentOpportunity?.payoutMode || "",
         renewalFee: investmentOpportunity?.renewalFee || "",
-        selectedBranchIds:
-          investmentOpportunity?.opportunityBranches?.map(
-            (branch) => branch?.branch?.id
-          ) || [], // Store selected branch IDs
+        // selectedBranchIds:
+        //   investmentOpportunity?.opportunityBranches?.map(
+        //     (branch) => branch?.branch?.id
+        //   ) || [], // Store selected branch IDs
         isStore: investmentOpportunity?.isMasterFranchise || false, // If it's a Master Franchise
-        selectedTerritoryIds:
-          investmentOpportunity?.territoryMasters?.map(
-            (territory) => territory?.territory?.id
-          ) || [], // If there are territories
+        // selectedTerritoryIds:
+        //   investmentOpportunity?.territoryMasters?.map(
+        //     (territory) => territory?.territory?.id
+        //   ) || [], // If there are territories
         isSignatureStore: investmentOpportunity?.isSignature || false, // If it's a Signature Store
-        location: investmentOpportunity?.signatureStoreLocation || "", // Signature store location
+        // location: investmentOpportunity?.signatureStoreLocation || "", // Signature store location
       });
     }
   }, [investmentOpportunity]);
@@ -116,11 +116,11 @@ export default function EditInvestmentOpportunityForm({
       exitOptions,
       payoutMode,
       renewalFee,
-      selectedBranchIds,
+      // selectedBranchIds,
       isStore,
-      selectedTerritoryIds,
+      // selectedTerritoryIds,
       isSignatureStore,
-      location,
+      // location,
     } = formData;
 
     // Basic validation for required fields
@@ -136,10 +136,8 @@ export default function EditInvestmentOpportunityForm({
       !lockInMonths ||
       !exitOptions ||
       !payoutMode ||
-      !renewalFee ||
-      selectedBranchIds.length === 0 // Ensure at least one branch is selected
+      !renewalFee
     ) {
-      console.log(selectedBranchIds, "selectedBranchIdsselectedBranchIds");
 
       console.log({
         name: name,
@@ -154,11 +152,10 @@ export default function EditInvestmentOpportunityForm({
         exitOptions: exitOptions,
         payoutMode: payoutMode,
         renewalFee: renewalFee,
-        selectedBranchIds: !selectedBranchIds.length === 0,
       });
 
       setErrorValidation(
-        "All fields are required and at least one branch must be selected."
+        "All fields are required ."
       );
       return;
     }
@@ -172,28 +169,28 @@ export default function EditInvestmentOpportunityForm({
     }
 
     // If Store is checked, at least one territory must be chosen
-    if (isStore && selectedTerritoryIds.length === 0) {
-      setErrorValidation(
-        "Please select at least one territory when Store is enabled."
-      );
-      return;
-    }
+    // if (isStore && selectedTerritoryIds.length === 0) {
+    //   setErrorValidation(
+    //     "Please select at least one territory when Store is enabled."
+    //   );
+    //   return;
+    // }
 
     // If Signature Store is enabled, location is required
-    if (isSignatureStore && !location) {
-      setErrorValidation("Please enter the location for Signature Store.");
-      return;
-    }
+    // if (isSignatureStore && !location) {
+    //   setErrorValidation("Please enter the location for Signature Store.");
+    //   return;
+    // }
 
     try {
       // Prepare payload with territories only if isStore is true
       const payload = {
         ...formData,
-        selectedBranchIds,
-        selectedTerritoryIds: isStore ? selectedTerritoryIds : [],
+        // selectedBranchIds,
+        // selectedTerritoryIds: isStore ? selectedTerritoryIds : [],
         isMasterFranchise: isStore, // Master Franchise flag
         isSignature: isSignatureStore, // Signature Store flag
-        signatureStoreLocation: isSignatureStore ? location : "", // Signature Store location
+        // signatureStoreLocation: isSignatureStore ? location : "", // Signature Store location
       };
 
       // Call the store's updateInvestmentOpportunity function to send data to the backend
@@ -215,11 +212,11 @@ export default function EditInvestmentOpportunityForm({
         exitOptions: "",
         payoutMode: "",
         renewalFee: "",
-        selectedBranchIds: [],
+        // selectedBranchIds: [],
         isStore: false,
-        selectedTerritoryIds: [],
+        // selectedTerritoryIds: [],
         isSignatureStore: false, // Reset signature store checkbox
-        location: "", // Reset location
+        // location: "", // Reset location
       });
 
       setErrorValidation(""); // Clear any previous errors
@@ -232,25 +229,25 @@ export default function EditInvestmentOpportunityForm({
   };
 
   // Handle branch selection (multiple)
-  const handleBranchSelection = (e) => {
-    const selectedBranches = Array.from(
-      e.target.selectedOptions,
-      (option) => option.value
-    );
-    setFormData((prev) => ({ ...prev, selectedBranchIds: selectedBranches }));
-  };
+  // const handleBranchSelection = (e) => {
+  //   const selectedBranches = Array.from(
+  //     e.target.selectedOptions,
+  //     (option) => option.value
+  //   );
+  //   setFormData((prev) => ({ ...prev, selectedBranchIds: selectedBranches }));
+  // };
 
   // Handle territory selection (multiple)
-  const handleTerritorySelection = (e) => {
-    const selectedTerritories = Array.from(
-      e.target.selectedOptions,
-      (option) => option.value
-    );
-    setFormData((prev) => ({
-      ...prev,
-      selectedTerritoryIds: selectedTerritories,
-    }));
-  };
+  // const handleTerritorySelection = (e) => {
+  //   const selectedTerritories = Array.from(
+  //     e.target.selectedOptions,
+  //     (option) => option.value
+  //   );
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     selectedTerritoryIds: selectedTerritories,
+  //   }));
+  // };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -486,7 +483,7 @@ export default function EditInvestmentOpportunityForm({
         </div>
 
         {/* Branches Selection */}
-        <div>
+        {/* <div>
           <label className="block mb-1">Select Branches</label>
           <select
             multiple
@@ -500,7 +497,7 @@ export default function EditInvestmentOpportunityForm({
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* Master Franchise Checkbox */}
         <div className="flex items-center gap-2">
@@ -514,7 +511,7 @@ export default function EditInvestmentOpportunityForm({
                 ...prev,
                 isStore: checked,
                 // if unchecked, clear territories to avoid stale selections
-                selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
+                // selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
                 isSignatureStore: false, // Disable signature store checkbox
               }));
             }}
@@ -536,8 +533,8 @@ export default function EditInvestmentOpportunityForm({
               setFormData((prev) => ({
                 ...prev,
                 isSignatureStore: checked,
-                location: checked ? prev.location : "",
-                selectedTerritoryIds: [], // Clear territories
+                // location: checked ? prev.location : "",
+                // selectedTerritoryIds: [], // Clear territories
                 isStore: false, // Disable Store checkbox
               }));
             }}
@@ -549,7 +546,7 @@ export default function EditInvestmentOpportunityForm({
         </div>
 
         {/* Location for Signature Store */}
-        {formData.isSignatureStore && (
+        {/* {formData.isSignatureStore && (
           <input
             type="text"
             placeholder="Location"
@@ -559,10 +556,10 @@ export default function EditInvestmentOpportunityForm({
             }
             className="border px-3 py-2 rounded-md w-full"
           />
-        )}
+        )} */}
 
         {/* Territories multiselect (only when Store is checked) */}
-        {formData.isStore && (
+        {/* {formData.isStore && (
           <div className="md:col-span-1">
             <label className="block mb-1">Select Territories</label>
             <select
@@ -581,7 +578,7 @@ export default function EditInvestmentOpportunityForm({
               Hold Ctrl/Cmd to select multiple territories.
             </p>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Submit Button */}

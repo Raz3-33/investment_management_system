@@ -141,8 +141,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center">
                           <svg
                             className={`shrink-0 fill-current ${
-                              pathname === "/" ||
-                              pathname.includes("dashboard")
+                              pathname === "/" || pathname.includes("dashboard")
                                 ? "text-violet-500"
                                 : "text-gray-400 dark:text-gray-500"
                             }`}
@@ -305,6 +304,56 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
 
                     <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
                       Investment Management
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
+
+              {/*  Booking List Management  */}
+              <li
+                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                  pathname.includes("booking_list_management") &&
+                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                }`}
+              >
+                <NavLink
+                  end
+                  to="/booking_list_management"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("booking_list_management")
+                      ? ""
+                      : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      className={`shrink-0 ${
+                        pathname.includes("booking_list_management")
+                          ? "text-violet-500"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
+                      {/* <!-- Bar chart --> */}
+                      <rect x="3" y="10" width="2" height="8" rx="0.5" />
+                      <rect x="7" y="6" width="2" height="12" rx="0.5" />
+                      <rect x="11" y="3" width="2" height="15" rx="0.5" />
+
+                      {/* <!-- Magnifying glass (opportunity/discovery) --> */}
+                      <circle cx="17" cy="17" r="3" />
+                      <line x1="19.5" y1="19.5" x2="22" y2="22" />
+                    </svg>
+
+                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Booking List Management
                     </span>
                   </div>
                 </NavLink>
@@ -641,9 +690,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                             : "hover:text-gray-900 dark:hover:text-white"
                         }`}
                         onClick={() => setSidebarExpanded(true)}
-                      >
-                        
-                      </NavLink>
+                      ></NavLink>
                     </React.Fragment>
                   );
                 }}

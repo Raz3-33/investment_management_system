@@ -55,16 +55,6 @@ export const getInvestmentOpportunityById = async (id) => {
           },
         },
       },
-      territoryMasters: {
-        select: {
-          territory: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
     },
   });
 };

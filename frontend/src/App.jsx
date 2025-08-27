@@ -20,6 +20,8 @@ import InvestmentManagement from "./pages/InvestmentManagement/InvestmentManagem
 import PayoutManagement from "./pages/PayoutManagement/PayoutManagement";
 import SalesManagement from "./pages/salesManagement/salesManagement";
 import ProfilePage from "./pages/settings/Profile";
+import BookingListManagement from "./pages/BookingListManagement/BookingListManagement";
+import BookingDetailPage from "./components/BookingListManagement/BookingDetailPage";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -62,6 +64,21 @@ function App() {
           element={<MainLayout children={<UserManagement />} />}
         />
 
+        {/* Booking Management */}
+
+        <Route
+          path="/booking_list_management"
+          element={<MainLayout children={<BookingListManagement />} />}
+        />
+
+        <Route
+          path="/booking_details_management/:bookingId"
+          element={
+            <MainLayout>
+              <BookingDetailPage />
+            </MainLayout>
+          }
+        />
         {/* Investment Opportunity Management */}
 
         <Route

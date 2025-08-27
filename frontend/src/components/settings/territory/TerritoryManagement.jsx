@@ -33,6 +33,8 @@ export default function TerritoryManagement() {
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newLocationImage, setNewLocationImage] = useState(null);
+  const [newPincodeImage, setNewPincodeImage] = useState(null);
 
   // Toast
   const [showToast, setShowToast] = useState(false);
@@ -105,22 +107,25 @@ export default function TerritoryManagement() {
   };
 
   // Add Location (Manually)
-  const addLocation = (loc) => {
-    if (loc.trim() && !formData?.locations.includes(loc)) {
-      setFormData((prev) => ({ ...prev, locations: [...prev.locations, loc] }));
+  const addLocation = (name, imageFile) => {
+    if (name.trim() && !formData.locations.some((loc) => loc.name === name)) {
+      setFormData((prev) => ({
+        ...prev,
+        locations: [...prev.locations, { name, image: imageFile }],
+      }));
     }
   };
 
   // Remove Location
-  const removeLocation = (loc) => {
+  const removeLocation = (name) => {
     setFormData((prev) => ({
       ...prev,
-      locations: prev.locations.filter((l) => l !== loc),
+      locations: prev.locations.filter((l) => l.name !== name),
     }));
   };
 
   // Add Pincode (Automatically)
-  const addPincode = async (code) => {
+  const addPincode = async (code, imageFile) => {
     if (code.length === 6 && !formData.pincodes.some((p) => p.code === code)) {
       try {
         const res = await axios.get(
@@ -131,7 +136,7 @@ export default function TerritoryManagement() {
           const city = data.PostOffice[0].District;
           setFormData((prev) => ({
             ...prev,
-            pincodes: [...prev.pincodes, { code, city }],
+            pincodes: [...prev.pincodes, { code, city, image: imageFile }],
           }));
         }
       } catch (err) {
@@ -165,20 +170,21 @@ export default function TerritoryManagement() {
 
   const handleCreateOrUpdate = async () => {
     const v = validate(formData);
-    console.log(v);
-
     setErrors(v);
     if (Object.keys(v).length) return;
 
-    alert("asdjfhgaksj");
     setIsSubmitting(true);
     try {
+      // Prepare payload - exclude any non-serializable props if necessary
+      // Here assuming backend accepts image info as is or you handle uploads separately
       const payload = { ...formData };
+
       if (editMode) {
         await updateTerritory(editingId, payload);
       } else {
         await addTerritory(payload);
       }
+
       setFormData({
         name: "",
         region: "",
@@ -409,22 +415,34 @@ export default function TerritoryManagement() {
           {/* Conditional Fields */}
           {formData.assignmentType === "Manually" && (
             <div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 items-center">
                 <input
                   type="text"
                   placeholder="Enter Location"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
-                  className="border px-3 py-2 rounded-md flex-1 dark:bg-gray-800 dark:text-white"
+                  className="border px-3 py-2 rounded-md flex-1 min-w-0 dark:bg-gray-800 dark:text-white"
                 />
-                <Button
-                  onClick={() => {
-                    addLocation(newLocation);
-                    setNewLocation("");
-                  }}
-                >
-                  Add
-                </Button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setNewLocationImage(e.target.files[0] || null)
+                  }
+                  className="border rounded-md p-1 flex-1 min-w-0 dark:bg-gray-800 dark:text-white"
+                />
+                {newLocation.trim() && newLocationImage && (
+                  <Button
+                    className="whitespace-nowrap"
+                    onClick={() => {
+                      addLocation(newLocation, newLocationImage);
+                      setNewLocation("");
+                      setNewLocationImage(null);
+                    }}
+                  >
+                    Add
+                  </Button>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2 mt-2">
@@ -433,9 +451,16 @@ export default function TerritoryManagement() {
                     key={idx}
                     className="px-3 py-1 bg-blue-500 text-white rounded-full flex items-center gap-2"
                   >
-                    {loc}
+                    {loc.image && (
+                      <img
+                        src={URL.createObjectURL(loc.image)}
+                        alt="location"
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                    )}
+                    {loc.name}
                     <button
-                      onClick={() => removeLocation(loc)}
+                      onClick={() => removeLocation(loc.name)}
                       className="text-sm"
                     >
                       ✕
@@ -448,22 +473,36 @@ export default function TerritoryManagement() {
 
           {formData.assignmentType === "Automatically" && (
             <div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter Pincode"
-                  value={newPincode}
-                  onChange={(e) => setNewPincode(e.target.value)}
-                  className="border px-3 py-2 rounded-md flex-1 dark:bg-gray-800 dark:text-white"
-                />
-                <Button
-                  onClick={() => {
-                    addPincode(newPincode);
-                    setNewPincode("");
-                  }}
-                >
-                  Add
-                </Button>
+              <div className="w-full max-w-full">
+                <div className="flex flex-col sm:flex-row gap-2 items-center">
+                  <input
+                    type="text"
+                    placeholder="Enter Pincode"
+                    value={newPincode}
+                    onChange={(e) => setNewPincode(e.target.value)}
+                    className="border px-3 py-2 rounded-md flex-1 min-w-0 dark:bg-gray-800 dark:text-white"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewPincodeImage(e.target.files[0] || null)
+                    }
+                    className="border rounded-md p-1 flex-1 min-w-0 dark:bg-gray-800 dark:text-white"
+                  />
+                  {newPincode.trim() && newPincodeImage && (
+                    <Button
+                      className="whitespace-nowrap"
+                      onClick={() => {
+                        addPincode(newPincode, newPincodeImage);
+                        setNewPincode("");
+                        setNewPincodeImage(null);
+                      }}
+                    >
+                      Add
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-2 mt-2">
@@ -472,6 +511,13 @@ export default function TerritoryManagement() {
                     key={idx}
                     className="px-3 py-1 bg-green-500 text-white rounded-full flex items-center gap-2"
                   >
+                    {pin.image && (
+                      <img
+                        src={URL.createObjectURL(pin.image)}
+                        alt="pincode"
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                    )}
                     {pin.code} ({pin.city})
                     <button
                       onClick={() => removePincode(pin.code)}

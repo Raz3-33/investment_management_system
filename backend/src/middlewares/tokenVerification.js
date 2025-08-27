@@ -8,9 +8,6 @@ export async function verifyToken(req, res, next) {
     ? authHeader.split(" ")[1]
     : null;
 
-    console.log(token,"tokentokentokentokentokentokentokentokentokentoken");
-    
-
   if (!token) {
     console.warn("⛔ No token provided in Authorization header");
     return res.status(403).json({ message: "Token is required" });
@@ -31,6 +28,7 @@ export async function verifyToken(req, res, next) {
           id: true,
           name: true,
           email: true,
+          isAdmin: true, // include isAdmin here
           role: { select: { id: true, name: true } },
         },
       });

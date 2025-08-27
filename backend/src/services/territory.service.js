@@ -38,7 +38,7 @@ export const getAll = async () => {
 export const getById = async (id) => {
   try {
     return await prisma.territory.findUnique({ where: { id } });
-  } catch (error) {
+  } catch (error) {   
     throw new Error("Error fetching territory: " + error.message);
   }
 };
@@ -59,9 +59,10 @@ export const create = async (data) => {
             id: uuidv4(),
             investmentOpportunityId: opportunityId,
             assignmentType: type,
-            location: loc.trim(),
+            location: loc.name.trim(),
             pincode: null,
             city: null,
+            imageUrl: loc.imageUrl || null,
           },
         });
         createdRecords.push(created);
@@ -82,8 +83,9 @@ export const create = async (data) => {
             investmentOpportunityId: opportunityId,
             assignmentType: type,
             location: null,
-            pincode: pin.code, // use the code from payload
-            city: pin.city || null, // use city from payload
+            pincode: pin.code,
+            city: pin.city || null,
+            imageUrl: pin.imageUrl || null,
           },
         });
         createdRecords.push(created);
@@ -99,6 +101,7 @@ export const create = async (data) => {
           location: null,
           pincode: null,
           city: null,
+          imageUrl: null,
         },
       });
       createdRecords.push(created);

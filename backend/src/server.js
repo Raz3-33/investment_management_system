@@ -12,6 +12,7 @@ import branchRouter from "./routes/branch.routes.js"
 import territoryRouter from "./routes/territory.routes.js";
 import userRouter from "./routes/user.routes.js";
 import investmentOpportunity from "./routes/investmentOpportunity.routes.js";
+import bookingFormRoutes from "./routes/bookingForm.routes.js";
 import investorRouter from "./routes/investor.routes.js";
 import investmentRoutes from "./routes/investment.routes.js";
 import payoutsRoutes from "./routes/payout.routes.js";
@@ -60,6 +61,10 @@ app.use("/api/profile", profileRoute);
 
 // investment Opportunity
 app.use("/api/investmentOpportunity", investmentOpportunity);
+
+// booking form routes
+app.use("/api/bookings", bookingFormRoutes);
+
 
 // investor routes
 app.use("/api/investors", investorRouter);
