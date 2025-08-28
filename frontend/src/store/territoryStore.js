@@ -26,60 +26,49 @@ export const useTerritoryStore = create((set, get) => ({
   },
 
   addTerritory: async (payload) => {
-    // Create FormData
+    // Prepare FormData
     const formData = new FormData();
-
-    // Append normal fields
-    for (const key in payload) {
-      if (
-        key !== "locationFiles" &&
-        key !== "pincodeFiles" &&
-        key !== "locations" &&
-        key !== "pincodes"
-      ) {
-        // For non-array/simple fields
-        formData.append(key, payload[key]);
-      }
-    }
-
-    // Append locations as JSON string for parsing server-side
-    if (Array.isArray(payload.locations)) {
-      formData.append("locations", JSON.stringify(payload.locations));
-    }
-
-    // Append pincodes as JSON string
-    if (Array.isArray(payload.pincodes)) {
-      formData.append("pincodes", JSON.stringify(payload.pincodes));
-    }
-
-    // Append location images - expect payload.locationFiles as array of File objects
-    if (payload.locationFiles && payload.locationFiles.length > 0) {
-      payload.locationFiles.forEach((file, idx) => {
-        formData.append("locationImages", file, file.name);
-      });
-    }
-
-    // Append pincode images - expect payload.pincodeFiles as array of File objects
-    if (payload.pincodeFiles && payload.pincodeFiles.length > 0) {
-      payload.pincodeFiles.forEach((file, idx) => {
-        formData.append("pincodeImages", file, file.name);
-      });
-    }
-
-    // Axios post with multipart/form-data (Content-Type set automatically)
-    const res = await api.post("/territories", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+  
+    // Add basic fields
+    formData.append("name", payload.name);
+    formData.append("region", payload.region);
+    formData.append("opportunityId", payload.opportunityId);
+    formData.append("assignmentType", payload.assignmentType);
+  
+    // Add locations metadata as JSON string
+    formData.append("locations", JSON.stringify(payload.locations.map(loc => ({
+      name: loc.name,
+      // image will be handled separately
+    }))));
+  
+    // Add pincodes metadata as JSON string
+    formData.append("pincodes", JSON.stringify(payload.pincodes.map(pin => ({
+      code: pin.code,
+      city: pin.city,
+      // image handled separately
+    }))));
+  
+    // Add location images (must be File objects)
+    payload.locations.forEach(loc => {
+      if (loc.image) formData.append("locationImages", loc.image, loc.image.name);
     });
-
+  
+    // Add pincode images (must be File objects)
+    payload.pincodes.forEach(pin => {
+      if (pin.image) formData.append("pincodeImages", pin.image, pin.image.name);
+    });
+  
+    // Send request
+    const res = await api.post("/territories", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+  
     set({
       territoryAdded: res.data.data,
       territories: [res.data.data, ...get().territories],
     });
-
     return res.data.data;
-  },
+  },  
 
   updateTerritory: async (id, payload) => {
     const res = await api.put(`/territories/${id}`, payload);

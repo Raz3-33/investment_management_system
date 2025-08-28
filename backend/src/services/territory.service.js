@@ -38,7 +38,7 @@ export const getAll = async () => {
 export const getById = async (id) => {
   try {
     return await prisma.territory.findUnique({ where: { id } });
-  } catch (error) {   
+  } catch (error) {
     throw new Error("Error fetching territory: " + error.message);
   }
 };

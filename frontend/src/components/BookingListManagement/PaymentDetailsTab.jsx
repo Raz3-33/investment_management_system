@@ -53,27 +53,32 @@ export default function PaymentDetailsTab({ paymentDetails }) {
   return (
     <div className="space-y-6">
       <div className="p-4 border rounded-md dark:border-gray-700">
-        <h4 className="font-semibold mb-2">Overall Payment Info</h4>
-        <InfoItem label="Deal Amount" value={paymentDetails.dealAmount} />
-        <InfoItem label="Token Received" value={paymentDetails.tokenReceived} />
-        <InfoItem
-          label="Token Date"
-          value={
-            paymentDetails.tokenDate
-              ? new Date(paymentDetails.tokenDate).toDateString()
-              : "-"
-          }
-        />
-        <InfoItem label="Balance Due" value={paymentDetails.balanceDue} />
-        <InfoItem
-          label="Mode of Payment"
-          value={paymentDetails.modeOfPayment}
-        />
-        <InfoItem label="Remarks" value={paymentDetails.remarks} />
-        <InfoItem
-          label="Additional Commitment"
-          value={paymentDetails.additionalCommitment}
-        />
+        <h4 className="font-semibold mb-4">Overall Payment Info</h4>
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
+          <InfoItem label="Deal Amount" value={paymentDetails.dealAmount} />
+          <InfoItem
+            label="Token Received"
+            value={paymentDetails.tokenReceived}
+          />
+          <InfoItem
+            label="Token Date"
+            value={
+              paymentDetails.tokenDate
+                ? new Date(paymentDetails.tokenDate).toDateString()
+                : "-"
+            }
+          />
+          <InfoItem label="Balance Due" value={paymentDetails.balanceDue} />
+          <InfoItem
+            label="Mode of Payment"
+            value={paymentDetails.modeOfPayment}
+          />
+          <InfoItem label="Remarks" value={paymentDetails.remarks} />
+          <InfoItem
+            label="Additional Commitment"
+            value={paymentDetails.additionalCommitment}
+          />
+        </div>
       </div>
 
       {payments.map(({ date, amount, approved, approvalKey }, idx) => (

@@ -1,10 +1,9 @@
+import sanitizedConfig from "../config.js";
 import * as territoryService from "../services/territory.service.js";
 import upload from "../utils/multer.js";
 import { uploadFileToS3 } from "../utils/s3Utils.js";
 
 import fs from "fs";
-
-
 // Get all
 export const getAll = async (req, res) => {
   try {
@@ -48,20 +47,25 @@ export const create = [
   async (req, res) => {
     try {
       const data = req.body;
-
-      console.log(req.files,"req.filesreq.filesreq.filesreq.files");
-      
-      // multer files
-      const locationFiles = req.files.locationImages || [];
-      const pincodeFiles = req.files.pincodeImages || [];
-
-      // Parse JSON fields if sent as strings (common in multipart requests)
+      // Parse metadata
       if (typeof data.locations === "string") {
         data.locations = JSON.parse(data.locations);
       }
       if (typeof data.pincodes === "string") {
         data.pincodes = JSON.parse(data.pincodes);
       }
+
+      // Files from multer
+      const locationFiles = req.files.locationImages || [];
+      const pincodeFiles = req.files.pincodeImages || [];
+
+      // Attach image files to correct records (by order)
+      data.locations.forEach((loc, idx) => {
+        if (locationFiles[idx]) loc.imageFile = locationFiles[idx];
+      });
+      data.pincodes.forEach((pin, idx) => {
+        if (pincodeFiles[idx]) pin.imageFile = pincodeFiles[idx];
+      });
 
       // Upload each location image to S3 and attach URL
       if (data.locations && locationFiles.length) {
@@ -75,8 +79,11 @@ export const create = [
                 originalname: file.originalname,
                 mimetype: file.mimetype,
               },
-              process.env.S3_BUCKET_NAME
+              sanitizedConfig.S3_BUCKET_NAME
             );
+
+            console.log(s3Url, "s3Urls3Urls3Urls3Urls3Urls3Urls3Urls3Url");
+
             data.locations[i].imageUrl = s3Url;
             fs.unlinkSync(file.path); // clean local file after upload
           }

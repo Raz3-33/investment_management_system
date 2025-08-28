@@ -114,6 +114,10 @@ export default function TerritoryManagement() {
         locations: [...prev.locations, { name, image: imageFile }],
       }));
     }
+
+    console.log({
+      locations: [...formData.locations, { name, image: imageFile }],
+    });
   };
 
   // Remove Location
@@ -217,6 +221,30 @@ export default function TerritoryManagement() {
     }
   };
 
+  // const displayRows = useMemo(() => {
+  //   if (!Array.isArray(territories)) return [];
+
+  //   return territories.map((t) => {
+  //     const opportunity = investmentOpportunities.find(
+  //       (o) => o.id === t.investmentOpportunityId
+  //     );
+
+  //     let locationInfo = "";
+  //     if (t.assignmentType === "MANUALLY") {
+  //       locationInfo = t.location || "-";
+  //     } else if (t.assignmentType === "AUTOMATICALLY") {
+  //       locationInfo = t.pincode ? `${t.pincode} (${t.city || "-"})` : "-";
+  //     }
+
+  //     return {
+  //       id: t.id,
+  //       opportunity: opportunity ? opportunity.name : "N/A",
+  //       assignmentType: t.assignmentType,
+  //       locationInfo,
+  //     };
+  //   });
+  // }, [territories, investmentOpportunities]);
+
   const displayRows = useMemo(() => {
     if (!Array.isArray(territories)) return [];
 
@@ -235,8 +263,10 @@ export default function TerritoryManagement() {
       return {
         id: t.id,
         opportunity: opportunity ? opportunity.name : "N/A",
+        opportunityId: t.investmentOpportunityId, // important for editing
         assignmentType: t.assignmentType,
         locationInfo,
+        fullData: t, // store full territory object for editing
       };
     });
   }, [territories, investmentOpportunities]);
@@ -251,7 +281,59 @@ export default function TerritoryManagement() {
     setEditMode(true);
     setEditingId(row.id);
     setIsModalOpen(true);
-    setFormData(row);
+
+    // fullData has all territory fields
+    const territory = row.fullData;
+    console.log(
+      territory,
+      "territoryterritoryterritoryterritoryterritoryterritoryterritory"
+    );
+
+    console.log({
+      name: territory?.location,
+      image: territory?.imageUrl,
+      // ? { preview: territory.imageUrl }
+      // : null,
+    });
+
+    // Populate formData as per your expected structure
+    setFormData({
+      id: territory.id,
+      name: territory.name || "", // add if you have name field
+      region: territory.region || "", // add if you have region
+      opportunityId: territory.investmentOpportunityId || "",
+      assignmentType:
+        territory.assignmentType === "MANUALLY"
+          ? "Manually"
+          : territory.assignmentType === "AUTOMATICALLY"
+          ? "Automatically"
+          : "",
+      locations:
+        territory.assignmentType === "MANUALLY" && territory.location
+          ? [
+              {
+                name: territory?.location,
+                image: territory?.imageUrl,
+                // ? { preview: territory.imageUrl }
+                // : null,
+              },
+            ]
+          : [],
+      pincodes:
+        territory.assignmentType === "AUTOMATICALLY" && territory.pincode
+          ? [
+              {
+                code: territory?.pincode,
+                city: territory?.city || "",
+                image: territory?.imageUrl,
+                // ? { preview: territory.imageUrl }
+                // : null,
+              },
+            ]
+          : [],
+      city: territory.city || "",
+    });
+
     setErrors({});
   };
 
@@ -451,13 +533,23 @@ export default function TerritoryManagement() {
                     key={idx}
                     className="px-3 py-1 bg-blue-500 text-white rounded-full flex items-center gap-2"
                   >
-                    {loc.image && (
-                      <img
-                        src={URL.createObjectURL(loc.image)}
-                        alt="location"
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                    )}
+                    {loc.image &&
+                      (typeof loc.image === "string" ? (
+                        // loc.image is a URL string from S3
+                        <img
+                          src={loc.image}
+                          alt="location"
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        // loc.image is a File object (local upload)
+                        <img
+                          src={URL.createObjectURL(loc.image)}
+                          alt="location"
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ))}
+
                     {loc.name}
                     <button
                       onClick={() => removeLocation(loc.name)}
@@ -511,13 +603,22 @@ export default function TerritoryManagement() {
                     key={idx}
                     className="px-3 py-1 bg-green-500 text-white rounded-full flex items-center gap-2"
                   >
-                    {pin.image && (
-                      <img
-                        src={URL.createObjectURL(pin.image)}
-                        alt="pincode"
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                    )}
+                    {pin.image &&
+                      (typeof pin.image === "string" ? (
+                        // pin.image is a URL string, use directly
+                        <img
+                          src={pin.image}
+                          alt="pincode"
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        // pin.image is a File object, create a preview URL
+                        <img
+                          src={URL.createObjectURL(pin.image)}
+                          alt="pincode"
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ))}
                     {pin.code} ({pin.city})
                     <button
                       onClick={() => removePincode(pin.code)}
