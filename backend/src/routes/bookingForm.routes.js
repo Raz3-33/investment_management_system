@@ -10,6 +10,15 @@ router.get("/", bookingFormController.getAllBookings);
 // GET /api/bookings/:id - get booking by ID
 router.get("/:id", bookingFormController.getBookingById);
 
-router.put("/payments/approval/:id",verifyToken, bookingFormController.updatePaymentApproval);
+router.put(
+  "/payments/approval/:id",
+  verifyToken,
+  bookingFormController.updatePaymentApproval
+);
+
+router.post(
+  "/convert-to-investment/:personalDetailsId",
+  bookingFormController.convertToInvestment
+);
 
 export default router;

@@ -16,7 +16,7 @@ const columns = [
 export default function InvestmentTypeManagement() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(3);
+  const [rowsPerPage] = useState(8);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingTypeId, setEditingTypeId] = useState(null);

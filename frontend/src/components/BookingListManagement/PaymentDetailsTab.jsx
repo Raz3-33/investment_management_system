@@ -5,7 +5,7 @@ import { InfoItem } from "./PersonalInfoTab";
 const approvalOptions = ["Pending", "Approved"];
 
 export default function PaymentDetailsTab({ paymentDetails }) {
-  const { updatePaymentApproval, fetchBookingById, booking } = useBookingStore(
+  const { updatePaymentApproval, fetchBookingById, booking,convertBookingToInvestment } = useBookingStore(
     (state) => state
   );
 
@@ -26,6 +26,7 @@ export default function PaymentDetailsTab({ paymentDetails }) {
     payment3: paymentDetails.isAmount3Approved ? "Approved" : "Pending",
     payment4: paymentDetails.isAmount4Approved ? "Approved" : "Pending",
   });
+
   const [approvalStatus, setApprovalStatus] = useState(getDropdownState());
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function PaymentDetailsTab({ paymentDetails }) {
       await updatePaymentApproval(paymentDetails.id, approvalField, value);
       if (booking?.id) fetchBookingById(booking.id);
     } catch (err) {
-      // handle error (optional)
+      console.error(err);
     }
   };
 
@@ -49,6 +50,33 @@ export default function PaymentDetailsTab({ paymentDetails }) {
     approved: paymentDetails[`isAmount${num}Approved`],
     approvalKey: `payment${num}`,
   }));
+
+  // const handleConvertClick = () => {
+  //   if (onConvert) {
+  //     onConvert();
+  //   } else {
+  //     console.log("Convert to Investment clicked");
+  //   }
+  // };
+
+
+const handleConvertClick = async () => {
+  try {
+    // booking?.personalDetails?.id or however you hold it.
+    const personalDetailsId = booking?.personalDetails?.id || paymentDetails?.personalDetailsId;
+    if (!personalDetailsId) {
+      alert("Missing booking personal details id");
+      return;
+    }
+    const data = await convertBookingToInvestment(personalDetailsId);
+    // optional: refetch booking or navigate to investment view
+    // await fetchBookingById(booking.id);
+    alert("Converted to Investment successfully");
+    console.log("Conversion result:", data);
+  } catch (e) {
+    alert(e?.response?.data?.message || e.message || "Conversion failed");
+  }
+};
 
   return (
     <div className="space-y-6">
@@ -126,6 +154,18 @@ export default function PaymentDetailsTab({ paymentDetails }) {
           </div>
         </div>
       ))}
+
+      {/* Convert button bottom-left */}
+      <div className="pt-4">
+        <button
+          type="button"
+          onClick={handleConvertClick}
+          className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold hover:bg-gray-50 active:scale-[0.99] transition
+                     dark:border-gray-700 dark:hover:bg-gray-800"
+        >
+          Convert to Investment
+        </button>
+      </div>
     </div>
   );
 }

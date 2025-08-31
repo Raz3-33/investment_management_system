@@ -128,19 +128,64 @@ export const create = [
 ];
 
 // Update
-export const update = async (req, res) => {
-  try {
-    const updated = await territoryService.update(req.params.id, req.body);
-    res.json({ success: true, data: updated });
-  } catch (error) {
-    const status = /not found|validation/i.test(error.message) ? 400 : 500;
-    res.status(status).json({
-      success: false,
-      message: "Failed to update territory",
-      error: error.message,
-    });
-  }
-};
+export const update = [
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const {
+        opportunityId,
+        assignmentType, // "Manually" | "Automatically" | "User"
+        locationName,   // for MANUALLY
+        pincode,        // for AUTOMATICALLY
+        city,           // for AUTOMATICALLY
+        imageUrl,       // to keep existing
+        removeImage,    // "true" to clear
+      } = req.body;
+
+      let nextImageUrl = undefined;
+
+      if (req.file) {
+        const file = req.file;
+        const buffer = file.buffer || fs.readFileSync(file.path);
+        const s3Url = await uploadFileToS3(
+          {
+            buffer,
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+          },
+          sanitizedConfig.S3_BUCKET_NAME
+        );
+        nextImageUrl = s3Url;
+        if (file.path) { try { fs.unlinkSync(file.path); } catch {} }
+      } else if (typeof imageUrl === "string" && imageUrl.trim()) {
+        nextImageUrl = imageUrl.trim();
+      } else if (String(removeImage) === "true") {
+        nextImageUrl = null;
+      }
+
+      const updated = await territoryService.update(id, {
+        opportunityId,
+        assignmentType,
+        locationName,
+        pincode,
+        city,
+        nextImageUrl,
+      });
+
+      res.json({ success: true, data: updated });
+    } catch (error) {
+      const status = /not found|invalid|required/i.test(error.message) ? 400 : 500;
+      res.status(status).json({
+        success: false,
+        message: "Failed to update territory",
+        error: error.message,
+      });
+    }
+  },
+];
+
 
 // Delete
 export const removeTerritory = async (req, res) => {

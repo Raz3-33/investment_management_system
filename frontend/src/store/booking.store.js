@@ -90,12 +90,11 @@ export const useBookingStore = create((set) => ({
   },
 
   updatePaymentApproval: async (paymentId, approvalKey, status) => {
-    
     set({ loading: true, error: null });
     try {
       // Get token from store or localStorage
       const token = localStorage.getItem("token");
-      alert(token)
+      alert(token);
       console.log(token, "tokentokentokentokentokentoken");
 
       if (!token) {
@@ -121,6 +120,36 @@ export const useBookingStore = create((set) => ({
       set({
         error:
           err.response?.data?.message || "Failed to update payment approval",
+        loading: false,
+      });
+      throw err;
+    }
+  },
+
+  // store/booking.store.js
+  convertBookingToInvestment: async (personalDetailsId) => {
+    // personalDetailsId = BookingFormPersonalDetails.id
+    // assumes your auth token is in localStorage
+    const token = localStorage.getItem("token");
+    if (!token) {
+      set({ error: "Token is required" });
+      throw new Error("Token is required");
+    }
+
+    set({ loading: true, error: null });
+    try {
+      const res = await api.post(
+        `/bookings/convert-to-investment/${personalDetailsId}`,
+        {},
+        {
+          headers: { authorization: `Bearer ${token}` },
+        }
+      );
+      set({ loading: false });
+      return res.data?.data;
+    } catch (err) {
+      set({
+        error: err.response?.data?.message || "Failed to convert to investment",
         loading: false,
       });
       throw err;

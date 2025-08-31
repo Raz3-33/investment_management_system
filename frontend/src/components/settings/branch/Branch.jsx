@@ -14,7 +14,7 @@ const columns = [
 
 export default function BranchManagement() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(3);
+  const [rowsPerPage] = useState(8);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
     name: "",

@@ -5,13 +5,67 @@ import { useInvestorStore } from "../../store/investorStore";
 import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity.store";
 
 // Function to format ISO string into YYYY-MM-DD format
-const formatDateForInput = (dateString) => {
-  const date = new Date(dateString);
-  return date.toISOString().split("T")[0]; // Convert to YYYY-MM-DD
+// Returns 'YYYY-MM-DD' or '' if it can't parse
+export const formatDateForInput = (value) => {
+  if (!value) return "";
+
+  // If it's already a Date
+  if (value instanceof Date && !isNaN(value)) {
+    // Adjust to local so the same calendar date shows in <input type="date">
+    const d = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // If it's a timestamp
+  if (typeof value === "number") {
+    const d = new Date(value);
+    if (!isNaN(d)) {
+      const adj = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+      return adj.toISOString().slice(0, 10);
+    }
+    return "";
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+
+    // If already 'YYYY-MM-DD'
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+
+    // Try to extract a date portion from messy strings
+    // 1) Prefer full ISO date at the start
+    const isoFullMatch = trimmed.match(
+      /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?/
+    );
+    if (isoFullMatch) {
+      const d = new Date(isoFullMatch[0]);
+      if (!isNaN(d)) {
+        const adj = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+        return adj.toISOString().slice(0, 10);
+      }
+    }
+
+    // 2) Fallback: just grab the 'YYYY-MM-DD' part if present
+    const ymd = trimmed.match(/\d{4}-\d{2}-\d{2}/);
+    if (ymd) return ymd[0];
+
+    // 3) Last resort: let Date parse the whole string
+    const d = new Date(trimmed);
+    if (!isNaN(d)) {
+      const adj = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+      return adj.toISOString().slice(0, 10);
+    }
+
+    return "";
+  }
+
+  return "";
 };
 
 export default function EditInvestmentForm({ investmentId, closeModal }) {
-  const { investments, updateInvestment } = useInvestmentStore((state) => state);
+  const { investments, updateInvestment } = useInvestmentStore(
+    (state) => state
+  );
   const { investors, fetchInvestors } = useInvestorStore((state) => state);
   const {
     investmentOpportunities,
@@ -60,16 +114,18 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
   }, [investmentOpportunities, investment?.opportunityId]);
 
   useEffect(() => {
-  console.log(investmentOpportunitiesWithBranch, "investmentOpportunitiesWithBranch");
-  // Find the selected opportunity from the list
-  if (investment?.branchId) {
-    setFormData((prev) => ({
-      ...prev,
-      selectedBranchId: investment.branchId, // Pre-set the branch ID
-    }));
-  }
-}, [investment, investmentOpportunitiesWithBranch]);
-
+    console.log(
+      investmentOpportunitiesWithBranch,
+      "investmentOpportunitiesWithBranch"
+    );
+    // Find the selected opportunity from the list
+    if (investment?.branchId) {
+      setFormData((prev) => ({
+        ...prev,
+        selectedBranchId: investment.branchId, // Pre-set the branch ID
+      }));
+    }
+  }, [investment, investmentOpportunitiesWithBranch]);
 
   // Handle when opportunity changes
   const handleOpportunityChange = async (e) => {
@@ -168,7 +224,9 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
+      {errorValidation && (
+        <p className="text-red-500 text-sm">{errorValidation}</p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Amount */}
@@ -257,7 +315,7 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
           <label className="block mb-1">Contract Start</label>
           <input
             type="date"
-            value={formatDateForInput(formData.contractStart)}
+            value={formatDateForInput(formData?.contractStart)}
             onChange={(e) =>
               setFormData({ ...formData, contractStart: e.target.value })
             }
