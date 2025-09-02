@@ -69,3 +69,29 @@ export const convertToInvestment = async (req, res) => {
     });
   }
 };
+
+
+// controller/bookingForm.controller.js
+export const updateDocumentApproval = async (req, res) => {
+  try {
+    const { personalDetailsId } = req.params;
+    const { docKey, status } = req.body; // status: "Approved" | "Pending"
+    const result = await bookingFormService.updateDocumentApproval(
+      personalDetailsId,
+      docKey,
+      status,
+      req.user
+    );
+
+    if (!result.success) {
+      return res.status(result.statusCode || 400).json({
+        success: false,
+        message: result.message || "Failed to update document approval",
+      });
+    }
+
+    return res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

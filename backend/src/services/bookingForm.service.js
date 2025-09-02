@@ -31,30 +31,128 @@ export const getBookingById = async (id) => {
   });
 };
 
+// services/bookingForm.service.js (or booking.service.js)
+// Assumes `prisma` is imported and available
+
 export const updatePaymentApproval = async (id, approvalKey, status, user) => {
   try {
-    // Allow if user is finance role OR isAdmin true
-    const isFinance = user?.role?.name.toLowerCase() === "finance";
+    // ---- Role check ----
+    const isFinance = user?.role?.name?.toLowerCase() === "finance";
     const isAdmin = user?.isAdmin === true;
-
     if (!isFinance && !isAdmin) {
-      return res.status(403).json({
+      return {
         success: false,
-        message:
-          "Forbidden: Only finance role or admin users can update approval",
-      });
+        statusCode: 403,
+        message: "Forbidden: Only finance role or admin users can update approval",
+      };
     }
-    const isApproved = status === "Approved";
-    const updateData = { [approvalKey]: isApproved };
 
-    return prisma.bookingFormPaymentDetails.update({
+    // ---- Validate approvalKey ----
+    const validApprovalKeys = [
+      "isAmount1Approved",
+      "isAmount2Approved",
+      "isAmount3Approved",
+      "isAmount4Approved",
+    ];
+    if (!validApprovalKeys.includes(approvalKey)) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: `Invalid approvalKey: ${approvalKey}`,
+      };
+    }
+
+    const isApproved = status === "Approved";
+
+    // ---- Load current paymentDetails ----
+    const paymentDetails = await prisma.bookingFormPaymentDetails.findUnique({
       where: { id },
-      data: updateData,
+      include: {
+        personalDetails: true, // for isPaymentCompleted flip (optional)
+      },
     });
+
+    if (!paymentDetails) {
+      return {
+        success: false,
+        statusCode: 404,
+        message: "Payment details not found",
+      };
+    }
+
+    // Map e.g. isAmount3Approved -> amount3
+    const index = approvalKey.match(/\d+/)?.[0]; // "3"
+    const amountField = `amount${index}`;
+
+    // Current approval value & amount
+    const alreadyApproved = Boolean(paymentDetails[approvalKey]);
+    const amountValue = Number(paymentDetails[amountField] || 0);
+
+    // ---- Build approved sum AFTER applying the requested toggle ----
+    // Read all amounts and approvals
+    const amounts = [1, 2, 3, 4].map((i) => Number(paymentDetails[`amount${i}`] || 0));
+    const approvals = [1, 2, 3, 4].map((i) => Boolean(paymentDetails[`isAmount${i}Approved`]));
+
+    // Apply the requested change in a copy
+    const idx = Number(index) - 1; // 0-based
+    approvals[idx] = isApproved;    // reflect the new state
+
+    // Sum of approved schedule amounts
+    const approvedScheduled = approvals.reduce(
+      (sum, ok, i) => sum + (ok ? amounts[i] : 0),
+      0
+    );
+
+    const dealAmount = Number(paymentDetails.dealAmount || 0);
+    const tokenReceived = Number(paymentDetails.tokenReceived || 0);
+
+    // Recompute new balanceDue from scratch (no drift)
+    let newBalanceDue = dealAmount - (tokenReceived + approvedScheduled);
+    if (!Number.isFinite(newBalanceDue)) newBalanceDue = 0;
+    if (newBalanceDue < 0) newBalanceDue = 0;
+
+    // ---- Persist updates in a transaction ----
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedPayment = await tx.bookingFormPaymentDetails.update({
+        where: { id },
+        data: {
+          [approvalKey]: isApproved,
+          balanceDue: newBalanceDue,
+        },
+      });
+
+      // OPTIONAL: mark the booking as fully paid
+      // Flip isPaymentCompleted on BookingFormPersonalDetails when balanceDue == 0
+      let updatedPersonal = null;
+      if (paymentDetails.personalDetailsId) {
+        updatedPersonal = await tx.bookingFormPersonalDetails.update({
+          where: { id: paymentDetails.personalDetailsId },
+          data: {
+            isPaymentCompleted: newBalanceDue === 0,
+          },
+        });
+      }
+
+      return { updatedPayment, updatedPersonal };
+    });
+
+    return {
+      success: true,
+      data: {
+        payment: updated.updatedPayment,
+        personal: updated.updatedPersonal, // may be null if not updated
+      },
+    };
   } catch (err) {
-    return err.message;
+    console.error("Error in updatePaymentApproval:", err);
+    return {
+      success: false,
+      statusCode: 500,
+      message: err.message || "Failed to update payment approval",
+    };
   }
 };
+
 
 // services/booking.service.js
 
@@ -285,3 +383,95 @@ export async function convertToInvestment({
     };
   });
 }
+
+
+// services/bookingForm.service.js
+export const updateDocumentApproval = async (personalDetailsId, docKey, status, user) => {
+  try {
+    // ---- Role check (allow finance or admin; add more if needed) ----
+    const roleName = user?.role?.name?.toLowerCase?.() || "";
+    const isFinance = roleName === "finance";
+    const isAdmin = user?.isAdmin === true;
+    // (Optionally allow ops/kyc)
+    const allowed = isFinance || isAdmin /* || roleName === "kyc" || roleName === "operations" */;
+    if (!allowed) {
+      return {
+        success: false,
+        statusCode: 403,
+        message: "Forbidden: Only finance/admin can approve documents",
+      };
+    }
+
+    if (!personalDetailsId) {
+      return { success: false, statusCode: 400, message: "personalDetailsId is required" };
+    }
+    if (!docKey) {
+      return { success: false, statusCode: 400, message: "docKey is required" };
+    }
+
+    // Map doc key -> approval boolean key
+    const docKeyToApproval = {
+      aadharFront: "aadharFrontIsApproved",
+      aadharBack: "aadharBackIsApproved",
+      panCard: "panCardIsApproved",
+      companyPan: "companyPanIsApproved",
+      addressProof: "addressProofIsApproved",
+      attachedImage: "attachedImageIsApproved",
+      // gstNumber has no approval boolean in your schema
+    };
+
+    const approvalField = docKeyToApproval[docKey];
+    if (!approvalField) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: `No approval flag configured for "${docKey}"`,
+      };
+    }
+
+    const isApproved = status === "Approved";
+
+    // Load record (to ensure document exists before approving)
+    const pd = await prisma.bookingFormPersonalDetails.findUnique({
+      where: { id: personalDetailsId },
+      select: {
+        id: true,
+        [docKey]: true,
+        [approvalField]: true,
+      },
+    });
+
+    if (!pd) {
+      return { success: false, statusCode: 404, message: "Booking personal details not found" };
+    }
+
+    // Optional: block approving if file/url not present
+    if (!pd[docKey]) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: `Cannot approve: ${docKey} is missing`,
+      };
+    }
+
+    const updated = await prisma.bookingFormPersonalDetails.update({
+      where: { id: personalDetailsId },
+      data: {
+        [approvalField]: isApproved,
+      },
+      select: {
+        id: true,
+        [approvalField]: true,
+      },
+    });
+
+    return { success: true, data: updated };
+  } catch (err) {
+    console.error("Error in updateDocumentApproval:", err);
+    return {
+      success: false,
+      statusCode: 500,
+      message: err.message || "Failed to update document approval",
+    };
+  }
+};

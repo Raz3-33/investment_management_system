@@ -1,6 +1,7 @@
 // App.js
 
 import Branch from "../../components/settings/branch/Branch";
+import BrandManagement from "../../components/settings/Brand/BrandManagement";
 import TerritoryManagement from "../../components/settings/territory/TerritoryManagement";
 import Tabs from "../../components/ui/tab/Tabs";
 import BusinessCategoryManagement from "./BusinessCategoryManagement";
@@ -40,6 +41,22 @@ const tabs = [
       </svg>
     ),
     content: <Branch />,
+  },
+
+   // ✅ NEW Brand tab
+   {
+    id: "brand",
+    label: "Brand",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+        {/* Tag icon */}
+        <path d="M3 12L12 3H19C20.1046 3 21 3.89543 21 5V11L12 20L3 12Z"
+          stroke="currentColor" stroke-width="1.5" fill="none" />
+        <circle cx="16" cy="7" r="1.5" fill="currentColor" />
+      </svg>
+    ),
+    content: <BrandManagement />,
   },
   {
     id: "businessCategory",

@@ -155,4 +155,31 @@ export const useBookingStore = create((set) => ({
       throw err;
     }
   },
+
+
+  // store/booking.store.js
+updateDocumentApproval: async (personalDetailsId, docKey, status = "Approved") => {
+  set({ loading: true, error: null });
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      set({ loading: false, error: "Token is required" });
+      throw new Error("Token is required");
+    }
+    const res = await api.put(
+      `/bookings/documents/approval/${personalDetailsId}`,
+      { docKey, status },
+      { headers: { authorization: `Bearer ${token}` } }
+    );
+    set({ loading: false });
+    return res.data?.data;
+  } catch (err) {
+    set({
+      error: err.response?.data?.message || "Failed to approve document",
+      loading: false,
+    });
+    throw err;
+  }
+},
+
 }));

@@ -70,88 +70,66 @@ export const createInvestmentOpportunity = async (data) => {
     roiPercent,
     turnOverPercentage,
     lockInMonths,
-    brandName,
+    brandId,
     exitOptions,
     payoutMode,
     renewalFee,
-    selectedBranchIds,
-    isStore, // New field
-    isSignature, // New field
-    // signatureStoreLocation, // New field
-    // selectedTerritoryIds, // New field for territories
+    isStore,
+    isSignature,
   } = data;
-  console.log(data);
 
-  // Validate that the investment type and business category exist
-  const investmentTypeExists = await prisma.investmentType.findUnique({
-    where: { id: investmentTypeId },
-  });
-  const businessCategoryExists = await prisma.businessCategory.findUnique({
-    where: { id: businessCategoryId },
-  });
+  // Validate referentials
+  const [investmentTypeExists, businessCategoryExists, brandExists] =
+    await Promise.all([
+      prisma.investmentType.findUnique({ where: { id: investmentTypeId } }),
+      prisma.businessCategory.findUnique({ where: { id: businessCategoryId } }),
+      prisma.brand.findUnique({ where: { id: brandId } }),
+    ]);
 
-  if (!investmentTypeExists || !businessCategoryExists) {
-    throw new Error("Invalid investment type or business category.");
+  if (!investmentTypeExists || !businessCategoryExists || !brandExists) {
+    throw new Error("Invalid investment type, business category, or brand.");
   }
 
   try {
-    let calculatedRoiAmount = null;
-    if (roiPercent && minAmount) {
-      calculatedRoiAmount =
-        (parseFloat(roiPercent) / 100) * parseFloat(minAmount);
-    }
+    const min = parseFloat(minAmount);
+    const roi = parseFloat(roiPercent);
+    const turnoverPct =
+      turnOverPercentage !== undefined && turnOverPercentage !== ""
+        ? parseFloat(turnOverPercentage)
+        : null;
 
-    // Create the new investment opportunity
+    const calculatedRoiAmount =
+      !Number.isNaN(roi) && !Number.isNaN(min) ? (roi / 100) * min : null;
+
     const newOpportunity = await prisma.investmentOpportunity.create({
       data: {
         name,
         description,
         investmentTypeId,
         businessCategoryId,
-        minAmount: parseFloat(minAmount),
-        maxAmount: maxAmount ? parseFloat(maxAmount) : null,
-        roiPercent: parseFloat(roiPercent),
-        lockInMonths: parseInt(lockInMonths),
-        turnOverPercentage: parseInt(turnOverPercentage),
+        minAmount: min,
+        maxAmount:
+          maxAmount !== undefined && maxAmount !== ""
+            ? parseFloat(maxAmount)
+            : null,
+        roiPercent: roi,
+        lockInMonths: parseInt(lockInMonths, 10),
+        turnOverPercentage: turnoverPct,
         turnOverAmount: calculatedRoiAmount,
-        brandName,
+
+        // 🔑 brand relation + denormalized name
+        brandId,
+        brandName: brandExists.name, // ensure Brand.name is NOT nullable in schema
+
         exitOptions,
         payoutMode,
         isActive: true,
         renewalFee: parseFloat(renewalFee),
-        isMasterFranchise: isStore,
-        isSignature,
-        // signatureStoreLocation,
+        isMasterFranchise: !!isStore,
+        isSignature: !!isSignature,
+        // signatureStoreLocation, selectedBranchIds, territories... as needed
       },
     });
-
-    // After creating the opportunity, create the opportunity-branch relationship
-    // if (selectedBranchIds && selectedBranchIds.length > 0) {
-    //   const opportunityBranches = selectedBranchIds.map((branchId) => ({
-    //     opportunityId: newOpportunity.id, // Use the new opportunity ID
-    //     branchId,
-    //   }));
-
-    //   await prisma.opportunityBranch.createMany({
-    //     data: opportunityBranches,
-    //   });
-    // }
-
-    // Handle the relationship between opportunity and territories (for Master Franchise)
-    // if (
-    //   isStore &&
-    //   selectedTerritoryIds &&
-    //   selectedTerritoryIds.length > 0
-    // ) {
-    //   const territoryMasters = selectedTerritoryIds.map((territoryId) => ({
-    //     opportunityId: newOpportunity.id,
-    //     territoryId,
-    //   }));
-
-    //   await prisma.territoryMaster.createMany({
-    //     data: territoryMasters,
-    //   });
-    // }
 
     return newOpportunity;
   } catch (error) {

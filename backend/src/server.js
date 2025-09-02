@@ -9,6 +9,7 @@ import sanitizedConfig from "./config.js";
 import { errorHandler, notFound } from "./middlewares/errorMiddlware.js";
 import roleRoutes from "./routes/role.routes.js";
 import branchRouter from "./routes/branch.routes.js"
+import brandRouter from "./routes/brand.routes.js"
 import territoryRouter from "./routes/territory.routes.js";
 import userRouter from "./routes/user.routes.js";
 import investmentOpportunity from "./routes/investmentOpportunity.routes.js";
@@ -50,6 +51,10 @@ app.use("/api/roles", roleRoutes);
 
 // branch
 app.use("/api/branches", branchRouter);
+
+// brands
+app.use("/api/brands", brandRouter);
+
 app.use("/api/territories", territoryRouter);
 
 // user management

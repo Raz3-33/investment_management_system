@@ -112,6 +112,17 @@ model Branch {
   officeDetails BookingFormOfficeDetails[]
 }
 
+model Brand {
+  id          String   @id
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  InvestmentOpportunity InvestmentOpportunity[]
+}
+
 model Investor {
   id                    String       @id @default(uuid())
   name                  String
@@ -149,9 +160,12 @@ model BusinessCategory {
 
 // Investment Opportunity model
 model InvestmentOpportunity {
-  id                 String   @id @default(uuid())
-  name               String
-  brandName          String
+  id        String @id @default(uuid())
+  name      String
+  brandName String
+  brandId   String
+  brand     Brand  @relation(fields: [brandId], references: [id])
+
   description        String
   minAmount          Float
   maxAmount          Float?
@@ -161,9 +175,9 @@ model InvestmentOpportunity {
   renewalFee         Float?
   lockInMonths       Int
   exitOptions        String?
-  payoutMode         String // Monthly, Quarterly, etc.
+  payoutMode         String
   isActive           Boolean  @default(true)
-  documents          String[] // Array of file URLs
+  documents          String[]
 
   investmentTypeId String
   investmentType   InvestmentType @relation(fields: [investmentTypeId], references: [id])
@@ -171,20 +185,16 @@ model InvestmentOpportunity {
   businessCategoryId String
   businessCategory   BusinessCategory @relation(fields: [businessCategoryId], references: [id])
 
-  investments Investment[]
-
-  sales Sales[] // Sales data linked to the opportunity
-
-  branches Branch[] @relation("OpportunityBranches")
-
+  investments         Investment[]
+  sales               Sales[]
+  branches            Branch[]            @relation("OpportunityBranches")
   opportunityBranches OpportunityBranch[]
 
   isMasterFranchise      Boolean @default(false)
   isSignature            Boolean @default(false)
   signatureStoreLocation String?
 
-  // NEW Relation with territories
-  territoryMasters TerritoryMaster[] // New relation for territories
+  territoryMasters TerritoryMaster[]
   territories      Territory[]
 
   @@map("investment_opportunities")
@@ -278,12 +288,13 @@ model Territory {
   location                   String? // required if assignmentType = MANUALLY
   pincode                    String? // required if assignmentType = AUTOMATICALLY
   city                       String? // should remain null
-  imageUrl                 String? // URL to territory image stored on S3
+  imageUrl                   String? // URL to territory image stored on S3
   territoryMasters           TerritoryMaster[]
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
   InvestmentOpportunity      InvestmentOpportunity?       @relation(fields: [investmentOpportunityId], references: [id])
   investmentOpportunityId    String?
+  isBooked                   Boolean                      @default(false)
   BookingFormPersonalDetails BookingFormPersonalDetails[]
 
   @@map("territories")

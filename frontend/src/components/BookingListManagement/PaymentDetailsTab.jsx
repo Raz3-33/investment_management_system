@@ -1,13 +1,19 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+
 import { useBookingStore } from "../../store/booking.store";
 import { InfoItem } from "./PersonalInfoTab";
 
 const approvalOptions = ["Pending", "Approved"];
 
 export default function PaymentDetailsTab({ paymentDetails }) {
-  const { updatePaymentApproval, fetchBookingById, booking,convertBookingToInvestment } = useBookingStore(
-    (state) => state
-  );
+  const {
+    updatePaymentApproval,
+    fetchBookingById,
+    booking,
+    convertBookingToInvestment,
+    loading,
+  } = useBookingStore((state) => state);
 
   if (!paymentDetails) return <p>No payment details.</p>;
 
@@ -59,24 +65,41 @@ export default function PaymentDetailsTab({ paymentDetails }) {
   //   }
   // };
 
+  const handleConvertClick = async () => {
+    try {
+      const personalDetailsId =
+        booking?.personalDetails?.id || paymentDetails?.personalDetailsId;
+      if (!personalDetailsId) {
+        toast.warning("Missing booking personal details id", {
+          position: "top-right",
+        });
+        return;
+      }
 
-const handleConvertClick = async () => {
-  try {
-    // booking?.personalDetails?.id or however you hold it.
-    const personalDetailsId = booking?.personalDetails?.id || paymentDetails?.personalDetailsId;
-    if (!personalDetailsId) {
-      alert("Missing booking personal details id");
-      return;
+      const loadingId = toast.loading("Converting booking to investment...");
+
+      const data = await convertBookingToInvestment(personalDetailsId);
+
+      // optional: refetch booking or navigate
+      // await fetchBookingById(booking.id);
+
+      toast.update(loadingId, {
+        render: "Converted to Investment successfully",
+        type: "success",
+        isLoading: false, // Critical: end loading state
+        autoClose: 1000,
+        delay: 0, // Optional: remove update delay
+      });
+
+      console.log("Conversion result:", data);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.message || e?.message || "Conversion failed";
+      // Either update the loading toast if it exists, or show a new error toast
+      toast.dismiss(); // optional: clear any stuck loaders
+      toast.error(msg, { position: "top-right", autoClose: 5000 });
     }
-    const data = await convertBookingToInvestment(personalDetailsId);
-    // optional: refetch booking or navigate to investment view
-    // await fetchBookingById(booking.id);
-    alert("Converted to Investment successfully");
-    console.log("Conversion result:", data);
-  } catch (e) {
-    alert(e?.response?.data?.message || e.message || "Conversion failed");
-  }
-};
+  };
 
   return (
     <div className="space-y-6">

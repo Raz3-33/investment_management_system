@@ -21,4 +21,12 @@ router.post(
   bookingFormController.convertToInvestment
 );
 
+// routes/bookingForm.routes.js
+router.put(
+  "/documents/approval/:personalDetailsId",
+  verifyToken,
+  bookingFormController.updateDocumentApproval
+);
+
+
 export default router;

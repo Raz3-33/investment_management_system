@@ -4,11 +4,14 @@ import { useInvestmentOpportunityStore } from "../../store/investmentOpportunity
 import { useSettingStore } from "../../store/settingStore";
 import { useBranchStore } from "../../store/branchStore";
 import { useTerritoryStore } from "../../store/territoryStore";
+import { useBrandStore } from "../../store/useBrandStore";
 
 export default function AddInvestmentOpportunityForm() {
   const { addInvestmentOpportunity, error } = useInvestmentOpportunityStore(
     (s) => s
   );
+
+  const { brands, fetchBrands } = useBrandStore((s) => s);
 
   const {
     investmentTypes,
@@ -27,7 +30,8 @@ export default function AddInvestmentOpportunityForm() {
     description: "",
     investmentTypeId: "",
     businessCategoryId: "",
-    brandName: "",
+    // brandName: "",
+    brandId: "",
     minAmount: "",
     maxAmount: "",
     roiPercent: "",
@@ -51,12 +55,14 @@ export default function AddInvestmentOpportunityForm() {
     fetchInvestmentTypes();
     fetchBusinessCategories();
     fetchBranches();
-    fetchTerritories(); // <-- NEW
+    fetchTerritories();
+    fetchBrands();
   }, [
     fetchInvestmentTypes,
     fetchBusinessCategories,
     fetchBranches,
     fetchTerritories,
+    fetchBrands,
   ]);
 
   useEffect(() => {
@@ -72,7 +78,8 @@ export default function AddInvestmentOpportunityForm() {
       !formData.description ||
       !formData.investmentTypeId ||
       !formData.businessCategoryId ||
-      !formData.brandName ||
+      // !formData.brandName ||
+      !formData.brandId ||
       !formData.minAmount ||
       !formData.roiPercent ||
       !formData.lockInMonths ||
@@ -133,7 +140,6 @@ export default function AddInvestmentOpportunityForm() {
         description: "",
         investmentTypeId: "",
         businessCategoryId: "",
-        brandName: "",
         minAmount: "",
         maxAmount: "",
         roiPercent: "",
@@ -185,7 +191,7 @@ export default function AddInvestmentOpportunityForm() {
         />
 
         {/* Brand Name */}
-        <input
+        {/* <input
           type="text"
           placeholder="Brand Name"
           value={formData.brandName}
@@ -193,7 +199,23 @@ export default function AddInvestmentOpportunityForm() {
             setFormData({ ...formData, brandName: e.target.value })
           }
           className="border px-3 py-2 rounded-md w-full"
-        />
+        /> */}
+
+        {/* Brand */}
+        <select
+          value={formData.brandId}
+          onChange={(e) =>
+            setFormData({ ...formData, brandId: e.target.value })
+          }
+          className="border px-3 py-2 rounded-md w-full"
+        >
+          <option value="">Select Brand</option>
+          {brands?.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
 
         {/* Investment Type */}
         <select
