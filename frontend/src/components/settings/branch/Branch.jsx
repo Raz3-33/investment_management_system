@@ -210,7 +210,7 @@ export default function BranchManagement() {
           />
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <div className="flex justify-end pt-2">
-            <Button variant="primary" onClick={handleCreateOrUpdate}>
+            <Button className ="w-full h-10" variant="primary" onClick={handleCreateOrUpdate}>
               {editMode ? "Update" : "Add"}
             </Button>
           </div>

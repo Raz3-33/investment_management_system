@@ -634,6 +634,7 @@ export default function TerritoryManagement() {
 
           <div className="flex justify-end pt-2">
             <Button
+            className ="w-full h-10"
               variant="primary"
               onClick={handleCreateOrUpdate}
               disabled={isSubmitting}

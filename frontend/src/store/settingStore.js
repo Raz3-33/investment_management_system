@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api } from "../services/api"; // Your API service
 
-export const useSettingStore = create((set) => ({
+export const useSettingStore = create((set,get) => ({
   // State management for both businessCategory and investmentType
   businessCategories: [],
   investmentTypes: [],
@@ -50,8 +50,11 @@ export const useSettingStore = create((set) => ({
     try {
       const res = await api.post("/settings/business-categories", newCategory); // Adjust route
       set({
-        businessCategoriesAdded: res.data?.data, // Add to state
+        businessCategoriesAdded: res.data?.data,
+        // businessCategories:await get().fetchInvestmentTypes()
       });
+
+      await get().fetchBusinessCategories()
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to add business category",
@@ -68,6 +71,8 @@ export const useSettingStore = create((set) => ({
         // investmentTypes: [...set.getState().investmentTypes, res.data?.data], // Add to state
         investmentTypesAdded:res.data?.data,
       });
+      await get().fetchInvestmentTypes()
+
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to add investment type",

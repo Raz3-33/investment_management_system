@@ -69,7 +69,7 @@ export default function AddInvestmentTypeForm() {
       <div className="flex justify-center">
         <Button
           type="submit"
-          className="w-full md:w-auto bg-blue-600 text-white hover:bg-blue-700 transition duration-300"
+          className="w-full h-10 md:w-auto bg-blue-600 text-white hover:bg-blue-700 transition duration-300"
         >
           Add Investment Type
         </Button>

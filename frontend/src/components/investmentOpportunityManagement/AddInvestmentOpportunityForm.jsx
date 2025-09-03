@@ -5,13 +5,16 @@ import { useSettingStore } from "../../store/settingStore";
 import { useBranchStore } from "../../store/branchStore";
 import { useTerritoryStore } from "../../store/territoryStore";
 import { useBrandStore } from "../../store/useBrandStore";
+import Modal from "../ui/Modal/Modal";
+import AddInvestmentTypeForm from "../settings/investmentType/AddInvestmentTypeForm";
+import AddBusinessCategoryForm from "../settings/businessCategory/AddBusinessCategoryForm";
 
 export default function AddInvestmentOpportunityForm() {
   const { addInvestmentOpportunity, error } = useInvestmentOpportunityStore(
     (s) => s
   );
 
-  const { brands, fetchBrands } = useBrandStore((s) => s);
+  const { brands, fetchBrands, addBrand } = useBrandStore((s) => s);
 
   const {
     investmentTypes,
@@ -50,6 +53,12 @@ export default function AddInvestmentOpportunityForm() {
   });
 
   const [errorValidation, setErrorValidation] = useState("");
+
+  const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
+  const [isInvestmentTypeModalOpen, setIsInvestmentTypeModalOpen] =
+    useState(false);
+  const [isBusinessCategoryModalOpen, setIsBusinessCategoryModalOpen] =
+    useState(false);
 
   useEffect(() => {
     fetchInvestmentTypes();
@@ -164,34 +173,35 @@ export default function AddInvestmentOpportunityForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {errorValidation && (
-        <p className="text-red-500 text-sm">{errorValidation}</p>
-      )}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {errorValidation && (
+          <p className="text-red-500 text-sm">{errorValidation}</p>
+        )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Opportunity Name */}
-        <input
-          type="text"
-          placeholder="Opportunity Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="border px-3 py-2 rounded-md w-full"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Opportunity Name */}
+          <input
+            type="text"
+            placeholder="Opportunity Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          />
 
-        {/* Description */}
-        <input
-          type="text"
-          placeholder="Description"
-          value={formData.description}
-          onChange={(e) =>
-            setFormData({ ...formData, description: e.target.value })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        />
+          {/* Description */}
+          <input
+            type="text"
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          />
 
-        {/* Brand Name */}
-        {/* <input
+          {/* Brand Name */}
+          {/* <input
           type="text"
           placeholder="Brand Name"
           value={formData.brandName}
@@ -201,176 +211,197 @@ export default function AddInvestmentOpportunityForm() {
           className="border px-3 py-2 rounded-md w-full"
         /> */}
 
-        {/* Brand */}
-        <select
-          value={formData.brandId}
-          onChange={(e) =>
-            setFormData({ ...formData, brandId: e.target.value })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        >
-          <option value="">Select Brand</option>
-          {brands?.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
+          {/* Brand */}
+          <select
+            value={formData.brandId}
+            onChange={(e) => {
+              if (e.target.value === "add-new") {
+                setFormData({ ...formData, brandId: "" }); // reset selection
+                setIsBrandModalOpen(true);
+              } else {
+                setFormData({ ...formData, brandId: e.target.value });
+              }
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Brand</option>
+            {brands?.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+            <option value="add-new" className="text-blue-600 font-semibold">
+              ➕ Add Brand
             </option>
-          ))}
-        </select>
+          </select>
 
-        {/* Investment Type */}
-        <select
-          value={formData.investmentTypeId}
-          onChange={(e) =>
-            setFormData({ ...formData, investmentTypeId: e.target.value })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        >
-          <option value="">Select Investment Type</option>
-          {investmentTypes?.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+          {/* Investment Type */}
+          <select
+            value={formData.investmentTypeId}
+            onChange={(e) => {
+              if (e.target.value === "__add_new__") {
+                // reset selection and open the modal
+                setFormData({ ...formData, investmentTypeId: "" });
+                setIsInvestmentTypeModalOpen(true);
+                return;
+              }
+              setFormData({ ...formData, investmentTypeId: e.target.value });
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Investment Type</option>
+            {investmentTypes?.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+            <option value="__add_new__">➕ Add Investment Type</option>
+          </select>
 
-        {/* Business Category */}
-        <select
-          value={formData.businessCategoryId}
-          onChange={(e) =>
-            setFormData({ ...formData, businessCategoryId: e.target.value })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        >
-          <option value="">Select Business Category</option>
-          {businessCategories?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          {/* Business Category */}
+          <select
+            value={formData.businessCategoryId}
+            onChange={(e) => {
+              if (e.target.value === "__add_new__") {
+                setFormData({ ...formData, businessCategoryId: "" });
+                setIsBusinessCategoryModalOpen(true);
+                return;
+              }
+              setFormData({ ...formData, businessCategoryId: e.target.value });
+            }}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Business Category</option>
+            {businessCategories?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+            <option value="__add_new__">➕ Add Business Category</option>
+          </select>
 
-        {/* Min Amount */}
-        <input
-          type="text"
-          placeholder="Min Amount"
-          value={formData.minAmount}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              minAmount: e.target.value.replace(/[^0-9.]/g, ""),
-            })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        />
-
-        {/* Max Amount */}
-        <input
-          type="text"
-          placeholder="Max Amount"
-          value={formData.maxAmount}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              maxAmount: e.target.value.replace(/[^0-9.]/g, ""),
-            })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        />
-
-        {/* ROI % */}
-        <div className="relative">
+          {/* Min Amount */}
           <input
             type="text"
-            placeholder="Minimum Guarantee (%)"
-            value={formData.roiPercent}
+            placeholder="Min Amount"
+            value={formData.minAmount}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                roiPercent: e.target.value.replace(/[^0-9.]/g, ""),
-              })
-            }
-            className="border px-3 py-2 rounded-md w-full pr-8"
-          />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            %
-          </span>
-        </div>
-
-        {/* Turn Over % */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Turn Over Percentage"
-            value={formData.turnOverPercentage}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                turnOverPercentage: e.target.value.replace(/[^0-9.]/g, ""),
-              })
-            }
-            className="border px-3 py-2 rounded-md w-full pr-8"
-          />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            %
-          </span>
-        </div>
-
-        {/* Lock-in Months */}
-        <input
-          type="text"
-          placeholder="Lock-in Months"
-          value={formData.lockInMonths}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              lockInMonths: e.target.value.replace(/[^0-9]/g, ""),
-            })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        />
-
-        {/* Exit Options */}
-        <input
-          type="text"
-          placeholder="Exit Options"
-          value={formData.exitOptions}
-          onChange={(e) =>
-            setFormData({ ...formData, exitOptions: e.target.value })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        />
-
-        {/* Payout Mode */}
-        <select
-          value={formData.payoutMode}
-          onChange={(e) =>
-            setFormData({ ...formData, payoutMode: e.target.value })
-          }
-          className="border px-3 py-2 rounded-md w-full"
-        >
-          <option value="">Select Payout Mode</option>
-          <option value="Monthly">Monthly</option>
-          <option value="Quarterly">Quarterly</option>
-          <option value="Yearly">Yearly</option>
-        </select>
-
-        <div>
-          {/* Renewal Fee */}
-          <input
-            type="text"
-            placeholder="Renewal Fee"
-            value={formData.renewalFee}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                renewalFee: e.target.value.replace(/[^0-9.]/g, ""),
+                minAmount: e.target.value.replace(/[^0-9.]/g, ""),
               })
             }
             className="border px-3 py-2 rounded-md w-full"
           />
-        </div>
-        {/* Branches */}
-        {/* <div>
+
+          {/* Max Amount */}
+          <input
+            type="text"
+            placeholder="Max Amount"
+            value={formData.maxAmount}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                maxAmount: e.target.value.replace(/[^0-9.]/g, ""),
+              })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          />
+
+          {/* ROI % */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Minimum Guarantee (%)"
+              value={formData.roiPercent}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  roiPercent: e.target.value.replace(/[^0-9.]/g, ""),
+                })
+              }
+              className="border px-3 py-2 rounded-md w-full pr-8"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              %
+            </span>
+          </div>
+
+          {/* Turn Over % */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Turn Over Percentage"
+              value={formData.turnOverPercentage}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  turnOverPercentage: e.target.value.replace(/[^0-9.]/g, ""),
+                })
+              }
+              className="border px-3 py-2 rounded-md w-full pr-8"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              %
+            </span>
+          </div>
+
+          {/* Lock-in Months */}
+          <input
+            type="text"
+            placeholder="Lock-in Months"
+            value={formData.lockInMonths}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                lockInMonths: e.target.value.replace(/[^0-9]/g, ""),
+              })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          />
+
+          {/* Exit Options */}
+          <input
+            type="text"
+            placeholder="Exit Options"
+            value={formData.exitOptions}
+            onChange={(e) =>
+              setFormData({ ...formData, exitOptions: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          />
+
+          {/* Payout Mode */}
+          <select
+            value={formData.payoutMode}
+            onChange={(e) =>
+              setFormData({ ...formData, payoutMode: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Payout Mode</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+            <option value="Yearly">Yearly</option>
+          </select>
+
+          <div>
+            {/* Renewal Fee */}
+            <input
+              type="text"
+              placeholder="Renewal Fee"
+              value={formData.renewalFee}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  renewalFee: e.target.value.replace(/[^0-9.]/g, ""),
+                })
+              }
+              className="border px-3 py-2 rounded-md w-full"
+            />
+          </div>
+          {/* Branches */}
+          {/* <div>
           <label className="block mb-1">Select Branches</label>
           <select
             multiple
@@ -392,56 +423,56 @@ export default function AddInvestmentOpportunityForm() {
           </select>
         </div> */}
 
-        {/* NEW: Store checkbox */}
-        <div className="flex items-center gap-2">
-          <input
-            id="isStore"
-            type="checkbox"
-            checked={formData.isStore}
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setFormData((prev) => ({
-                ...prev,
-                isStore: checked,
-                // if unchecked, clear territories to avoid stale selections
-                // selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
-                isSignature: false, // Disable signature store checkbox
-              }));
-            }}
-            className="h-4 w-4"
-          />
-          <label htmlFor="isStore" className="text-sm select-none">
-            Master Franchise
-          </label>
-        </div>
+          {/* NEW: Store checkbox */}
+          <div className="flex items-center gap-2">
+            <input
+              id="isStore"
+              type="checkbox"
+              checked={formData.isStore}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setFormData((prev) => ({
+                  ...prev,
+                  isStore: checked,
+                  // if unchecked, clear territories to avoid stale selections
+                  // selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
+                  isSignature: false, // Disable signature store checkbox
+                }));
+              }}
+              className="h-4 w-4"
+            />
+            <label htmlFor="isStore" className="text-sm select-none">
+              Master Franchise
+            </label>
+          </div>
 
-        {/* NEW: Signature Store checkbox */}
-        <div className="flex items-center gap-2">
-          <input
-            id="isSignature"
-            type="checkbox"
-            checked={formData.isSignature}
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setFormData((prev) => ({
-                ...prev,
-                isSignature: checked,
-                signatureStoreLocation: checked
-                  ? prev.signatureStoreLocation
-                  : "",
-                selectedTerritoryIds: [], // Clear territories
-                isStore: false, // Disable Store checkbox
-              }));
-            }}
-            className="h-4 w-4"
-          />
-          <label htmlFor="isSignature" className="text-sm select-none">
-            Signature Store
-          </label>
-        </div>
+          {/* NEW: Signature Store checkbox */}
+          <div className="flex items-center gap-2">
+            <input
+              id="isSignature"
+              type="checkbox"
+              checked={formData.isSignature}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setFormData((prev) => ({
+                  ...prev,
+                  isSignature: checked,
+                  signatureStoreLocation: checked
+                    ? prev.signatureStoreLocation
+                    : "",
+                  selectedTerritoryIds: [], // Clear territories
+                  isStore: false, // Disable Store checkbox
+                }));
+              }}
+              className="h-4 w-4"
+            />
+            <label htmlFor="isSignature" className="text-sm select-none">
+              Signature Store
+            </label>
+          </div>
 
-        {/* signatureStoreLocation for Signature Store */}
-        {/* {formData.isSignature && (
+          {/* signatureStoreLocation for Signature Store */}
+          {/* {formData.isSignature && (
           <input
             type="text"
             placeholder="Location"
@@ -453,8 +484,8 @@ export default function AddInvestmentOpportunityForm() {
           />
         )} */}
 
-        {/* NEW: Territories multiselect (only when Store is checked) */}
-        {/* {formData.isStore && (
+          {/* NEW: Territories multiselect (only when Store is checked) */}
+          {/* {formData.isStore && (
           <div className="md:col-span-1">
             <label className="block mb-1">Select Territories</label>
             <select
@@ -480,16 +511,105 @@ export default function AddInvestmentOpportunityForm() {
             </p>
           </div>
         )} */}
-      </div>
+        </div>
 
-      <div className="flex justify-center">
-        <Button
-          type="submit"
-          className="w-full h-9 md:w-auto bg-blue-600 text-white hover:bg-blue-700 transition duration-300"
-        >
-          Add Investment Opportunity
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-center">
+          <Button
+            type="submit"
+            className="w-full h-9 md:w-auto bg-blue-600 text-white hover:bg-blue-700 transition duration-300"
+          >
+            Add Investment Opportunity
+          </Button>
+        </div>
+      </form>
+
+      <Modal
+        isOpen={isBrandModalOpen}
+        onClose={() => setIsBrandModalOpen(false)}
+        title="Create Brand"
+      >
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Brand Name"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((s) => ({ ...s, name: e.target.value }))
+            }
+            className="border px-3 py-2 rounded-md w-full dark:bg-gray-800 dark:text-white"
+          />
+
+          <textarea
+            placeholder="Description (optional)"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData((s) => ({ ...s, description: e.target.value }))
+            }
+            className="border px-3 py-2 rounded-md w-full dark:bg-gray-800 dark:text-white"
+            rows={4}
+          />
+
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.isActive}
+              onChange={(e) =>
+                setFormData((s) => ({ ...s, isActive: e.target.checked }))
+              }
+            />
+            <span className="text-sm">Active</span>
+          </label>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <div className="flex justify-end pt-2">
+            <Button
+              variant="primary"
+              onClick={async () => {
+                await addBrand(formData); // from useBrandStore
+                fetchBrands(); // refresh dropdown
+                setIsBrandModalOpen(false); // close modal
+                setFormData({ name: "", description: "", isActive: true });
+              }}
+            >
+              Add
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Investment Type Modal */}
+
+      <Modal
+        isOpen={isInvestmentTypeModalOpen}
+        onClose={() => setIsInvestmentTypeModalOpen(false)}
+        title="Add Investment Type"
+      >
+        <div className="space-y-4">
+          <AddInvestmentTypeForm
+            onSuccess={() => {
+              fetchInvestmentTypes();
+              setIsInvestmentTypeModalOpen(false);
+            }}
+          />
+        </div>
+      </Modal>
+
+      {/* Business Category Modal */}
+
+      <Modal
+        isOpen={isBusinessCategoryModalOpen}
+        onClose={() => setIsBusinessCategoryModalOpen(false)}
+        title="Add Business Category"
+      >
+        <div className="space-y-4">
+          <AddBusinessCategoryForm
+            onSuccess={() => {
+              fetchBusinessCategories();
+              setIsBusinessCategoryModalOpen(false);
+            }}
+          />
+        </div>
+      </Modal>
+    </>
   );
 }
