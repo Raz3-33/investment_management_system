@@ -15,6 +15,26 @@ const columns = [
   { key: "actions", label: "Actions", isAction: true },
 ];
 
+// ---- Limits (tweak as you like) ----
+const MAX_LOCATION_IMAGES = 4;
+const MAX_PINCODE_IMAGES = 4; // total pincode chips allowed
+const MAX_FILE_SIZE_MB = 1; // per-file limit
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+function validateFile(file) {
+  if (!file) return { ok: false, reason: "No file selected" };
+  if (!file.type?.startsWith("image/")) {
+    return { ok: false, reason: "Only image files are allowed" };
+  }
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return {
+      ok: false,
+      reason: `File too large. Max ${MAX_FILE_SIZE_MB}MB per image`,
+    };
+  }
+  return { ok: true };
+}
+
 export default function TerritoryManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(15);
@@ -170,6 +190,50 @@ export default function TerritoryManagement() {
       e.pincodes = "At least one pincode is required.";
     }
     return e;
+  };
+
+  // Manually (Location) image select
+  const handleLocationImageSelect = (e) => {
+    const file = e.target.files?.[0] || null;
+
+    // Count limit
+    if (formData.locations.length >= MAX_LOCATION_IMAGES) {
+      toast.error(`You can add up to ${MAX_LOCATION_IMAGES} locations only`);
+      e.target.value = "";
+      return;
+    }
+
+    // Size/type limit
+    const { ok, reason } = validateFile(file);
+    if (!ok) {
+      toast.error(reason);
+      e.target.value = "";
+      return;
+    }
+
+    setNewLocationImage(file);
+  };
+
+  // Automatically (Pincode) image select
+  const handlePincodeImageSelect = (e) => {
+    const file = e.target.files?.[0] || null;
+
+    // Count limit
+    if (formData.pincodes.length >= MAX_PINCODE_IMAGES) {
+      toast.error(`You can add up to ${MAX_PINCODE_IMAGES} pincodes only`);
+      e.target.value = "";
+      return;
+    }
+
+    // Size/type limit
+    const { ok, reason } = validateFile(file);
+    if (!ok) {
+      toast.error(reason);
+      e.target.value = "";
+      return;
+    }
+
+    setNewPincodeImage(file);
   };
 
   const handleCreateOrUpdate = async () => {
@@ -431,7 +495,6 @@ export default function TerritoryManagement() {
       </div>
 
       {/* Modal */}
-      {/* Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -508,9 +571,7 @@ export default function TerritoryManagement() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    setNewLocationImage(e.target.files[0] || null)
-                  }
+                  onChange={handleLocationImageSelect} // <-- changed
                   className="border rounded-md p-1 flex-1 min-w-0 dark:bg-gray-800 dark:text-white"
                 />
                 {newLocation.trim() && newLocationImage && (
@@ -521,12 +582,20 @@ export default function TerritoryManagement() {
                       setNewLocation("");
                       setNewLocationImage(null);
                     }}
+                    disabled={
+                      !newLocation.trim() ||
+                      !newLocationImage ||
+                      formData.locations.length >= MAX_LOCATION_IMAGES
+                    }
                   >
                     Add
                   </Button>
                 )}
               </div>
-
+              <p className="text-xs text-gray-500 mt-1">
+                {MAX_LOCATION_IMAGES - formData.locations.length} location slots
+                left
+              </p>
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.locations.map((loc, idx) => (
                   <span
@@ -577,11 +646,10 @@ export default function TerritoryManagement() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) =>
-                      setNewPincodeImage(e.target.files[0] || null)
-                    }
+                    onChange={handlePincodeImageSelect} // <-- changed
                     className="border rounded-md p-1 flex-1 min-w-0 dark:bg-gray-800 dark:text-white"
                   />
+
                   {newPincode.trim() && newPincodeImage && (
                     <Button
                       className="whitespace-nowrap"
@@ -590,12 +658,21 @@ export default function TerritoryManagement() {
                         setNewPincode("");
                         setNewPincodeImage(null);
                       }}
+                      disabled={
+                        !newPincode.trim() ||
+                        !newPincodeImage ||
+                        formData.pincodes.length >= MAX_PINCODE_IMAGES
+                      }
                     >
                       Add
                     </Button>
                   )}
                 </div>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {MAX_PINCODE_IMAGES - formData.pincodes.length} pincode slots
+                left
+              </p>
 
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.pincodes.map((pin, idx) => (
@@ -634,7 +711,7 @@ export default function TerritoryManagement() {
 
           <div className="flex justify-end pt-2">
             <Button
-            className ="w-full h-10"
+              className="w-full h-10"
               variant="primary"
               onClick={handleCreateOrUpdate}
               disabled={isSubmitting}

@@ -94,7 +94,10 @@ export const useBookingStore = create(
       deleteBooking: async (id) => {
         set({ loading: true, error: null });
         try {
-          const { data } = await api.delete(`/bookings/${id}`, get()._getAuth());
+          const { data } = await api.delete(
+            `/bookings/${id}`,
+            get()._getAuth()
+          );
           set({ bookingDelete: data, loading: false });
         } catch (err) {
           set({
@@ -119,6 +122,28 @@ export const useBookingStore = create(
             error:
               err.response?.data?.message ||
               "Failed to update payment approval",
+            loading: false,
+          });
+          throw err;
+        }
+      },
+
+      // inside create(...) in useBookingStore
+      updateScheduledPaymentApproval: async (scheduledId, status) => {
+        set({ loading: true, error: null });
+        try {
+          const res = await api.put(
+            `/bookings/payments/scheduled/approval/${scheduledId}`,
+            { status }, // "Approved" | "Pending"
+            get()._getAuth()
+          );
+          set({ loading: false });
+          return res.data?.data;
+        } catch (err) {
+          set({
+            error:
+              err.response?.data?.message ||
+              "Failed to update scheduled payment approval",
             loading: false,
           });
           throw err;
@@ -161,8 +186,7 @@ export const useBookingStore = create(
           return res.data?.data;
         } catch (err) {
           set({
-            error:
-              err.response?.data?.message || "Failed to approve document",
+            error: err.response?.data?.message || "Failed to approve document",
             loading: false,
           });
           throw err;

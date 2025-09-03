@@ -27,6 +27,7 @@ export const getBookingById = async (id) => {
       },
       paymentDetails: true,
       territory: true,
+      paymentScheduledDetails: true,
     },
   });
 };
@@ -34,26 +35,22 @@ export const getBookingById = async (id) => {
 // services/bookingForm.service.js (or booking.service.js)
 // Assumes `prisma` is imported and available
 
+// services/bookingForm.service.js
 export const updatePaymentApproval = async (id, approvalKey, status, user) => {
   try {
-    // ---- Role check ----
     const isFinance = user?.role?.name?.toLowerCase() === "finance";
     const isAdmin = user?.isAdmin === true;
     if (!isFinance && !isAdmin) {
       return {
         success: false,
         statusCode: 403,
-        message: "Forbidden: Only finance role or admin users can update approval",
+        message:
+          "Forbidden: Only finance role or admin users can update approval",
       };
     }
 
-    // ---- Validate approvalKey ----
-    const validApprovalKeys = [
-      "isAmount1Approved",
-      "isAmount2Approved",
-      "isAmount3Approved",
-      "isAmount4Approved",
-    ];
+    // Only token approval handled here now (legacy flags allowed but ignored in sum)
+    const validApprovalKeys = ["isTokenApproved"];
     if (!validApprovalKeys.includes(approvalKey)) {
       return {
         success: false,
@@ -64,14 +61,10 @@ export const updatePaymentApproval = async (id, approvalKey, status, user) => {
 
     const isApproved = status === "Approved";
 
-    // ---- Load current paymentDetails ----
     const paymentDetails = await prisma.bookingFormPaymentDetails.findUnique({
       where: { id },
-      include: {
-        personalDetails: true, // for isPaymentCompleted flip (optional)
-      },
+      include: { personalDetails: true },
     });
-
     if (!paymentDetails) {
       return {
         success: false,
@@ -80,58 +73,63 @@ export const updatePaymentApproval = async (id, approvalKey, status, user) => {
       };
     }
 
-    // Map e.g. isAmount3Approved -> amount3
-    const index = approvalKey.match(/\d+/)?.[0]; // "3"
-    const amountField = `amount${index}`;
+    const personalDetailsId = paymentDetails.personalDetailsId;
 
-    // Current approval value & amount
-    const alreadyApproved = Boolean(paymentDetails[approvalKey]);
-    const amountValue = Number(paymentDetails[amountField] || 0);
-
-    // ---- Build approved sum AFTER applying the requested toggle ----
-    // Read all amounts and approvals
-    const amounts = [1, 2, 3, 4].map((i) => Number(paymentDetails[`amount${i}`] || 0));
-    const approvals = [1, 2, 3, 4].map((i) => Boolean(paymentDetails[`isAmount${i}Approved`]));
-
-    // Apply the requested change in a copy
-    const idx = Number(index) - 1; // 0-based
-    approvals[idx] = isApproved;    // reflect the new state
-
-    // Sum of approved schedule amounts
-    const approvedScheduled = approvals.reduce(
-      (sum, ok, i) => sum + (ok ? amounts[i] : 0),
-      0
-    );
-
-    const dealAmount = Number(paymentDetails.dealAmount || 0);
-    const tokenReceived = Number(paymentDetails.tokenReceived || 0);
-
-    // Recompute new balanceDue from scratch (no drift)
-    let newBalanceDue = dealAmount - (tokenReceived + approvedScheduled);
-    if (!Number.isFinite(newBalanceDue)) newBalanceDue = 0;
-    if (newBalanceDue < 0) newBalanceDue = 0;
-
-    // ---- Persist updates in a transaction ----
     const updated = await prisma.$transaction(async (tx) => {
-      const updatedPayment = await tx.bookingFormPaymentDetails.update({
+      // 1) Update token approval
+      await tx.bookingFormPaymentDetails.update({
         where: { id },
-        data: {
-          [approvalKey]: isApproved,
-          balanceDue: newBalanceDue,
-        },
+        data: { [approvalKey]: isApproved },
       });
 
-      // OPTIONAL: mark the booking as fully paid
-      // Flip isPaymentCompleted on BookingFormPersonalDetails when balanceDue == 0
-      let updatedPersonal = null;
-      if (paymentDetails.personalDetailsId) {
-        updatedPersonal = await tx.bookingFormPersonalDetails.update({
-          where: { id: paymentDetails.personalDetailsId },
-          data: {
-            isPaymentCompleted: newBalanceDue === 0,
-          },
-        });
-      }
+      // 2) Aggregate schedules for this booking
+      const [totalCount, approvedCount, approvedSchedules, pdFresh] =
+        await Promise.all([
+          tx.paymentSceduledDetails.count({ where: { personalDetailsId } }),
+          tx.paymentSceduledDetails.count({
+            where: { personalDetailsId, isAmountApproved: true },
+          }),
+          tx.paymentSceduledDetails.findMany({
+            where: { personalDetailsId, isAmountApproved: true },
+            select: { amount: true },
+          }),
+          tx.bookingFormPaymentDetails.findUnique({
+            where: { personalDetailsId },
+            select: {
+              id: true,
+              dealAmount: true,
+              tokenReceived: true,
+              isTokenApproved: true,
+            },
+          }),
+        ]);
+
+      const approvedScheduled = approvedSchedules.reduce(
+        (sum, row) => sum + Number(row.amount || 0),
+        0
+      );
+
+      const dealAmount = Number(pdFresh.dealAmount || 0);
+      const tokenAmount = Number(pdFresh.tokenReceived || 0);
+      const tokenOk = pdFresh.isTokenApproved || tokenAmount <= 0;
+      const tokenPortion = pdFresh.isTokenApproved ? tokenAmount : 0;
+
+      let newBalanceDue = dealAmount - (tokenPortion + approvedScheduled);
+      if (!Number.isFinite(newBalanceDue)) newBalanceDue = 0;
+      if (newBalanceDue < 0) newBalanceDue = 0;
+
+      const allSchedulesApproved =
+        totalCount === 0 ? true : approvedCount === totalCount;
+      const isPaymentCompleted = allSchedulesApproved && tokenOk;
+
+      const updatedPayment = await tx.bookingFormPaymentDetails.update({
+        where: { id: pdFresh.id },
+        data: { balanceDue: newBalanceDue },
+      });
+      const updatedPersonal = await tx.bookingFormPersonalDetails.update({
+        where: { id: personalDetailsId },
+        data: { isPaymentCompleted },
+      });
 
       return { updatedPayment, updatedPersonal };
     });
@@ -140,7 +138,7 @@ export const updatePaymentApproval = async (id, approvalKey, status, user) => {
       success: true,
       data: {
         payment: updated.updatedPayment,
-        personal: updated.updatedPersonal, // may be null if not updated
+        personal: updated.updatedPersonal,
       },
     };
   } catch (err) {
@@ -152,7 +150,6 @@ export const updatePaymentApproval = async (id, approvalKey, status, user) => {
     };
   }
 };
-
 
 // services/booking.service.js
 
@@ -384,16 +381,22 @@ export async function convertToInvestment({
   });
 }
 
-
 // services/bookingForm.service.js
-export const updateDocumentApproval = async (personalDetailsId, docKey, status, user) => {
+export const updateDocumentApproval = async (
+  personalDetailsId,
+  docKey,
+  status,
+  user
+) => {
   try {
     // ---- Role check (allow finance or admin; add more if needed) ----
     const roleName = user?.role?.name?.toLowerCase?.() || "";
     const isFinance = roleName === "finance";
     const isAdmin = user?.isAdmin === true;
     // (Optionally allow ops/kyc)
-    const allowed = isFinance || isAdmin /* || roleName === "kyc" || roleName === "operations" */;
+    const allowed =
+      isFinance ||
+      isAdmin; /* || roleName === "kyc" || roleName === "operations" */
     if (!allowed) {
       return {
         success: false,
@@ -403,7 +406,11 @@ export const updateDocumentApproval = async (personalDetailsId, docKey, status, 
     }
 
     if (!personalDetailsId) {
-      return { success: false, statusCode: 400, message: "personalDetailsId is required" };
+      return {
+        success: false,
+        statusCode: 400,
+        message: "personalDetailsId is required",
+      };
     }
     if (!docKey) {
       return { success: false, statusCode: 400, message: "docKey is required" };
@@ -442,7 +449,11 @@ export const updateDocumentApproval = async (personalDetailsId, docKey, status, 
     });
 
     if (!pd) {
-      return { success: false, statusCode: 404, message: "Booking personal details not found" };
+      return {
+        success: false,
+        statusCode: 404,
+        message: "Booking personal details not found",
+      };
     }
 
     // Optional: block approving if file/url not present
@@ -472,6 +483,116 @@ export const updateDocumentApproval = async (personalDetailsId, docKey, status, 
       success: false,
       statusCode: 500,
       message: err.message || "Failed to update document approval",
+    };
+  }
+};
+
+// services/bookingForm.service.js
+export const updateScheduledPaymentApproval = async (
+  scheduledId,
+  status,
+  user
+) => {
+  try {
+    // Role check: finance/admin
+    const isFinance = user?.role?.name?.toLowerCase() === "finance";
+    const isAdmin = user?.isAdmin === true;
+    if (!isFinance && !isAdmin) {
+      return {
+        success: false,
+        statusCode: 403,
+        message: "Forbidden: Only finance/admin can update schedule approval",
+      };
+    }
+
+    if (!scheduledId) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: "scheduledId is required",
+      };
+    }
+
+    const isApproved = status === "Approved";
+
+    // Load schedule to get personalDetailsId
+    const sched = await prisma.paymentSceduledDetails.findUnique({
+      where: { id: scheduledId },
+      select: { id: true, personalDetailsId: true },
+    });
+    if (!sched) {
+      return {
+        success: false,
+        statusCode: 404,
+        message: "Schedule item not found",
+      };
+    }
+
+    // Compute new balance due:
+    // dealAmount - (tokenApproved? tokenReceived:0) - sum(approved schedules)
+    const updated = await prisma.$transaction(async (tx) => {
+      // 1) Update schedule approval
+      await tx.paymentSceduledDetails.update({
+        where: { id: scheduledId },
+        data: { isAmountApproved: isApproved },
+      });
+
+      // 2) Read all approved schedules for this booking
+      const schedules = await tx.paymentSceduledDetails.findMany({
+        where: {
+          personalDetailsId: sched.personalDetailsId,
+          isAmountApproved: true,
+        },
+        select: { amount: true },
+      });
+      const approvedScheduled = schedules.reduce(
+        (sum, row) => sum + Number(row.amount || 0),
+        0
+      );
+
+      // 3) Read payment details for token/dealAmount
+      const pd = await tx.bookingFormPaymentDetails.findUnique({
+        where: { personalDetailsId: sched.personalDetailsId }, // unique
+        select: {
+          id: true,
+          dealAmount: true,
+          tokenReceived: true,
+          isTokenApproved: true,
+        },
+      });
+      if (!pd)
+        throw new Error("Payment details not found for this schedule item");
+
+      const dealAmount = Number(pd.dealAmount || 0);
+      const tokenAmount = Number(pd.tokenReceived || 0);
+      const tokenApprovedPortion = pd.isTokenApproved ? tokenAmount : 0;
+
+      let newBalanceDue =
+        dealAmount - (tokenApprovedPortion + approvedScheduled);
+      if (!Number.isFinite(newBalanceDue)) newBalanceDue = 0;
+      if (newBalanceDue < 0) newBalanceDue = 0;
+
+      // 4) Persist new balance + maybe flip isPaymentCompleted
+      const updatedPayment = await tx.bookingFormPaymentDetails.update({
+        where: { id: pd.id },
+        data: { balanceDue: newBalanceDue },
+      });
+
+      const updatedPersonal = await tx.bookingFormPersonalDetails.update({
+        where: { id: sched.personalDetailsId },
+        data: { isPaymentCompleted: newBalanceDue === 0 },
+      });
+
+      return { updatedPayment, updatedPersonal };
+    });
+
+    return { success: true, data: updated };
+  } catch (err) {
+    console.error("Error in updateScheduledPaymentApproval:", err);
+    return {
+      success: false,
+      statusCode: 500,
+      message: err.message || "Failed to update scheduled payment approval",
     };
   }
 };

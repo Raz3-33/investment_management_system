@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "react-toastify";
 
 import { useBookingStore } from "../../store/booking.store";
@@ -8,7 +8,8 @@ const approvalOptions = ["Pending", "Approved"];
 
 export default function PaymentDetailsTab({ paymentDetails }) {
   const {
-    updatePaymentApproval,
+    updatePaymentApproval, // keeps token approval
+    updateScheduledPaymentApproval, // NEW: per-schedule approval
     fetchBookingById,
     booking,
     convertBookingToInvestment,
@@ -17,53 +18,79 @@ export default function PaymentDetailsTab({ paymentDetails }) {
 
   if (!paymentDetails) return <p>No payment details.</p>;
 
-  // Map each approval key to the database boolean field
+  const scheduled = useMemo(() => {
+    // Prefer booking.paymentScheduledDetails if present
+    const rows = booking?.paymentScheduledDetails || [];
+    // Sort by date asc, fallback by created order if needed
+    return [...rows].sort((a, b) => {
+      const da = a?.date ? new Date(a.date).getTime() : 0;
+      const db = b?.date ? new Date(b.date).getTime() : 0;
+      return da - db;
+    });
+  }, [booking?.paymentScheduledDetails]);
+
+  // --- TOKEN approval mapping (unchanged) ---
   const paymentKeyToApprovalKey = {
-    payment1: "isAmount1Approved",
-    payment2: "isAmount2Approved",
-    payment3: "isAmount3Approved",
-    payment4: "isAmount4Approved",
+    token: "isTokenApproved",
   };
 
-  // On mount/update, sync dropdown value from booleans in DB
-  const getDropdownState = () => ({
-    payment1: paymentDetails.isAmount1Approved ? "Approved" : "Pending",
-    payment2: paymentDetails.isAmount2Approved ? "Approved" : "Pending",
-    payment3: paymentDetails.isAmount3Approved ? "Approved" : "Pending",
-    payment4: paymentDetails.isAmount4Approved ? "Approved" : "Pending",
-  });
+  // Build initial dropdown states for schedules
+  const makeScheduleState = () =>
+    Object.fromEntries(
+      scheduled.map((s) => [s.id, s.isAmountApproved ? "Approved" : "Pending"])
+    );
 
-  const [approvalStatus, setApprovalStatus] = useState(getDropdownState());
+  const [scheduledApproval, setScheduledApproval] = useState(
+    makeScheduleState()
+  );
 
   useEffect(() => {
-    setApprovalStatus(getDropdownState());
-  }, [paymentDetails]);
+    setScheduledApproval(makeScheduleState());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduled.length]);
 
-  const handleApprovalChange = async (paymentKey, value) => {
-    setApprovalStatus((prev) => ({ ...prev, [paymentKey]: value }));
+  const handleScheduledChange = async (schedId, value) => {
+    setScheduledApproval((prev) => ({ ...prev, [schedId]: value }));
     try {
-      const approvalField = paymentKeyToApprovalKey[paymentKey];
-      await updatePaymentApproval(paymentDetails.id, approvalField, value);
-      if (booking?.id) fetchBookingById(booking.id);
+      await updateScheduledPaymentApproval(schedId, value);
+      if (booking?.id) await fetchBookingById(booking.id);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to update schedule approval", {
+        position: "top-right",
+      });
     }
   };
 
-  const payments = [1, 2, 3, 4].map((num) => ({
-    date: paymentDetails[`date${num}`],
-    amount: paymentDetails[`amount${num}`],
-    approved: paymentDetails[`isAmount${num}Approved`],
-    approvalKey: `payment${num}`,
-  }));
+  // --- TOKEN approval confirm handler (unchanged logic) ---
+  const handleTokenApproveClick = async () => {
+    const ok = window.confirm(
+      "Confirm that the Token amount has been received and approved?"
+    );
+    if (!ok) return;
 
-  // const handleConvertClick = () => {
-  //   if (onConvert) {
-  //     onConvert();
-  //   } else {
-  //     console.log("Convert to Investment clicked");
-  //   }
-  // };
+    try {
+      const loadingId = toast.loading("Approving token amount...");
+      await updatePaymentApproval(
+        paymentDetails.id,
+        paymentKeyToApprovalKey.token, // "isTokenApproved"
+        "Approved"
+      );
+      if (booking?.id) await fetchBookingById(booking.id);
+
+      toast.update(loadingId, {
+        render: "Token amount marked as approved",
+        type: "success",
+        isLoading: false,
+        autoClose: 1200,
+      });
+    } catch (e) {
+      const msg =
+        e?.response?.data?.message || e?.message || "Token approval failed";
+      toast.dismiss();
+      toast.error(msg, { position: "top-right", autoClose: 4000 });
+    }
+  };
 
   const handleConvertClick = async () => {
     try {
@@ -77,32 +104,28 @@ export default function PaymentDetailsTab({ paymentDetails }) {
       }
 
       const loadingId = toast.loading("Converting booking to investment...");
-
       const data = await convertBookingToInvestment(personalDetailsId);
-
-      // optional: refetch booking or navigate
-      // await fetchBookingById(booking.id);
 
       toast.update(loadingId, {
         render: "Converted to Investment successfully",
         type: "success",
-        isLoading: false, // Critical: end loading state
+        isLoading: false,
         autoClose: 1000,
-        delay: 0, // Optional: remove update delay
+        delay: 0,
       });
 
       console.log("Conversion result:", data);
     } catch (e) {
       const msg =
         e?.response?.data?.message || e?.message || "Conversion failed";
-      // Either update the loading toast if it exists, or show a new error toast
-      toast.dismiss(); // optional: clear any stuck loaders
+      toast.dismiss();
       toast.error(msg, { position: "top-right", autoClose: 5000 });
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Overall Payment Info */}
       <div className="p-4 border rounded-md dark:border-gray-700">
         <h4 className="font-semibold mb-4">Overall Payment Info</h4>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -130,53 +153,92 @@ export default function PaymentDetailsTab({ paymentDetails }) {
             value={paymentDetails.additionalCommitment}
           />
         </div>
+
+        {/* Token approval status/action */}
+        <div className="mt-4 p-3 rounded-md border bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
+          <p className="text-sm font-medium mb-2">Token Approval</p>
+          {paymentDetails.isTokenApproved ? (
+            <p className="text-green-600 font-semibold">
+              Token amount received is approved
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleTokenApproveClick}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold hover:bg-gray-50 active:scale-[0.99] transition
+                         dark:border-gray-700 dark:hover:bg-gray-800"
+            >
+              Confirm Token Received
+            </button>
+          )}
+        </div>
       </div>
 
-      {payments.map(({ date, amount, approved, approvalKey }, idx) => (
-        <div
-          key={approvalKey}
-          className="p-4 border rounded-md dark:border-gray-700"
-        >
-          <h4 className="font-semibold mb-2">{`Payment ${idx + 1}`}</h4>
-          <InfoItem
-            label="Date"
-            value={date ? new Date(date).toDateString() : "-"}
-          />
-          <InfoItem label="Amount" value={amount || "-"} />
-          <p className="mt-2 text-sm">
-            Status:{" "}
-            <span
-              className={
-                approved ? "text-green-600 font-semibold" : "text-gray-600"
-              }
-            >
-              {approved ? "Approved" : "Pending"}
-            </span>
-          </p>
-          <div className="mt-2">
-            <label
-              htmlFor={approvalKey}
-              className="block text-gray-500 text-sm mb-1"
-            >
-              Finance Team Approval
-            </label>
-            <select
-              id={approvalKey}
-              className="border rounded p-1 w-full max-w-xs"
-              value={approvalStatus[approvalKey]}
-              onChange={(e) =>
-                handleApprovalChange(approvalKey, e.target.value)
-              }
-            >
-              {approvalOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+      {/* Dynamic Schedules from backend */}
+      {scheduled.map((row, idx) => {
+        const approved = !!row.isAmountApproved;
+        return (
+          <div
+            key={row.id}
+            className="p-4 border rounded-md dark:border-gray-700"
+          >
+            <h4 className="font-semibold mb-2">{`Payment ${idx + 1}`}</h4>
+            <InfoItem
+              label="Date"
+              value={row.date ? new Date(row.date).toDateString() : "-"}
+            />
+            <InfoItem label="Amount" value={row.amount ?? "-"} />
+            <p className="mt-2 text-sm">
+              Status:{" "}
+              <span
+                className={
+                  approved ? "text-green-600 font-semibold" : "text-gray-600"
+                }
+              >
+                {approved ? "Approved" : "Pending"}
+              </span>
+            </p>
+
+            <div className="mt-2">
+              <label
+                htmlFor={`sched-${row.id}`}
+                className="block text-gray-500 text-sm mb-1"
+              >
+                Finance Team Approval
+              </label>
+              <select
+                id={`sched-${row.id}`}
+                className="border rounded p-1 w-full max-w-xs"
+                value={
+                  scheduledApproval[row.id] ||
+                  (approved ? "Approved" : "Pending")
+                }
+                onChange={(e) => handleScheduledChange(row.id, e.target.value)}
+              >
+                {approvalOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {row.paymentProof ? (
+              <div className="mt-2 text-sm">
+                <span className="text-gray-500">Payment Proof: </span>
+                <a
+                  href={row.paymentProof}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  View
+                </a>
+              </div>
+            ) : null}
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Convert button bottom-left */}
       <div className="pt-4">

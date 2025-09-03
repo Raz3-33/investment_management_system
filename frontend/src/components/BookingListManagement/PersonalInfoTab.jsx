@@ -5,7 +5,7 @@ export default function PersonalInfoTab({ booking }) {
       <InfoItem label="Email" value={booking.email} />
       <InfoItem label="Phone" value={booking.phoneNumber} />
       <InfoItem label="Alt Phone" value={booking.altPhoneNumber} />
-      <InfoItem label="Territory" value={booking.territory?.city} />
+      <InfoItem label="Territory" value={booking.territory?.city ? booking.territory?.city : booking.territory?.location} />
       <InfoItem label="Opportunity" value={booking.oppurtunity} />
       <InfoItem label="State" value={booking.state} />
       <InfoItem label="District" value={booking.district} />

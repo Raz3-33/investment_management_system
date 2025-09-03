@@ -6,8 +6,18 @@ import { checkPermission } from "../middlewares/checkPermission.js";
 const router = express.Router();
 
 // Lists / details
-router.get("/", verifyToken, checkPermission("Booking Management:view"), bookingFormController.getAllBookings);
-router.get("/:id", verifyToken, checkPermission("Booking Management:view"), bookingFormController.getBookingById);
+router.get(
+  "/",
+  verifyToken,
+  checkPermission("Booking Management:view"),
+  bookingFormController.getAllBookings
+);
+router.get(
+  "/:id",
+  verifyToken,
+  checkPermission("Booking Management:view"),
+  bookingFormController.getBookingById
+);
 
 // Approvals (treat as "approve")
 router.put(
@@ -33,3 +43,11 @@ router.post(
 );
 
 export default router;
+
+// routes/bookingForm.routes.js
+router.put(
+  "/payments/scheduled/approval/:id",
+  verifyToken,
+  checkPermission("Booking Management:approve"),
+  bookingFormController.updateScheduledPaymentApproval
+);

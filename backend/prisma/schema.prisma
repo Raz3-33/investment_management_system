@@ -339,11 +339,9 @@ model BookingFormPersonalDetails {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  // officeDetails  BookingFormOfficeDetails[]
-  // paymentDetails BookingFormPaymentDetails[]
-
-  officeDetails  BookingFormOfficeDetails?
-  paymentDetails BookingFormPaymentDetails?
+  officeDetails           BookingFormOfficeDetails?
+  paymentDetails          BookingFormPaymentDetails?
+  paymentScheduledDetails PaymentSceduledDetails[] // changed to array for 1-N
 }
 
 // Section: Office Detailsffc
@@ -380,30 +378,16 @@ model BookingFormOfficeDetails {
 }
 
 // Section: Payment Details
+
 model BookingFormPaymentDetails {
-  id            String    @id @default(uuid())
-  dealAmount    Float?
-  tokenReceived Float?
-  tokenDate     DateTime?
-  balanceDue    Float?
-  paymentProof  String? // store file path or URL
-  modeOfPayment String?
-
-  // Payment Schedules
-  date1             DateTime?
-  amount1           Float?
-  isAmount1Approved Boolean   @default(false)
-  date2             DateTime?
-  amount2           Float?
-  isAmount2Approved Boolean   @default(false)
-
-  date3             DateTime?
-  amount3           Float?
-  isAmount3Approved Boolean   @default(false)
-
-  date4             DateTime?
-  amount4           Float?
-  isAmount4Approved Boolean   @default(false)
+  id              String    @id @default(uuid())
+  dealAmount      Float?
+  tokenReceived   Float?
+  isTokenApproved Boolean   @default(false)
+  tokenDate       DateTime?
+  balanceDue      Float?
+  paymentProof    String? // store file path or URL
+  modeOfPayment   String?
 
   // Additional Commitment & Remarks
   additionalCommitment String?
@@ -411,4 +395,16 @@ model BookingFormPaymentDetails {
 
   personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
   personalDetailsId String                     @unique
+}
+
+// Section: Payment Details
+
+model PaymentSceduledDetails {
+  id                String                     @id @default(uuid())
+  date              DateTime?
+  amount            Float?
+  isAmountApproved  Boolean                    @default(false)
+  paymentProof      String
+  personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
+  personalDetailsId String
 }

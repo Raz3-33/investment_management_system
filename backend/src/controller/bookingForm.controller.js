@@ -95,3 +95,26 @@ export const updateDocumentApproval = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// controller/bookingForm.controller.js
+export const updateScheduledPaymentApproval = async (req, res) => {
+  try {
+    const { id } = req.params;           // schedule row id
+    const { status } = req.body;         // "Approved" | "Pending"
+    const result = await bookingFormService.updateScheduledPaymentApproval(
+      id,
+      status,
+      req.user
+    );
+
+    if (!result.success) {
+      return res
+        .status(result.statusCode || 400)
+        .json({ success: false, message: result.message });
+    }
+
+    return res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

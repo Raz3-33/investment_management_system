@@ -7,7 +7,7 @@ export const useRoleStore = create(
     (set, get) => ({
       roles: [],
       rolesAdd: null,
-      rolesRemoved:null,
+      rolesRemoved: null,
       roleDetail: null,
       loadingRoleDetail: false,
       errorRoleDetail: null,
@@ -15,7 +15,9 @@ export const useRoleStore = create(
       error: null,
 
       // Initially load the token directly from localStorage
-      token: localStorage.getItem("token") ?? JSON.parse(localStorage.getItem("token")), // Directly load token from localStorage
+      token:
+        localStorage.getItem("token") ??
+        JSON.parse(localStorage.getItem("token")), // Directly load token from localStorage
 
       fetchRoles: async () => {
         const token = get().token || localStorage.getItem("token"); // Ensure token is available
@@ -68,9 +70,13 @@ export const useRoleStore = create(
               authorization: `Bearer ${token}`, // Attach token for authentication
             },
           });
+
+          console.log(res.data.role, "res.data.roleres.data.roleres.data.role");
+
           set((state) => ({
             rolesAdd: res.data.role,
           }));
+          await get().fetchRoles();
         } catch (err) {
           set({ error: "Failed to add role" });
         }
