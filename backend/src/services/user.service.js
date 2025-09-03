@@ -139,6 +139,7 @@ export const updateUser = async (id, data) => {
       headId,
       managerId,
       userType,
+      password,
     } = data;
 
     // Validate required fields
@@ -148,45 +149,48 @@ export const updateUser = async (id, data) => {
       );
     }
 
-    // Check if role exists
-    const roleExists = await prisma.role.findUnique({
-      where: { id: roleId },
-    });
+    // Check role existence
+    const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
     if (!roleExists) {
       throw new Error("Invalid roleId. The specified role does not exist.");
     }
 
-    // Check if email is unique (ignore current user)
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // Check email uniqueness (ignore the current user)
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email,
+        NOT: { id },
+      },
+      select: { id: true },
     });
-    if (existingUser && existingUser.id !== id) {
+    if (existingUser) {
       throw new Error("A user with this email already exists.");
     }
 
-    // If password is provided, hash it
-    // let hashedPassword;
-    // if (password) {
-    //   hashedPassword = await bcrypt.hash(password, 10);
-    // }
+    // Build update payload, only including password if provided
+    const updatePayload = {
+      name,
+      email,
+      countryCode,
+      phone,
+      roleId,
+      designation,
+      branchId,
+      headId: headId || null,
+      managerId: managerId || null,
+      isHead: userType === "head",
+      isManager: userType === "manager",
+    };
 
-    // Update user
+    // If password provided, hash and include it
+    if (password && password.trim().length > 0) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updatePayload.password = hashedPassword;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: {
-        name,
-        email,
-        countryCode,
-        phone,
-        // password: hashedPassword || undefined, // Only update if provided
-        roleId,
-        designation,
-        branchId,
-        headId: headId || null, // Optional
-        managerId: managerId || null, // Optional
-        isHead: userType === "head" ? true : false,
-        isManager: userType === "manager" ? true : false,
-      },
+      data: updatePayload,
     });
 
     return updatedUser;

@@ -44,7 +44,7 @@ function handleActions(row, onEdit, onDelete) {
 
 export default function RoleManagement() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(8);
+  const [rowsPerPage] = useState(15);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState({
     name: "",

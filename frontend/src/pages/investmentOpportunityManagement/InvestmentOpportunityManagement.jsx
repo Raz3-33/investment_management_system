@@ -18,7 +18,7 @@ const columns = [
 export default function InvestmentOpportunityManagement() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(8);
+  const [rowsPerPage] = useState(15);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingOpportunityId, setEditingOpportunityId] = useState(null);

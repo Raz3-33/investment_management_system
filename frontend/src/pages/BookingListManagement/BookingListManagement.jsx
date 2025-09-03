@@ -21,7 +21,7 @@ const columns = [
 export default function BookingListManagement() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(8);
+  const [rowsPerPage] = useState(15);
   const navigate = useNavigate();
   //   const [isModalOpen, setIsModalOpen] = useState(false);
   //   const [editMode, setEditMode] = useState(false);

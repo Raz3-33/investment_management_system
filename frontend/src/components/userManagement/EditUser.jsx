@@ -25,6 +25,12 @@ export default function EditUserForm({ userId, onClose }) {
     userType: "",
   });
 
+  // NEW: local password fields (kept outside formData so we don't send empty values)
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+
   const [errorValidation, setErrorValidation] = useState("");
   const [countries, setCountries] = useState([]);
 
@@ -65,6 +71,7 @@ export default function EditUserForm({ userId, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // basic required fields
     if (
       !formData.name ||
       !formData.email ||
@@ -76,9 +83,33 @@ export default function EditUserForm({ userId, onClose }) {
       return;
     }
 
+    // password validation (only if user is trying to change it)
+    if (newPassword || confirmNewPassword) {
+      if (!newPassword || !confirmNewPassword) {
+        setErrorValidation("Please enter both password fields.");
+        return;
+      }
+      if (newPassword.length < 5) {
+        setErrorValidation("Password must be at least 5 characters long.");
+        return;
+      }
+      if (newPassword !== confirmNewPassword) {
+        setErrorValidation("Passwords do not match.");
+        return;
+      }
+    }
+
     try {
-      await updateUser(userId, formData);
+      // Only include password when actually changing it
+      const payload = {
+        ...formData,
+        ...(newPassword ? { password: newPassword } : {}),
+      };
+
+      await updateUser(userId, payload);
       setErrorValidation("");
+      setNewPassword("");
+      setConfirmNewPassword("");
       if (onClose) onClose();
     } catch (err) {
       setErrorValidation("Failed to update user: " + err.message);
@@ -210,7 +241,8 @@ export default function EditUserForm({ userId, onClose }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {formData.userType !== "head" && formData.userType !== "manager" && (
+        {/* If not head, allow selecting head */}
+        {formData.userType !== "head" && (
           <select
             value={formData.headId}
             onChange={(e) =>
@@ -229,6 +261,7 @@ export default function EditUserForm({ userId, onClose }) {
           </select>
         )}
 
+        {/* If not manager, allow selecting manager */}
         {formData.userType !== "manager" && (
           <select
             value={formData.managerId}
@@ -248,6 +281,53 @@ export default function EditUserForm({ userId, onClose }) {
           </select>
         )}
       </div>
+
+      {/* NEW: Change Password (optional) */}
+      <h3 className="font-semibold text-gray-700 border-b pb-1">
+        Change Password <span className="text-xs text-gray-500">(optional)</span>
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative">
+          <input
+            type={showNewPassword ? "text" : "password"}
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="border px-3 py-2 rounded-md w-full pr-10"
+            autoComplete="new-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowNewPassword((s) => !s)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600"
+            aria-label={showNewPassword ? "Hide password" : "Show password"}
+          >
+            {showNewPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+
+        <div className="relative">
+          <input
+            type={showConfirmNewPassword ? "text" : "password"}
+            placeholder="Confirm New Password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            className="border px-3 py-2 rounded-md w-full pr-10"
+            autoComplete="new-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmNewPassword((s) => !s)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600"
+            aria-label={showConfirmNewPassword ? "Hide password" : "Show password"}
+          >
+            {showConfirmNewPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+      </div>
+      <p className="text-xs text-gray-500">
+        Leave password fields blank to keep the current password unchanged.
+      </p>
 
       <div className="flex justify-center mt-4">
         <Button
