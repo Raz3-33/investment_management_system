@@ -30,8 +30,7 @@ export const getRoleWithPermissions = async (roleId) => {
 export const createRole = async (data) => {
   const { name, description, permissions } = data;
 
-
-  console.log(data,"================");
+  console.log(data, "================");
 
   // 1. Check if the role already exists
   const existingRole = await prisma.role.findUnique({
@@ -87,14 +86,13 @@ export const createRole = async (data) => {
           roleId: role.id,
           permissionId: perm.id,
           access: permissions[index].split(":")[1], // Preserve access level from the form
-        }
+        },
       })
     )
   );
 
   return { role, permissions: rolePermissions };
 };
-
 
 export const updateRole = async (id, data) => {
   const { name, description, permissions } = data;
@@ -160,3 +158,44 @@ export const updateRole = async (id, data) => {
   return { role: updatedRole, permissions: rolePermissions };
 };
 
+export const removeRole = async (roleId) => {
+  return prisma.$transaction(async (tx) => {
+    // Ensure role exists
+    const role = await tx.role.findUnique({
+      where: { id: roleId },
+      select: { id: true, name: true },
+    });
+    if (!role) {
+      throw new Error("Role not found.");
+    }
+
+    // Check association with users
+    const assignedUsers = await tx.user.count({
+      where: { roleId },
+    });
+
+    if (assignedUsers > 0) {
+      throw new Error(
+        `Cannot delete role "${role.name}": it is assigned to ${assignedUsers} user(s).`
+      );
+    }
+
+    // Remove role-permission associations
+    const { count: removedRolePermissions } =
+      await tx.rolePermission.deleteMany({
+        where: { roleId },
+      });
+
+    // Delete the role
+    await tx.role.delete({
+      where: { id: roleId },
+    });
+
+    return {
+      success: true,
+      deletedRoleId: roleId,
+      removedRolePermissions,
+      message: `Role "${role.name}" deleted.`,
+    };
+  });
+};

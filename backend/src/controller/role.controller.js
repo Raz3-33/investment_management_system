@@ -58,7 +58,7 @@ export const update = async (req, res, next) => {
 
 export const remove = async (req, res, next) => {
   try {
-    await roleService.deleteRole(req.params.id);
+    await roleService.removeRole(req.params.id);
     res.sendStatus(204);
   } catch (err) {
     next(err);

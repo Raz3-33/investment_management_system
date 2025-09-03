@@ -4,91 +4,65 @@ import { api } from "../services/api";
 
 export const useSalesStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       sales: null,
-      updateSales: null,
-      allSales: [], // New state to hold all sales data
+      updateSales: null, // (note: name collides with method below—rename if you prefer)
+      allSales: [],
       loading: false,
       error: null,
 
-      // Fetch sales for a specific opportunity
+      _auth: () => {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token is required");
+        return { headers: { authorization: `Bearer ${token}` } };
+      },
+
       fetchSales: async (salesId) => {
         set({ loading: true, error: null });
         try {
-          const token = localStorage.getItem("token");
-          const response = await api.get(`/sales/${salesId}`, {
-            headers: { authorization: `Bearer ${token}` },
-          });
+          const response = await api.get(`/sales/${salesId}`, get()._auth());
           set({ sales: response.data.data, loading: false });
         } catch (err) {
-          set({ error: err.message, loading: false });
+          set({ error: err.response?.data?.message || err.message, loading: false });
         }
       },
 
-      // Fetch all sales (without filtering by opportunity)
       fetchAllSales: async () => {
         set({ loading: true, error: null });
         try {
-          const token = localStorage.getItem("token");
-          if (!token) {
-            console.log("No authorization token found");
-            set({ error: "authorization token missing", loading: false });
-            return;
-          }
-          const response = await api.get(`/sales`, {
-            headers: { authorization: `Bearer ${token}` },
-          });
-          console.log(response);
+          const response = await api.get(`/sales`, get()._auth());
           set({ allSales: response.data.data, loading: false });
         } catch (err) {
-          console.log("API Error: ", err);
-          set({ error: err.message, loading: false });
+          set({ error: err.response?.data?.message || err.message, loading: false });
         }
       },
 
-      // Add a new sales entry
       addSales: async (opportunityId, data) => {
         try {
-          const token = localStorage.getItem("token");
-          if (!token) {
-            console.log("No authorization token found");
-            set({ error: "authorization token missing", loading: false });
-            return;
-          }
-          const response = await api.post(
-            `/sales`,
-            { opportunityId, ...data },
-            {
-              headers: { authorization: `Bearer ${token}` },
-            }
-          );
+          const response = await api.post(`/sales`, { opportunityId, ...data }, get()._auth());
           set({ sales: response.data.data });
         } catch (err) {
-          set({ error: err.message });
+          set({ error: err.response?.data?.message || err.message });
         }
       },
 
-      updateSales: async (salesId, data) => {
+      updateSalesRequest: async (salesId, data) => {
         try {
-          const token = localStorage.getItem("token");
-          const response = await api.put(`/sales/${salesId}`, data, {
-            headers: { authorization: `Bearer ${token}` },
-          });
-          set({
-            updateSales: response.data.data,
-          });
+          const response = await api.put(`/sales/${salesId}`, data, get()._auth());
+          set({ updateSales: response.data.data });
         } catch (err) {
-          set({ error: err.message });
+          set({ error: err.response?.data?.message || err.message });
         }
       },
 
-      // Delete a sales entry
       deleteSales: async (salesId) => {
         try {
-          await api.delete(`/sales/${salesId}`);
-          set({ sales: state.sales.filter((sale) => sale.id !== salesId) });
+          await api.delete(`/sales/${salesId}`, get()._auth());
+          set((s) => ({
+            sales: Array.isArray(s.sales) ? s.sales.filter((x) => x.id !== salesId) : s.sales,
+          })); // ✅ fixed
         } catch (err) {
-          set({ error: err.message });
+          set({ error: err.response?.data?.message || err.message });
         }
       },
     }),
@@ -97,7 +71,6 @@ export const useSalesStore = create(
       partialize: (state) => ({
         sales: state.sales,
         allSales: state.allSales,
-        token: state.token,
       }),
     }
   )

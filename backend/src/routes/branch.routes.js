@@ -1,21 +1,14 @@
 import express from "express";
 import * as branchController from "../controller/branch.controller.js";
+import { verifyToken } from "../middlewares/tokenVerification.js";
+import { checkPermission } from "../middlewares/checkPermission.js";
 
 const router = express.Router();
 
-// Get all branches
-router.get("/", branchController.getAll);
-
-// Get a specific branch by ID
-router.get("/:id", branchController.getBranchById);
-
-// Create a new branch
-router.post("/", branchController.createBranch);
-
-// Update an existing branch
-router.put("/:id", branchController.updateBranch);
-
-// Delete a branch
-router.delete("/:id", branchController.deleteBranch);
+router.get("/", verifyToken, checkPermission("Settings:view"), branchController.getAll);
+router.get("/:id", verifyToken, checkPermission("Settings:view"), branchController.getBranchById);
+router.post("/", verifyToken, checkPermission("Settings:create"), branchController.createBranch);
+router.put("/:id", verifyToken, checkPermission("Settings:update"), branchController.updateBranch);
+router.delete("/:id", verifyToken, checkPermission("Settings:delete"), branchController.deleteBranch);
 
 export default router;

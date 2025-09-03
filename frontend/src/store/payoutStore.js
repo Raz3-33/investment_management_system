@@ -1,65 +1,61 @@
 import { create } from "zustand";
 import { api } from "../services/api";
 
-export const usePayoutStore = create((set) => ({
+export const usePayoutStore = create((set, get) => ({
   payouts: [],
   addPayouts: null,
   editPayouts: null,
-  deletePayout:null,
-  loading: false, // Loading state
-  error: null, // Error state
+  deletePayout: null,
+  loading: false,
+  error: null,
 
-  // Fetch payouts for a specific investment
-  fetchPayouts: async (investmentId) => {
+  _auth: () => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token is required");
+    return { headers: { authorization: `Bearer ${token}` } };
+  },
+
+  fetchPayouts: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await api.get(`/payouts`);
+      const response = await api.get(`/payouts`, get()._auth());
       set({ payouts: response.data.data, loading: false });
     } catch (error) {
-      set({ loading: false, error: error.message });
+      set({ loading: false, error: error.response?.data?.message || error.message });
     }
   },
 
-  // Create a new payout
   createPayout: async (data) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.post("/payouts/create", data);
+      const response = await api.post("/payouts/create", data, get()._auth());
       set({ addPayouts: response?.data?.data, loading: false });
-      return response.data.data; // Return the created payout
+      return response.data.data;
     } catch (error) {
-      set({ loading: false, error: error.message });
-      throw error; // Propagate error to the component
+      set({ loading: false, error: error.response?.data?.message || error.message });
+      throw error;
     }
   },
 
-  // Update an existing payout
   updatePayout: async (payoutId, data) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.put(`/payouts/${payoutId}`, data);
-      set({
-        editPayouts: response?.data?.data,
-        loading: false,
-      });
-      return response.data.data; // Return the updated payout
+      const response = await api.put(`/payouts/${payoutId}`, data, get()._auth());
+      set({ editPayouts: response?.data?.data, loading: false });
+      return response.data.data;
     } catch (error) {
-      set({ loading: false, error: error.message });
-      throw error; // Propagate error to the component
+      set({ loading: false, error: error.response?.data?.message || error.message });
+      throw error;
     }
   },
 
-  // Delete a payout
   deletePayout: async (payoutId) => {
     set({ loading: true, error: null });
     try {
-      await api.delete(`/payouts/${payoutId}`);
-      set({
-        deletePayout: response?.data?.data,
-        loading: false,
-      });
+      const response = await api.delete(`/payouts/${payoutId}`, get()._auth());
+      set({ deletePayout: response?.data?.data, loading: false });
     } catch (error) {
-      set({ loading: false, error: error.message });
+      set({ loading: false, error: error.response?.data?.message || error.message });
     }
   },
 }));

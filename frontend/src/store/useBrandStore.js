@@ -9,11 +9,16 @@ export const useBrandStore = create((set, get) => ({
   loading: false,
   error: null,
 
-  // Fetch brands
+  _auth: () => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token is required");
+    return { headers: { authorization: `Bearer ${token}` } };
+  },
+
   fetchBrands: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await api.get("/brands");
+      const res = await api.get("/brands", get()._auth());
       set({ brands: res.data?.data || [], loading: false });
     } catch (err) {
       set({
@@ -23,12 +28,10 @@ export const useBrandStore = create((set, get) => ({
     }
   },
 
-  // Add
   addBrand: async (newBrand) => {
     try {
-      const res = await api.post("/brands", newBrand);
+      const res = await api.post("/brands", newBrand, get()._auth());
       set({ brandAdded: res?.data?.data });
-      // optional: refresh list immediately
       await get().fetchBrands();
     } catch (err) {
       console.error("Add brand failed", err);
@@ -36,26 +39,21 @@ export const useBrandStore = create((set, get) => ({
     }
   },
 
-  // Update
   updateBrand: async (id, updatedBrand) => {
     try {
-      const res = await api.put(`/brands/${id}`, updatedBrand);
+      const res = await api.put(`/brands/${id}`, updatedBrand, get()._auth());
       set({ brandUpdated: res?.data?.data });
-      await get().fetchBrands(); // <-- use get(), not set.fetchBranches
+      await get().fetchBrands();
     } catch (err) {
       console.error("Update brand failed", err);
       set({ error: err.response?.data?.message || "Failed to update brand" });
     }
   },
 
-  // Delete
   deleteBrand: async (id) => {
     try {
-      await api.delete(`/brands/${id}`);
-      set({
-        brandDeleted: id,
-        brands: get().brands.filter((b) => b.id !== id),
-      });
+      await api.delete(`/brands/${id}`, get()._auth());
+      set({ brandDeleted: id, brands: get().brands.filter((b) => b.id !== id) });
     } catch (err) {
       console.error("Delete brand failed", err);
       set({ error: err.response?.data?.message || "Failed to delete brand" });

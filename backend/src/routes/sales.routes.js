@@ -2,27 +2,53 @@ import express from "express";
 import {
   createSales,
   getSales,
-  getAllSales, // Added this import
+  getAllSales,
   updateSales,
   deleteSales,
 } from "../controller/sales.controller.js";
 import { verifyToken } from "../middlewares/tokenVerification.js";
+import { checkPermission } from "../middlewares/checkPermission.js";
 
 const router = express.Router();
 
-// Create sales for an opportunity
-router.post("/", verifyToken, createSales);
+// Create sales
+router.post(
+  "/",
+  verifyToken,
+  checkPermission("Sales Management:create"),
+  createSales
+);
 
-// Get all sales for an opportunity
-router.get("/:salesId", verifyToken, getSales);
+// Get specific sale
+router.get(
+  "/:salesId",
+  verifyToken,
+  checkPermission("Sales Management:view"),
+  getSales
+);
 
-// Get all sales (without filtering by opportunity)
-router.get("/", verifyToken, getAllSales);  // New route to fetch all sales
+// Get all sales
+router.get(
+  "/",
+  verifyToken,
+  checkPermission("Sales Management:view"),
+  getAllSales
+);
 
-// Update sales for an opportunity
-router.put("/:salesId", verifyToken, updateSales);
+// Update sale
+router.put(
+  "/:salesId",
+  verifyToken,
+  checkPermission("Sales Management:update"),
+  updateSales
+);
 
-// Delete sales for an opportunity
-router.delete("/:salesId", verifyToken, deleteSales);
+// Delete sale
+router.delete(
+  "/:salesId",
+  verifyToken,
+  checkPermission("Sales Management:delete"),
+  deleteSales
+);
 
 export default router;

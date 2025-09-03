@@ -1,25 +1,26 @@
 import { create } from "zustand";
-import { api } from "../services/api"; // Your API service
+import { api } from "../services/api";
 
-export const useSettingStore = create((set,get) => ({
-  // State management for both businessCategory and investmentType
+export const useSettingStore = create((set, get) => ({
   businessCategories: [],
   investmentTypes: [],
-  businessCategoriesAdded:null,
-  investmentTypesAdded:null,
-  updateInvestmentTypes:null,
+  businessCategoriesAdded: null,
+  investmentTypesAdded: null,
+  updateInvestmentTypes: null,
   loading: false,
   error: null,
 
-  // Fetch business categories
+  _auth: () => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Token is required");
+    return { headers: { authorization: `Bearer ${token}` } };
+  },
+
   fetchBusinessCategories: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await api.get("/settings/business-categories"); // Adjust according to your backend route
-      set({
-        businessCategories: res.data?.data || [],
-        loading: false,
-      });
+      const res = await api.get("/settings/business-categories", get()._auth());
+      set({ businessCategories: res.data?.data || [], loading: false });
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to fetch business categories",
@@ -28,15 +29,11 @@ export const useSettingStore = create((set,get) => ({
     }
   },
 
-  // Fetch investment types
   fetchInvestmentTypes: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await api.get("/settings/investment-types"); // Adjust according to your backend route
-      set({
-        investmentTypes: res.data?.data || [],
-        loading: false,
-      });
+      const res = await api.get("/settings/investment-types", get()._auth());
+      set({ investmentTypes: res.data?.data || [], loading: false });
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to fetch investment types",
@@ -45,16 +42,11 @@ export const useSettingStore = create((set,get) => ({
     }
   },
 
-  // Add a new business category
   addBusinessCategory: async (newCategory) => {
     try {
-      const res = await api.post("/settings/business-categories", newCategory); // Adjust route
-      set({
-        businessCategoriesAdded: res.data?.data,
-        // businessCategories:await get().fetchInvestmentTypes()
-      });
-
-      await get().fetchBusinessCategories()
+      const res = await api.post("/settings/business-categories", newCategory, get()._auth());
+      set({ businessCategoriesAdded: res.data?.data });
+      await get().fetchBusinessCategories();
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to add business category",
@@ -63,16 +55,11 @@ export const useSettingStore = create((set,get) => ({
     }
   },
 
-  // Add a new investment type
   addInvestmentType: async (newType) => {
     try {
-      const res = await api.post("/settings/investment-types", newType); // Adjust route
-      set({
-        // investmentTypes: [...set.getState().investmentTypes, res.data?.data], // Add to state
-        investmentTypesAdded:res.data?.data,
-      });
-      await get().fetchInvestmentTypes()
-
+      const res = await api.post("/settings/investment-types", newType, get()._auth());
+      set({ investmentTypesAdded: res.data?.data });
+      await get().fetchInvestmentTypes();
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to add investment type",
@@ -81,14 +68,11 @@ export const useSettingStore = create((set,get) => ({
     }
   },
 
-  // Update a business category
   updateBusinessCategory: async (id, updatedCategory) => {
     try {
-      const res = await api.put(`/settings/business-categories/${id}`, updatedCategory); // Adjust route
+      const res = await api.put(`/settings/business-categories/${id}`, updatedCategory, get()._auth());
       set({
-        businessCategories: set.getState().businessCategories.map((category) =>
-          category.id === id ? res.data?.data : category
-        ),
+        businessCategories: get().businessCategories.map((c) => (c.id === id ? res.data?.data : c)),
       });
     } catch (err) {
       set({
@@ -98,16 +82,10 @@ export const useSettingStore = create((set,get) => ({
     }
   },
 
-  // Update an investment type
   updateInvestmentType: async (id, updatedType) => {
     try {
-      const res = await api.put(`/settings/investment-types/${id}`, updatedType); // Adjust route
-      set({
-        // investmentTypes: set.getState().investmentTypes.map((type) =>
-        //   type.id === id ? res.data?.data : type
-        // ),
-        updateInvestmentTypes:res.data?.data
-      });
+      const res = await api.put(`/settings/investment-types/${id}`, updatedType, get()._auth());
+      set({ updateInvestmentTypes: res.data?.data });
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to update investment type",
@@ -116,15 +94,9 @@ export const useSettingStore = create((set,get) => ({
     }
   },
 
-  // Delete a business category
   deleteBusinessCategory: async (id) => {
     try {
-      await api.delete(`/settings/business-categories/${id}`); // Adjust route
-      set({
-        businessCategories: set
-          .getState()
-          .businessCategories.filter((category) => category.id !== id), // Remove from state
-      });
+      await api.delete(`/settings/business-categories/${id}`, get()._auth());
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to delete business category",
@@ -133,15 +105,9 @@ export const useSettingStore = create((set,get) => ({
     }
   },
 
-  // Delete an investment type
   deleteInvestmentType: async (id) => {
     try {
-      await api.delete(`/settings/investment-types/${id}`); // Adjust route
-      set({
-        investmentTypes: set
-          .getState()
-          .investmentTypes.filter((type) => type.id !== id), // Remove from state
-      });
+      await api.delete(`/settings/investment-types/${id}`, get()._auth());
     } catch (err) {
       set({
         error: err.response?.data?.message || "Failed to delete investment type",

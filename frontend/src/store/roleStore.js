@@ -7,6 +7,7 @@ export const useRoleStore = create(
     (set, get) => ({
       roles: [],
       rolesAdd: null,
+      rolesRemoved:null,
       roleDetail: null,
       loadingRoleDetail: false,
       errorRoleDetail: null,
@@ -100,7 +101,7 @@ export const useRoleStore = create(
             },
           });
           set((state) => ({
-            roles: state.roles.filter((r) => r.id !== id),
+            rolesRemoved: state.roles.filter((r) => r.id !== id),
           }));
         } catch (err) {
           console.error("Delete failed", err);

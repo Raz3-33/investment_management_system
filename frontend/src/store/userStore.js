@@ -10,7 +10,23 @@ export const useUserStore = create(
       userAdd: null,
       loading: false,
       error: null,
-      token: localStorage.getItem("token") ?? localStorage.getItem("token"),
+      token:
+        localStorage.getItem("token") ??
+        JSON.parse(localStorage.getItem("token")),
+
+      setToken: (token, user) => {
+        localStorage.setItem("token", token);
+        if (user) localStorage.setItem("user", JSON.stringify(user));
+        set({ token });
+      },
+      _getAuth: () => {
+        const token =
+          get().token ||
+          localStorage.getItem("token") ||
+          JSON.parse(localStorage.getItem("token"));
+        if (!token) throw new Error("Token is required");
+        return { headers: { authorization: `Bearer ${token}` } };
+      },
 
       // Fetch all users
       fetchUsers: async () => {
@@ -62,7 +78,9 @@ export const useUserStore = create(
         // const token = get().token;
         try {
           const res = await api.put(`/users/${id}`, updatedUser, {
-            headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
+            headers: {
+              authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           });
           set((state) => ({
             users: state.users.map((u) => (u.id === id ? res.data?.data : u)),
@@ -77,9 +95,7 @@ export const useUserStore = create(
       deleteUser: async (id) => {
         const token = get().token;
         try {
-          await api.delete(`/users/${id}`, {
-            headers: { authorization: `Bearer ${token}` },
-          });
+          await api.delete(`/users/${id}`, get()._getAuth());
           set((state) => ({
             users: state.users.filter((u) => u.id !== id),
           }));

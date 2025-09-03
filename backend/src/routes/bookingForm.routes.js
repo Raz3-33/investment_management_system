@@ -1,32 +1,35 @@
 import express from "express";
 import * as bookingFormController from "../controller/bookingForm.controller.js";
 import { verifyToken } from "../middlewares/tokenVerification.js";
+import { checkPermission } from "../middlewares/checkPermission.js";
 
 const router = express.Router();
 
-// GET /api/bookings - list all bookings
-router.get("/", bookingFormController.getAllBookings);
+// Lists / details
+router.get("/", verifyToken, checkPermission("Booking Management:view"), bookingFormController.getAllBookings);
+router.get("/:id", verifyToken, checkPermission("Booking Management:view"), bookingFormController.getBookingById);
 
-// GET /api/bookings/:id - get booking by ID
-router.get("/:id", bookingFormController.getBookingById);
-
+// Approvals (treat as "approve")
 router.put(
   "/payments/approval/:id",
   verifyToken,
+  checkPermission("Booking Management:approve"),
   bookingFormController.updatePaymentApproval
 );
 
-router.post(
-  "/convert-to-investment/:personalDetailsId",
-  bookingFormController.convertToInvestment
-);
-
-// routes/bookingForm.routes.js
 router.put(
   "/documents/approval/:personalDetailsId",
   verifyToken,
+  checkPermission("Booking Management:approve"),
   bookingFormController.updateDocumentApproval
 );
 
+// Convert booking to investment (you can treat this as an approval step)
+router.post(
+  "/convert-to-investment/:personalDetailsId",
+  verifyToken,
+  checkPermission("Booking Management:approve"),
+  bookingFormController.convertToInvestment
+);
 
 export default router;

@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { toast } from "react-toastify";
+
 import DataTable from "../../components/ui/table/DataTable";
 import Button from "../../components/ui/Button";
 import PaginationControls from "../../components/ui/PaginationContrls";
@@ -12,23 +14,28 @@ const columns = [
   { key: "actions", label: "Actions", isAction: true },
 ];
 
+// add these three to your existing list
 const defaultModules = [
   "User Management",
   "Role Management",
   "Settings",
   "Investor",
   "Investment",
+  "Booking Management",
+  "Sales Management",
+  "Payout Management",
 ];
+
 
 const defaultActions = ["View", "Update", "Delete", "Approve"];
 
-function handleActions(row, onEdit) {
+function handleActions(row, onEdit, onDelete) {
   return (
     <div className="flex space-x-2">
       <Button variant="primary" onClick={() => onEdit(row)}>
         Edit
       </Button>
-      <Button variant="danger" onClick={() => alert(`Delete ${row.name}`)}>
+      <Button variant="danger" onClick={() => onDelete(row.id)}>
         Delete
       </Button>
     </div>
@@ -55,6 +62,8 @@ export default function RoleManagement() {
     fetchRoles,
     addRole,
     updateRole,
+    removeRole,
+    rolesRemoved,
     loading,
     fetchRoleDetail,
     loadingRoleDetail,
@@ -63,7 +72,7 @@ export default function RoleManagement() {
 
   useEffect(() => {
     fetchRoles();
-  }, [fetchRoles,rolesAdd]);
+  }, [fetchRoles, rolesAdd,rolesRemoved]);
 
   const handleCreateOrUpdate = async () => {
     if (!formData?.name) {
@@ -87,7 +96,6 @@ export default function RoleManagement() {
   };
 
   useEffect(() => {
-
     if (!editMode || !roleDetail?.permissions) return;
     // Mapping the permissions based on permission name (name:access)
     const formattedPermissions = roleDetail.permissions.map((rp) => {
@@ -114,6 +122,19 @@ export default function RoleManagement() {
       setError("Failed to load role details.");
     }
   };
+
+  const handleDeleteRole = async (roleId) => {
+  const ok = window.confirm("Delete this role? This action cannot be undone.");
+  if (!ok) return;
+
+  try {
+    await removeRole(roleId);
+    toast.success("Role deleted");
+  } catch (err) {
+    toast.error(err?.message || "Failed to delete role");
+  }
+};
+
 
   const filteredRows = useMemo(() => {
     return roles.filter(
@@ -162,7 +183,9 @@ export default function RoleManagement() {
             <DataTable
               columns={columns}
               rows={paginatedRows}
-              renderActions={(row) => handleActions(row, handleEdit)}
+              renderActions={(row) =>
+                handleActions(row, handleEdit, handleDeleteRole)
+              }
             />
             <PaginationControls
               currentPage={currentPage}
@@ -173,7 +196,7 @@ export default function RoleManagement() {
         )}
       </div>
 
-      <Modal
+      {/* <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editMode ? "Edit Role" : "Create New Role"}
@@ -218,12 +241,91 @@ export default function RoleManagement() {
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <div className="flex justify-end pt-2">
-            <Button className="w-full h-10" variant="primary" onClick={handleCreateOrUpdate}>
+            <Button
+              className="w-full h-10"
+              variant="primary"
+              onClick={handleCreateOrUpdate}
+            >
               {editMode ? "Update" : "Add"}
             </Button>
           </div>
         </div>
-      </Modal>
+      </Modal> */}
+
+
+      <Modal
+  isOpen={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  title={editMode ? "Edit Role" : "Create New Role"}
+>
+  <div className="flex flex-col gap-4">
+    {loadingRoleDetail ? (
+      <p className="text-gray-500">Loading role details...</p>
+    ) : (
+      <>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input
+            type="text"
+            placeholder="Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full dark:bg-gray-800 dark:text-white"
+          />
+          <input
+            type="text"
+            placeholder="Description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            className="border px-3 py-2 rounded-md w-full dark:bg-gray-800 dark:text-white"
+          />
+        </div>
+
+        {/* Scrollable permissions section */}
+        <section className="rounded-xl border bg-white/70 dark:bg-gray-900/60 backdrop-blur-sm shadow-sm">
+          <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200/70 dark:border-gray-800">
+            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+              Module Permissions
+            </h4>
+            <span className="text-xs text-gray-500">
+              {formData.permissions.length} selected
+            </span>
+          </header>
+
+          {/* This is the scroll container */}
+          <div className="max-h-[55vh] md:max-h-[60vh] overflow-y-auto p-4 custom-scroll">
+            {defaultModules.map((module) => (
+              <PermissionSelector
+                key={module}
+                module={module}
+                permissions={formData.permissions}
+                onChange={(newPerms) =>
+                  setFormData({ ...formData, permissions: newPerms })
+                }
+                actions={defaultActions}
+              />
+            ))}
+          </div>
+        </section>
+      </>
+    )}
+
+    {error && <p className="text-red-500 text-sm">{error}</p>}
+
+    {/* Sticky-ish footer action: stays visible because only middle section scrolls */}
+    <div className="flex justify-end pt-1">
+      <Button
+        className="w-full h-10 sm:w-auto sm:min-w-32"
+        variant="primary"
+        onClick={handleCreateOrUpdate}
+      >
+        {editMode ? "Update" : "Add"}
+      </Button>
+    </div>
+  </div>
+</Modal>
+
     </main>
   );
 }
