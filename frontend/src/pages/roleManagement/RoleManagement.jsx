@@ -20,6 +20,7 @@ const defaultModules = [
   "Role Management",
   "Settings",
   "Investor",
+  "Investment Opportunity Management",
   "Investment",
   "Booking Management",
   "Sales Management",

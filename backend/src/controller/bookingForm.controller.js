@@ -118,3 +118,25 @@ export const updateScheduledPaymentApproval = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
+
+export const markTerritoryBooked = async (req, res) => {
+  try {
+    const { personalDetailsId } = req.params;
+    const result = await bookingFormService.markTerritoryBooked({
+      personalDetailsId,
+      user: req.user,
+    });
+
+    if (!result.success) {
+      return res
+        .status(result.statusCode || 400)
+        .json({ success: false, message: result.message });
+    }
+
+    return res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

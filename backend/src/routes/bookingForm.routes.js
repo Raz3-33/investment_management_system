@@ -51,3 +51,12 @@ router.put(
   checkPermission("Booking Management:approve"),
   bookingFormController.updateScheduledPaymentApproval
 );
+
+
+router.post(
+  "/mark-booked/:personalDetailsId",
+  verifyToken,
+  checkPermission("Booking Management:approve"),
+  bookingFormController.markTerritoryBooked
+);
+

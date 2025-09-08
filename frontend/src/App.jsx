@@ -11,7 +11,6 @@ import MainLayout from "./layout/MainLayout";
 import RolePermissionForm from "./pages/roleManagement/RolePermissionForm";
 import Settings from "./pages/settings/Settings";
 import UserManagement from "./pages/userManagement/UserManagement";
-// import AddUserForm from "./components/userManagement/AddUserForm";
 import LoginPage from "./pages/Auth/login";
 import AuthRedirector from "./components/authRedirect";
 import InvestmentOpportunityManagement from "./pages/investmentOpportunityManagement/InvestmentOpportunityManagement";
@@ -23,15 +22,15 @@ import ProfilePage from "./pages/settings/Profile";
 import BookingListManagement from "./pages/BookingListManagement/BookingListManagement";
 import BookingDetailPage from "./components/BookingListManagement/BookingDetailPage";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function ScrollToTopOnNavigate() {
   const location = useLocation();
-
   useEffect(() => {
     document.querySelector("html").style.scrollBehavior = "auto";
     window.scroll({ top: 0 });
     document.querySelector("html").style.scrollBehavior = "";
   }, [location.pathname]);
-
   return null;
 }
 
@@ -42,90 +41,138 @@ function App() {
       <AuthRedirector />
 
       <Routes>
-        {/* dashboard */}
-        <Route path="/" element={<MainLayout children={<Dashboard />} />} />
+        {/* Dashboard (choose a permission name and seed it in DB, e.g. "Dashboard:view") */}
+        <Route
+          path="/"
+          element={
+            // <ProtectedRoute perm="Dashboard:view">
+            <MainLayout children={<Dashboard />} />
+            // </ProtectedRoute>
+          }
+        />
 
         {/* Role Management */}
         <Route
           path="/role_management"
-          element={<MainLayout children={<RoleManagement />} />}
+          element={
+            <ProtectedRoute perm="Role Management:view">
+              <MainLayout children={<RoleManagement />} />
+            </ProtectedRoute>
+          }
         />
 
-        <Route path="/login" element={<LoginPage />} />
-
+        {/* Role Permission Form (often same view perm; change if you require :update) */}
         <Route
           path="/role_management/permission"
-          element={<MainLayout children={<RolePermissionForm />} />}
+          element={
+            <ProtectedRoute perm="Role Management:view">
+              <MainLayout children={<RolePermissionForm />} />
+            </ProtectedRoute>
+          }
         />
-        {/* User Management */}
 
+        {/* Login (public) */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* User Management */}
         <Route
           path="/user_management"
-          element={<MainLayout children={<UserManagement />} />}
+          element={
+            <ProtectedRoute perm="User Management:view">
+              <MainLayout children={<UserManagement />} />
+            </ProtectedRoute>
+          }
         />
 
         {/* Booking Management */}
-
         <Route
           path="/booking_list_management"
-          element={<MainLayout children={<BookingListManagement />} />}
+          element={
+            <ProtectedRoute perm="Booking Management:view">
+              <MainLayout children={<BookingListManagement />} />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/booking_details_management/:bookingId"
           element={
-            <MainLayout>
-              <BookingDetailPage />
-            </MainLayout>
+            <ProtectedRoute perm="Booking Management:view">
+              <MainLayout>
+                <BookingDetailPage />
+              </MainLayout>
+            </ProtectedRoute>
           }
         />
-        {/* Investment Opportunity Management */}
 
+        {/* Investment Opportunity Management */}
         <Route
           path="/investment_opportunity_management"
           element={
-            <MainLayout children={<InvestmentOpportunityManagement />} />
+            <ProtectedRoute perm="Investment Opportunity Management:view">
+              <MainLayout children={<InvestmentOpportunityManagement />} />
+            </ProtectedRoute>
           }
         />
 
         {/* Investor Management */}
         <Route
           path="/investors_management"
-          element={<MainLayout children={<InvestorManagement />} />}
+          element={
+            <ProtectedRoute perm="Investor:view">
+              <MainLayout children={<InvestorManagement />} />
+            </ProtectedRoute>
+          }
         />
 
         {/* Investment Management */}
         <Route
           path="/investment_management"
-          element={<MainLayout children={<InvestmentManagement />} />}
+          element={
+            <ProtectedRoute perm="Investment:view">
+              <MainLayout children={<InvestmentManagement />} />
+            </ProtectedRoute>
+          }
         />
 
         {/* Payout Management */}
         <Route
           path="/payout_management"
-          element={<MainLayout children={<PayoutManagement />} />}
+          element={
+            <ProtectedRoute perm="Payout Management:view">
+              <MainLayout children={<PayoutManagement />} />
+            </ProtectedRoute>
+          }
         />
 
+        {/* Sales Management */}
         <Route
           path="/sales_management"
-          element={<MainLayout children={<SalesManagement />} />}
+          element={
+            <ProtectedRoute perm="Sales Management:view">
+              <MainLayout children={<SalesManagement />} />
+            </ProtectedRoute>
+          }
         />
-
-        {/* <Route
-          path="/user_management/add-user"
-          element={<MainLayout children={<AddUserForm />} />}
-        /> */}
 
         {/* Settings */}
         <Route
           path="/settings"
-          element={<MainLayout children={<Settings />} />}
+          element={
+            <ProtectedRoute perm="Settings:view">
+              <MainLayout children={<Settings />} />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Profile */}
+        {/* Profile (pick a permission or leave public if desired) */}
         <Route
           path="/profile"
-          element={<MainLayout children={<ProfilePage />} />}
+          element={
+            <ProtectedRoute perm="Settings:view">
+              <MainLayout children={<ProfilePage />} />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </div>

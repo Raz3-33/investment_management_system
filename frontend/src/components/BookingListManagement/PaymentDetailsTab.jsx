@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "react-toastify";
-
 import { useBookingStore } from "../../store/booking.store";
 import { InfoItem } from "./PersonalInfoTab";
 
@@ -8,20 +7,19 @@ const approvalOptions = ["Pending", "Approved"];
 
 export default function PaymentDetailsTab({ paymentDetails }) {
   const {
-    updatePaymentApproval, // keeps token approval
-    updateScheduledPaymentApproval, // NEW: per-schedule approval
+    updatePaymentApproval,
+    updateScheduledPaymentApproval,
     fetchBookingById,
-    booking,
     convertBookingToInvestment,
+    markTerritoryBooked,            // <-- NEW
+    booking,
     loading,
   } = useBookingStore((state) => state);
 
   if (!paymentDetails) return <p>No payment details.</p>;
 
   const scheduled = useMemo(() => {
-    // Prefer booking.paymentScheduledDetails if present
     const rows = booking?.paymentScheduledDetails || [];
-    // Sort by date asc, fallback by created order if needed
     return [...rows].sort((a, b) => {
       const da = a?.date ? new Date(a.date).getTime() : 0;
       const db = b?.date ? new Date(b.date).getTime() : 0;
@@ -29,20 +27,13 @@ export default function PaymentDetailsTab({ paymentDetails }) {
     });
   }, [booking?.paymentScheduledDetails]);
 
-  // --- TOKEN approval mapping (unchanged) ---
-  const paymentKeyToApprovalKey = {
-    token: "isTokenApproved",
-  };
-
-  // Build initial dropdown states for schedules
+  // map for UI selects
   const makeScheduleState = () =>
     Object.fromEntries(
       scheduled.map((s) => [s.id, s.isAmountApproved ? "Approved" : "Pending"])
     );
 
-  const [scheduledApproval, setScheduledApproval] = useState(
-    makeScheduleState()
-  );
+  const [scheduledApproval, setScheduledApproval] = useState(makeScheduleState());
 
   useEffect(() => {
     setScheduledApproval(makeScheduleState());
@@ -56,13 +47,11 @@ export default function PaymentDetailsTab({ paymentDetails }) {
       if (booking?.id) await fetchBookingById(booking.id);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update schedule approval", {
-        position: "top-right",
-      });
+      toast.error("Failed to update schedule approval", { position: "top-right" });
     }
   };
 
-  // --- TOKEN approval confirm handler (unchanged logic) ---
+  // TOKEN approval handler (existing)
   const handleTokenApproveClick = async () => {
     const ok = window.confirm(
       "Confirm that the Token amount has been received and approved?"
@@ -71,11 +60,7 @@ export default function PaymentDetailsTab({ paymentDetails }) {
 
     try {
       const loadingId = toast.loading("Approving token amount...");
-      await updatePaymentApproval(
-        paymentDetails.id,
-        paymentKeyToApprovalKey.token, // "isTokenApproved"
-        "Approved"
-      );
+      await updatePaymentApproval(paymentDetails.id, "isTokenApproved", "Approved");
       if (booking?.id) await fetchBookingById(booking.id);
 
       toast.update(loadingId, {
@@ -123,17 +108,89 @@ export default function PaymentDetailsTab({ paymentDetails }) {
     }
   };
 
+  // ---------- NEW: Mark as Booked ----------
+  const tokenApproved = !!paymentDetails?.isTokenApproved;
+  const balanceDue = Number(paymentDetails?.balanceDue || 0);
+  const allSchedulesApproved = scheduled.every(
+    (s) => (Number(s.amount || 0) <= 0) || !!s.isAmountApproved
+  );
+  const territoryBooked = !!booking?.territory?.isBooked;
+
+  const handleMarkBooked = async () => {
+    const personalDetailsId =
+      booking?.personalDetails?.id || paymentDetails?.personalDetailsId;
+    if (!personalDetailsId) {
+      toast.warning("Missing booking personal details id", {
+        position: "top-right",
+      });
+      return;
+    }
+
+    // quick client-side guard
+    if (!tokenApproved) {
+      toast.info("Token is not approved yet.", { position: "top-right" });
+      return;
+    }
+    if (!allSchedulesApproved) {
+      toast.info("All scheduled payments must be approved.", {
+        position: "top-right",
+      });
+      return;
+    }
+    if (balanceDue > 0) {
+      toast.info("Balance due must be ₹0 to book the territory.", {
+        position: "top-right",
+      });
+      return;
+    }
+
+    try {
+      const loadingId = toast.loading("Marking territory as booked...");
+      await markTerritoryBooked(personalDetailsId);
+      if (booking?.id) await fetchBookingById(booking.id);
+
+      toast.update(loadingId, {
+        render: "Territory marked as Booked",
+        type: "success",
+        isLoading: false,
+        autoClose: 1200,
+      });
+    } catch (e) {
+      const msg =
+        e?.response?.data?.message || e?.message || "Failed to mark as booked";
+      toast.dismiss();
+      toast.error(msg, { position: "top-right", autoClose: 4000 });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Overall Payment Info */}
       <div className="p-4 border rounded-md dark:border-gray-700">
-        <h4 className="font-semibold mb-4">Overall Payment Info</h4>
-        <div className="flex flex-wrap gap-x-6 gap-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="font-semibold">Overall Payment Info</h4>
+          <div className="flex items-center gap-2">
+            {/* Territory booked badge / button */}
+            {territoryBooked ? (
+              <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                Booked
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleMarkBooked}
+                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold hover:bg-gray-50 active:scale-[0.99] transition
+                           dark:border-gray-700 dark:hover:bg-gray-800"
+              >
+                Mark as Booked
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
           <InfoItem label="Deal Amount" value={paymentDetails.dealAmount} />
-          <InfoItem
-            label="Token Received"
-            value={paymentDetails.tokenReceived}
-          />
+          <InfoItem label="Token Received" value={paymentDetails.tokenReceived} />
           <InfoItem
             label="Token Date"
             value={
@@ -143,10 +200,7 @@ export default function PaymentDetailsTab({ paymentDetails }) {
             }
           />
           <InfoItem label="Balance Due" value={paymentDetails.balanceDue} />
-          <InfoItem
-            label="Mode of Payment"
-            value={paymentDetails.modeOfPayment}
-          />
+          <InfoItem label="Mode of Payment" value={paymentDetails.modeOfPayment} />
           <InfoItem label="Remarks" value={paymentDetails.remarks} />
           <InfoItem
             label="Additional Commitment"
@@ -174,14 +228,11 @@ export default function PaymentDetailsTab({ paymentDetails }) {
         </div>
       </div>
 
-      {/* Dynamic Schedules from backend */}
+      {/* Dynamic Schedules */}
       {scheduled.map((row, idx) => {
         const approved = !!row.isAmountApproved;
         return (
-          <div
-            key={row.id}
-            className="p-4 border rounded-md dark:border-gray-700"
-          >
+          <div key={row.id} className="p-4 border rounded-md dark:border-gray-700">
             <h4 className="font-semibold mb-2">{`Payment ${idx + 1}`}</h4>
             <InfoItem
               label="Date"
@@ -190,29 +241,19 @@ export default function PaymentDetailsTab({ paymentDetails }) {
             <InfoItem label="Amount" value={row.amount ?? "-"} />
             <p className="mt-2 text-sm">
               Status:{" "}
-              <span
-                className={
-                  approved ? "text-green-600 font-semibold" : "text-gray-600"
-                }
-              >
+              <span className={approved ? "text-green-600 font-semibold" : "text-gray-600"}>
                 {approved ? "Approved" : "Pending"}
               </span>
             </p>
 
             <div className="mt-2">
-              <label
-                htmlFor={`sched-${row.id}`}
-                className="block text-gray-500 text-sm mb-1"
-              >
+              <label htmlFor={`sched-${row.id}`} className="block text-gray-500 text-sm mb-1">
                 Finance Team Approval
               </label>
               <select
                 id={`sched-${row.id}`}
                 className="border rounded p-1 w-full max-w-xs"
-                value={
-                  scheduledApproval[row.id] ||
-                  (approved ? "Approved" : "Pending")
-                }
+                value={scheduledApproval[row.id] || (approved ? "Approved" : "Pending")}
                 onChange={(e) => handleScheduledChange(row.id, e.target.value)}
               >
                 {approvalOptions.map((opt) => (
@@ -240,7 +281,7 @@ export default function PaymentDetailsTab({ paymentDetails }) {
         );
       })}
 
-      {/* Convert button bottom-left */}
+      {/* Convert to Investment */}
       <div className="pt-4">
         <button
           type="button"

@@ -7,9 +7,9 @@ import { useBranchStore } from "../../store/branchStore";
 
 export default function EditUserForm({ userId, onClose }) {
   const { updateUser, getUserById, users, fetchUsers, error } = useUserStore(
-    (state) => state
+    (s) => s
   );
-  const { branches, fetchBranches } = useBranchStore((state) => state);
+  const { branches, fetchBranches } = useBranchStore((s) => s);
   const { roles, fetchRoles } = useRoleStore((s) => s);
 
   const [formData, setFormData] = useState({
@@ -22,10 +22,10 @@ export default function EditUserForm({ userId, onClose }) {
     designation: "",
     headId: "",
     managerId: "",
-    userType: "",
+    userType: "", // "head" | "manager" | ""
   });
 
-  // NEW: local password fields (kept outside formData so we don't send empty values)
+  // password (optional change)
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -83,7 +83,7 @@ export default function EditUserForm({ userId, onClose }) {
       return;
     }
 
-    // password validation (only if user is trying to change it)
+    // password validation (only if attempting to change)
     if (newPassword || confirmNewPassword) {
       if (!newPassword || !confirmNewPassword) {
         setErrorValidation("Please enter both password fields.");
@@ -100,9 +100,10 @@ export default function EditUserForm({ userId, onClose }) {
     }
 
     try {
-      // Only include password when actually changing it
       const payload = {
         ...formData,
+        isHead: formData.userType === "head",
+        isManager: formData.userType === "manager",
         ...(newPassword ? { password: newPassword } : {}),
       };
 
@@ -112,7 +113,29 @@ export default function EditUserForm({ userId, onClose }) {
       setConfirmNewPassword("");
       if (onClose) onClose();
     } catch (err) {
-      setErrorValidation("Failed to update user: " + err.message);
+      setErrorValidation("Failed to update user: " + (err?.message || "Unknown error"));
+    }
+  };
+
+  // Toggleable radio helpers
+  const handleUserTypeChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      userType: value,
+      ...(value === "head" ? { managerId: "" } : {}),
+      ...(value === "manager" ? { headId: "" } : {}),
+    }));
+  };
+
+  const handleUserTypeMouseDown = (value) => (e) => {
+    if (formData.userType === value) {
+      e.preventDefault();
+      setFormData((prev) => ({
+        ...prev,
+        userType: "",
+        headId: "",
+        managerId: "",
+      }));
     }
   };
 
@@ -191,7 +214,7 @@ export default function EditUserForm({ userId, onClose }) {
           className="border px-3 py-2 rounded-md w-full"
         >
           <option value="">Select Role</option>
-          {roles.map((role) => (
+          {roles?.map((role) => (
             <option key={role.id} value={role.id}>
               {role.name}
             </option>
@@ -209,32 +232,27 @@ export default function EditUserForm({ userId, onClose }) {
         className="border px-3 py-2 rounded-md w-full"
       />
 
+      {/* Toggleable radios */}
       <div className="flex gap-4 col-span-2">
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="radio"
             name="userType"
             value="head"
             checked={formData.userType === "head"}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                userType: e.target.value,
-                managerId: "",
-              })
-            }
+            onChange={() => handleUserTypeChange("head")}
+            onMouseDown={handleUserTypeMouseDown("head")}
           />
           Head
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="radio"
             name="userType"
             value="manager"
             checked={formData.userType === "manager"}
-            onChange={(e) =>
-              setFormData({ ...formData, userType: e.target.value, headId: "" })
-            }
+            onChange={() => handleUserTypeChange("manager")}
+            onMouseDown={handleUserTypeMouseDown("manager")}
           />
           Manager
         </label>
@@ -282,7 +300,7 @@ export default function EditUserForm({ userId, onClose }) {
         )}
       </div>
 
-      {/* NEW: Change Password (optional) */}
+      {/* Change Password (optional) */}
       <h3 className="font-semibold text-gray-700 border-b pb-1">
         Change Password <span className="text-xs text-gray-500">(optional)</span>
       </h3>
@@ -319,7 +337,9 @@ export default function EditUserForm({ userId, onClose }) {
             type="button"
             onClick={() => setShowConfirmNewPassword((s) => !s)}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600"
-            aria-label={showConfirmNewPassword ? "Hide password" : "Show password"}
+            aria-label={
+              showConfirmNewPassword ? "Hide password" : "Show password"
+            }
           >
             {showConfirmNewPassword ? "Hide" : "Show"}
           </button>

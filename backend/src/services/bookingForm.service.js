@@ -596,3 +596,119 @@ export const updateScheduledPaymentApproval = async (
     };
   }
 };
+
+export const markTerritoryBooked = async ({ personalDetailsId, user }) => {
+  try {
+    // permission guard (reuse finance/admin like other approvals)
+    const roleName = user?.role?.name?.toLowerCase?.() || "";
+    const isFinance = roleName === "finance";
+    const isAdmin = user?.isAdmin === true;
+    if (!isFinance && !isAdmin) {
+      return {
+        success: false,
+        statusCode: 403,
+        message: "Forbidden: Only finance/admin can mark as booked",
+      };
+    }
+
+    if (!personalDetailsId) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: "personalDetailsId is required",
+      };
+    }
+
+    const data = await prisma.$transaction(async (tx) => {
+      // load the booking with payment + schedules + territory
+      const booking = await tx.bookingFormPersonalDetails.findUnique({
+        where: { id: personalDetailsId },
+        include: {
+          territory: true,
+          paymentDetails: true,
+          paymentScheduledDetails: true,
+        },
+      });
+
+      if (!booking) {
+        return {
+          success: false,
+          statusCode: 404,
+          message: "Booking (personal details) not found",
+        };
+      }
+
+      if (!booking.territoryId) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: "No territory associated with this booking",
+        };
+      }
+
+      // If already booked, short-circuit
+      if (booking.territory?.isBooked) {
+        return {
+          success: true,
+          data: { territoryId: booking.territoryId, isBooked: true, already: true },
+        };
+      }
+
+      // Validate payments are fully done (use same rules as convertToInvestment)
+      const pd = booking.paymentDetails;
+      if (!pd) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: "Payment details not found for this booking",
+        };
+      }
+
+      const summary = summarizePayments(pd); // should examine token + scheduled approvals + balanceDue
+      const hasUnapproved = summary.pendingItems?.length > 0;
+      const hasPendingAmount =
+        typeof summary.pendingAmount === "number" && summary.pendingAmount > 0;
+
+      if (hasUnapproved || hasPendingAmount) {
+        const msgParts = [];
+        if (hasUnapproved) {
+          const labels = summary.pendingItems
+            .map((x) => `Payment ${x.index}`)
+            .join(", ");
+          msgParts.push(`Pending approvals: ${labels}`);
+        }
+        if (hasPendingAmount) {
+          msgParts.push(
+            `Pending amount: ₹${summary.pendingAmount.toLocaleString("en-IN")}`
+          );
+        }
+        return {
+          success: false,
+          statusCode: 400,
+          message:
+            msgParts.length > 0
+              ? msgParts.join(" | ")
+              : "Payments are not fully approved",
+        };
+      }
+
+      // Flip isBooked = true
+      const updated = await tx.territory.update({
+        where: { id: booking.territoryId },
+        data: { isBooked: true },
+        select: { id: true, isBooked: true },
+      });
+
+      return { success: true, data: updated };
+    });
+
+    return data;
+  } catch (err) {
+    console.error("Error in markTerritoryBooked:", err);
+    return {
+      success: false,
+      statusCode: 500,
+      message: err.message || "Failed to mark as booked",
+    };
+  }
+};

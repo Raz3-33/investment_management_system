@@ -8,6 +8,7 @@ import sanitizedConfig from "./config.js";
 
 import { errorHandler, notFound } from "./middlewares/errorMiddlware.js";
 import roleRoutes from "./routes/role.routes.js";
+import meRouter from "./routes/permission.routes.js";
 import branchRouter from "./routes/branch.routes.js"
 import brandRouter from "./routes/brand.routes.js"
 import territoryRouter from "./routes/territory.routes.js";
@@ -42,6 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 // authentication
 app.use("/api/auth", authenticationRoute);
+
+app.use("/api", meRouter);
+
 
 // dashboard
 app.use("/api/dashboard", dashBoardRoute);

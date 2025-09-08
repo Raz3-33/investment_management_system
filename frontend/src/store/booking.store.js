@@ -192,6 +192,25 @@ export const useBookingStore = create(
           throw err;
         }
       },
+
+      markTerritoryBooked: async (personalDetailsId) => {
+        set({ loading: true, error: null });
+        try {
+          const res = await api.post(
+            `/bookings/mark-booked/${personalDetailsId}`,
+            {},
+            get()._getAuth()
+          );
+          set({ loading: false });
+          return res.data?.data;
+        } catch (err) {
+          set({
+            error: err.response?.data?.message || "Failed to mark as booked",
+            loading: false,
+          });
+          throw err;
+        }
+      },
     }),
     {
       name: "booking-store",

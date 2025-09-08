@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import SidebarLinkGroup from "./SidebarLinkGroup";
+import IfCan from "../components/IfCan";
 
 function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
   const location = useLocation();
@@ -114,12 +115,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               >
                 •••
               </span>
-              {/* <span className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                Pages
-              </span> */}
             </h3>
             <ul className="mt-3">
-              {/* Dashboard */}
+              {/* Dashboard (visible to all in your App.tsx) */}
               <SidebarLinkGroup
                 activecondition={
                   pathname === "/" || pathname.includes("dashboard")
@@ -127,7 +125,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               >
                 {(handleClick, open) => {
                   return (
-                    <React.Fragment>
+                    <>
                       <NavLink
                         end
                         to="/"
@@ -158,548 +156,461 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </span>
                         </div>
                       </NavLink>
-                    </React.Fragment>
+                    </>
                   );
                 }}
               </SidebarLinkGroup>
 
-              {/* Inbox */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("role_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/role_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("role_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
+              {/* Role Management */}
+              <IfCan perm="Role Management:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("role_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
                   }`}
                 >
-                  <div className="flex items-center">
-                    <svg
-                      className={`shrink-0 fill-current ${
-                        pathname.includes("role_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="17"
-                      height="17"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M8 0c.2 0 .4.06.56.17l4.82 3.67c.36.27.57.7.57 1.16v4.45c0 3.07-2.39 5.36-5.33 6.48a.72.72 0 0 1-.46 0c-2.93-1.12-5.33-3.4-5.33-6.48V5c0-.46.21-.89.56-1.17L7.44.17A.86.86 0 0 1 8 0Zm0 1.6L3.33 5.17v4.27c0 2.3 1.7 4.16 4.2 5.18 2.5-1.02 4.14-2.88 4.14-5.18V5.17L8 1.6Zm0 5.9c.55 0 1-.45 1-1S8.55 5.5 8 5.5 7 5.95 7 6.5s.45 1 1 1Zm2.15 2.9c-.3-.8-1.05-1.4-2.15-1.4s-1.85.6-2.15 1.4a.5.5 0 0 0 .47.6h3.36a.5.5 0 0 0 .47-.6Z" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Role Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/* user management  */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("user_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/user_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("user_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className={`shrink-0 ${
-                        pathname.includes("user_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                    >
-                      {/* <!-- User head and body --> */}
-                      <circle cx="9" cy="7" r="3" />
-                      <path d="M5 21v-2a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v2" />
-
-                      {/* <!-- Gear for management --> */}
-                      <circle cx="17" cy="17" r="2" />
-                      <path d="M17 13v1" />
-                      <path d="M17 19v1" />
-                      <path d="M20 17h1" />
-                      <path d="M13 17h1" />
-                      <path d="M18.5 14.5l.7.7" />
-                      <path d="M15.5 14.5l-.7.7" />
-                      <path d="M18.5 19.5l.7-.7" />
-                      <path d="M15.5 19.5l-.7-.7" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      User Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/* Investment Management  */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("investment_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/investment_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("investment_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className={`shrink-0 ${
-                        pathname.includes("investment_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                    >
-                      {/* <!-- Hand holding investment --> */}
-                      <path d="M3 17s1.5 1 4 1h10c1.1 0 2-.9 2-2s-1-2-2-2h-5" />
-                      <path d="M7 17s.5 1 1.5 1 1.5-1 1.5-1" />
-                      {/* <!-- Investment bars --> */}
-                      <rect x="4" y="10" width="2" height="4" rx="0.5" />
-                      <rect x="8" y="8" width="2" height="6" rx="0.5" />
-                      <rect x="12" y="6" width="2" height="8" rx="0.5" />
-                      {/* <!-- Optional: upward arrow showing growth --> */}
-                      <path d="M16 6l2-2 2 2" />
-                      <line x1="18" y1="4" x2="18" y2="10" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Investment Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/*  Booking List Management  */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("booking_list_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/booking_list_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("booking_list_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className={`shrink-0 ${
-                        pathname.includes("booking_list_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                    >
-                      {/* <!-- Bar chart --> */}
-                      <rect x="3" y="10" width="2" height="8" rx="0.5" />
-                      <rect x="7" y="6" width="2" height="12" rx="0.5" />
-                      <rect x="11" y="3" width="2" height="15" rx="0.5" />
-
-                      {/* <!-- Magnifying glass (opportunity/discovery) --> */}
-                      <circle cx="17" cy="17" r="3" />
-                      <line x1="19.5" y1="19.5" x2="22" y2="22" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Booking List Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/* Investment Opportunity Management  */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("investment_opportunity_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/investment_opportunity_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("investment_opportunity_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className={`shrink-0 ${
-                        pathname.includes("investment_opportunity_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                    >
-                      {/* <!-- Bar chart --> */}
-                      <rect x="3" y="10" width="2" height="8" rx="0.5" />
-                      <rect x="7" y="6" width="2" height="12" rx="0.5" />
-                      <rect x="11" y="3" width="2" height="15" rx="0.5" />
-
-                      {/* <!-- Magnifying glass (opportunity/discovery) --> */}
-                      <circle cx="17" cy="17" r="3" />
-                      <line x1="19.5" y1="19.5" x2="22" y2="22" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Investment Opportunity Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/* Investors management  */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("investors_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/investors_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("investors_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="17"
-                      height="17"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className={`shrink-0 ${
-                        pathname.includes("investors_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                    >
-                      {/* <!-- User Icon (Investor) --> */}
-                      <circle cx="6" cy="7" r="3" />
-                      <path d="M2 21v-1a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v1" />
-
-                      {/* <!-- Investment Bars --> */}
-                      <rect x="14" y="10" width="2" height="7" rx="0.5" />
-                      <rect x="18" y="7" width="2" height="10" rx="0.5" />
-                      <rect x="10" y="13" width="2" height="4" rx="0.5" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Investors Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/* Sales management  */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("sales_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/sales_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("sales_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className={`shrink-0 ${
-                        pathname.includes("sales_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                    >
-                      {/* <!-- Bar chart --> */}
-                      <path d="M4 20V10" />
-                      <path d="M10 20V6" />
-                      <path d="M16 20V14" />
-
-                      {/* <!-- Growth arrow --> */}
-                      <path d="M4 14L10 8L14 12L20 6" />
-                      <path d="M20 6V10" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Sales Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/* Payout management  */}
-              <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("payout_management") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to="/payout_management"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("payout_management")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className={`shrink-0 ${
-                        pathname.includes("payout_management")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                    >
-                      {/* <!-- Wallet outline --> */}
-                      <path d="M4 7C4 5.89543 4.89543 5 6 5H20C21.1046 5 22 5.89543 22 7V17C22 18.1046 21.1046 19 20 19H6C4.89543 19 4 18.1046 4 17V7Z" />
-                      {/* <!-- Inner pocket --> */}
-                      <path d="M4 9H18C19.1046 9 20 9.89543 20 11V13C20 14.1046 19.1046 15 18 15H4" />
-                      {/* <!-- Rupee symbol for payout --> */}
-                      <path d="M9 10H13" />
-                      <path d="M9 13H12.5C11.5 13 11 14.5 9 14.5" />
-                      <path d="M13 7H9V10" />
-                    </svg>
-
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Payout Management
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-
-              {/* Messages */}
-              {/* <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("messages") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to=""
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("messages")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="grow flex items-center">
+                  <NavLink
+                    end
+                    to="/role_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("role_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
                       <svg
                         className={`shrink-0 fill-current ${
-                          pathname.includes("messages")
+                          pathname.includes("role_management")
                             ? "text-violet-500"
                             : "text-gray-400 dark:text-gray-500"
                         }`}
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
+                        width="17"
+                        height="17"
                         viewBox="0 0 16 16"
                       >
-                        <path d="M13.95.879a3 3 0 0 0-4.243 0L1.293 9.293a1 1 0 0 0-.274.51l-1 5a1 1 0 0 0 1.177 1.177l5-1a1 1 0 0 0 .511-.273l8.414-8.414a3 3 0 0 0 0-4.242L13.95.879ZM11.12 2.293a1 1 0 0 1 1.414 0l1.172 1.172a1 1 0 0 1 0 1.414l-8.2 8.2-3.232.646.646-3.232 8.2-8.2Z" />
-                        <path d="M10 14a1 1 0 1 0 0 2h5a1 1 0 1 0 0-2h-5Z" />
+                        <path d="M8 0c.2 0 .4.06.56.17l4.82 3.67c.36.27.57.7.57 1.16v4.45c0 3.07-2.39 5.36-5.33 6.48a.72.72 0 0 1-.46 0c-2.93-1.12-5.33-3.4-5.33-6.48V5c0-.46.21-.89.56-1.17L7.44.17A.86.86 0 0 1 8 0Zm0 1.6L3.33 5.17v4.27c0 2.3 1.7 4.16 4.2 5.18 2.5-1.02 4.14-2.88 4.14-5.18V5.17L8 1.6Zm0 5.9c.55 0 1-.45 1-1S8.55 5.5 8 5.5 7 5.95 7 6.5s.45 1 1 1Zm2.15 2.9c-.3-.8-1.05-1.4-2.15-1.4s-1.85.6-2.15 1.4a.5.5 0 0 0 .47.6h3.36a.5.5 0 0 0 .47-.6Z" />
                       </svg>
+
                       <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                        Messages
-                      </span>
-                    </div> */}
-              {/* Badge */}
-              {/* <div className="flex shrink-0 ml-2">
-                      <span className="inline-flex items-center justify-center h-5 text-xs font-medium text-white bg-violet-400 px-2 rounded-sm">
-                        4
+                        Role Management
                       </span>
                     </div>
-                  </div>
-                </NavLink> */}
-              {/* </li> */}
+                  </NavLink>
+                </li>
+              </IfCan>
 
-              {/* Calendar */}
-              {/* <li
-                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
-                  pathname.includes("calendar") &&
-                  "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
-                }`}
-              >
-                <NavLink
-                  end
-                  to=""
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("calendar")
-                      ? ""
-                      : "hover:text-gray-900 dark:hover:text-white"
+              {/* User Management */}
+              <IfCan perm="User Management:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("user_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
                   }`}
                 >
-                  <div className="flex items-center">
-                    <svg
-                      className={`shrink-0 fill-current ${
-                        pathname.includes("calendar")
-                          ? "text-violet-500"
-                          : "text-gray-400 dark:text-gray-500"
-                      }`}
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M5 4a1 1 0 0 0 0 2h6a1 1 0 1 0 0-2H5Z" />
-                      <path d="M4 0a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4V4a4 4 0 0 0-4-4H4ZM2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Z" />
-                      <path d="M4 0a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4V4a4 4 0 0 0-4-4H4ZM2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Z" />
-                    </svg>
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Calendar
-                    </span>
-                  </div>
-                </NavLink>
-              </li> */}
+                  <NavLink
+                    end
+                    to="/user_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("user_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 ${
+                          pathname.includes("user_management")
+                            ? "text-violet-500"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        <circle cx="9" cy="7" r="3" />
+                        <path d="M5 21v-2a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v2" />
+                        <circle cx="17" cy="17" r="2" />
+                        <path d="M17 13v1" />
+                        <path d="M17 19v1" />
+                        <path d="M20 17h1" />
+                        <path d="M13 17h1" />
+                        <path d="M18.5 14.5l.7.7" />
+                        <path d="M15.5 14.5l-.7.7" />
+                        <path d="M18.5 19.5l.7-.7" />
+                        <path d="M15.5 19.5l-.7-.7" />
+                      </svg>
+
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        User Management
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              </IfCan>
+
+              {/* Investment Management (perm: Investment:view) */}
+              <IfCan perm="Investment:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("investment_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                  }`}
+                >
+                  <NavLink
+                    end
+                    to="/investment_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("investment_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 ${
+                          pathname.includes("investment_management")
+                            ? "text-violet-500"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        <path d="M3 17s1.5 1 4 1h10c1.1 0 2-.9 2-2s-1-2-2-2h-5" />
+                        <path d="M7 17s.5 1 1.5 1 1.5-1 1.5-1" />
+                        <rect x="4" y="10" width="2" height="4" rx="0.5" />
+                        <rect x="8" y="8" width="2" height="6" rx="0.5" />
+                        <rect x="12" y="6" width="2" height="8" rx="0.5" />
+                        <path d="M16 6l2-2 2 2" />
+                        <line x1="18" y1="4" x2="18" y2="10" />
+                      </svg>
+
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        Investment Management
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              </IfCan>
+
+              {/* Booking List Management (perm: Booking Management:view) */}
+              <IfCan perm="Booking Management:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("booking_list_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                  }`}
+                >
+                  <NavLink
+                    end
+                    to="/booking_list_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("booking_list_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 ${
+                          pathname.includes("booking_list_management")
+                            ? "text-violet-500"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        <rect x="3" y="10" width="2" height="8" rx="0.5" />
+                        <rect x="7" y="6" width="2" height="12" rx="0.5" />
+                        <rect x="11" y="3" width="2" height="15" rx="0.5" />
+                        <circle cx="17" cy="17" r="3" />
+                        <line x1="19.5" y1="19.5" x2="22" y2="22" />
+                      </svg>
+
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        Booking List Management
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              </IfCan>
+
+              {/* Investment Opportunity Management */}
+              <IfCan perm="Investment Opportunity Management:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("investment_opportunity_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                  }`}
+                >
+                  <NavLink
+                    end
+                    to="/investment_opportunity_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("investment_opportunity_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 ${
+                          pathname.includes("investment_opportunity_management")
+                            ? "text-violet-500"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        <rect x="3" y="10" width="2" height="8" rx="0.5" />
+                        <rect x="7" y="6" width="2" height="12" rx="0.5" />
+                        <rect x="11" y="3" width="2" height="15" rx="0.5" />
+                        <circle cx="17" cy="17" r="3" />
+                        <line x1="19.5" y1="19.5" x2="22" y2="22" />
+                      </svg>
+
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        Investment Opportunity Management
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              </IfCan>
+
+              {/* Investors Management (perm: Investor:view) */}
+              <IfCan perm="Investor:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("investors_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                  }`}
+                >
+                  <NavLink
+                    end
+                    to="/investors_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("investors_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="17"
+                        height="17"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 ${
+                          pathname.includes("investors_management")
+                            ? "text-violet-500"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        <circle cx="6" cy="7" r="3" />
+                        <path d="M2 21v-1a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v1" />
+                        <rect x="14" y="10" width="2" height="7" rx="0.5" />
+                        <rect x="18" y="7" width="2" height="10" rx="0.5" />
+                        <rect x="10" y="13" width="2" height="4" rx="0.5" />
+                      </svg>
+
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        Investors Management
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              </IfCan>
+
+              {/* Sales Management */}
+              <IfCan perm="Sales Management:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("sales_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                  }`}
+                >
+                  <NavLink
+                    end
+                    to="/sales_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("sales_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 ${
+                          pathname.includes("sales_management")
+                            ? "text-violet-500"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        <path d="M4 20V10" />
+                        <path d="M10 20V6" />
+                        <path d="M16 20V14" />
+                        <path d="M4 14L10 8L14 12L20 6" />
+                        <path d="M20 6V10" />
+                      </svg>
+
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        Sales Management
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              </IfCan>
+
+              {/* Payout Management */}
+              <IfCan perm="Payout Management:view">
+                <li
+                  className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                    pathname.includes("payout_management") &&
+                    "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"
+                  }`}
+                >
+                  <NavLink
+                    end
+                    to="/payout_management"
+                    className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                      pathname.includes("payout_management")
+                        ? ""
+                        : "hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 ${
+                          pathname.includes("payout_management")
+                            ? "text-violet-500"
+                            : "text-gray-400 dark:text-gray-500"
+                        }`}
+                      >
+                        <path d="M4 7C4 5.89543 4.89543 5 6 5H20C21.1046 5 22 5.89543 22 7V17C22 18.1046 21.1046 19 20 19H6C4.89543 19 4 18.1046 4 17V7Z" />
+                        <path d="M4 9H18C19.1046 9 20 9.89543 20 11V13C20 14.1046 19.1046 15 18 15H4" />
+                        <path d="M9 10H13" />
+                        <path d="M9 13H12.5C11.5 13 11 14.5 9 14.5" />
+                        <path d="M13 7H9V10" />
+                      </svg>
+
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        Payout Management
+                      </span>
+                    </div>
+                  </NavLink>
+                </li>
+              </IfCan>
 
               {/* Settings */}
-              <SidebarLinkGroup activecondition={pathname.includes("settings")}>
-                {(handleClick, open) => {
-                  return (
-                    <React.Fragment>
-                      <NavLink
-                        end
-                        to="/settings"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("settings")
-                            ? "text-violet-500"
-                            : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
-                        onClick={() => setSidebarExpanded(true)}
-                      >
-                        <div className="flex items-center">
-                          <svg
-                            className={`shrink-0 fill-current ${
-                              pathname.includes("settings")
-                                ? "text-violet-500"
-                                : "text-gray-400 dark:text-gray-500"
-                            }`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                          >
-                            <path
-                              d="M10.5 1a3.502 3.502 0 0 1 3.355 2.5H15a1 1 0 1 1 0 2h-1.145a3.502 3.502 0 0 1-6.71 0H1a1 1 0 0 1 0-2h6.145A3.502 3.502 0 0 1 10.5 1ZM9 4.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM5.5 9a3.502 3.502 0 0 1 3.355 2.5H15a1 1 0 1 1 0 2H8.855a3.502 3.502 0 0 1-6.71 0H1a1 1 0 1 1 0-2h1.145A3.502 3.502 0 0 1 5.5 9ZM4 12.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0Z"
-                              fillRule="evenodd"
-                            />
-                          </svg>
-                          <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                            Settings
-                          </span>
-                        </div>
-                      </NavLink>
-                      <NavLink
-                        end
-                        to="/settings"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 mt-2 ${
-                          pathname === "/settings"
-                            ? "text-violet-500"
-                            : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
-                        onClick={() => setSidebarExpanded(true)}
-                      ></NavLink>
-                    </React.Fragment>
-                  );
-                }}
-              </SidebarLinkGroup>
-              {/* Utility */}
+              <IfCan perm="Settings:view">
+                <SidebarLinkGroup activecondition={pathname.includes("settings")}>
+                  {(handleClick, open) => {
+                    return (
+                      <>
+                        <NavLink
+                          end
+                          to="/settings"
+                          className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                            pathname.includes("settings")
+                              ? "text-violet-500"
+                              : "hover:text-gray-900 dark:hover:text-white"
+                          }`}
+                          onClick={() => setSidebarExpanded(true)}
+                        >
+                          <div className="flex items-center">
+                            <svg
+                              className={`shrink-0 fill-current ${
+                                pathname.includes("settings")
+                                  ? "text-violet-500"
+                                  : "text-gray-400 dark:text-gray-500"
+                              }`}
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 16 16"
+                            >
+                              <path
+                                d="M10.5 1a3.502 3.502 0 0 1 3.355 2.5H15a1 1 0 1 1 0 2h-1.145a3.502 3.502 0 0 1-6.71 0H1a1 1 0 0 1 0-2h6.145A3.502 3.502 0 0 1 10.5 1ZM9 4.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM5.5 9a3.502 3.502 0 0 1 3.355 2.5H15a1 1 0 1 1 0 2H8.855a3.502 3.502 0 0 1-6.71 0H1a1 1 0 1 1 0-2h1.145A3.502 3.502 0 0 1 5.5 9ZM4 12.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0Z"
+                                fillRule="evenodd"
+                              />
+                            </svg>
+                            <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                              Settings
+                            </span>
+                          </div>
+                        </NavLink>
+                        <NavLink
+                          end
+                          to="/settings"
+                          className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 mt-2 ${
+                            pathname === "/settings"
+                              ? "text-violet-500"
+                              : "hover:text-gray-900 dark:hover:text-white"
+                          }`}
+                          onClick={() => setSidebarExpanded(true)}
+                        ></NavLink>
+                      </>
+                    );
+                  }}
+                </SidebarLinkGroup>
+              </IfCan>
+
+              {/* Utility group left as-is (no perms) */}
               <SidebarLinkGroup activecondition={pathname.includes("utility")}>
                 {(handleClick, open) => {
                   return (
-                    <React.Fragment>
+                    <>
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
@@ -712,40 +623,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           handleClick();
                           setSidebarExpanded(true);
                         }}
-                      >
-                        {/* <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("utility")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
-                              }`}
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 16 16"
-                            >
-                              <path d="M14.75 2.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5ZM14.75 16a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5ZM2.5 14.75a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0ZM1.25 2.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" />
-                              <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2ZM4 8a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" />
-                            </svg>
-                            <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              Utility
-                            </span>
-                          </div>
-                          Icon
-                          <div className="flex shrink-0 ml-2">
-                            <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
-                              viewBox="0 0 12 12"
-                            >
-                              <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
-                            </svg>
-                          </div>
-                        </div> */}
-                      </a>
+                      />
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
@@ -782,13 +660,14 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </li>
                         </ul>
                       </div>
-                    </React.Fragment>
+                    </>
                   );
                 }}
               </SidebarLinkGroup>
             </ul>
           </div>
-          {/* More group */}
+
+          {/* More group (left as-is) */}
           <div>
             <h3 className="text-xs uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3">
               <span
@@ -797,16 +676,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               >
                 •••
               </span>
-              {/* <span className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                More
-              </span> */}
             </h3>
             <ul className="mt-3">
-              {/* Authentication */}
               <SidebarLinkGroup>
                 {(handleClick, open) => {
                   return (
-                    <React.Fragment>
+                    <>
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
@@ -819,35 +694,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           handleClick();
                           setSidebarExpanded(true);
                         }}
-                      >
-                        {/* <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <svg
-                              className={`shrink-0 fill-current text-gray-400 dark:text-gray-500`}
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 16 16"
-                            >
-                              <path d="M11.442 4.576a1 1 0 1 0-1.634-1.152L4.22 11.35 1.773 8.366A1 1 0 1 0 .227 9.634l3.281 4a1 1 0 0 0 1.59-.058l6.344-9ZM15.817 4.576a1 1 0 1 0-1.634-1.152l-5.609 7.957a1 1 0 0 0-1.347 1.453l.656.8a1 1 0 0 0 1.59-.058l6.344-9Z" />
-                            </svg>
-                            <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              Authentication
-                            </span>
-                          </div>
-                          Icon
-                          <div className="flex shrink-0 ml-2">
-                            <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
-                              viewBox="0 0 12 12"
-                            >
-                              <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
-                            </svg>
-                          </div>
-                        </div> */}
-                      </a>
+                      />
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
@@ -882,7 +729,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </li>
                         </ul>
                       </div>
-                    </React.Fragment>
+                    </>
                   );
                 }}
               </SidebarLinkGroup>

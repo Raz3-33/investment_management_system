@@ -17,22 +17,17 @@ export default function AddUserForm() {
     designation: "",
     headId: "",
     managerId: "",
-    userType: "",
+    userType: "", // "head" | "manager" | ""
     password: "",
     confirmPassword: "",
   });
-  const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
 
+  const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [errorValidation, setErrorValidation] = useState("");
   const [countries, setCountries] = useState([]);
 
-  const { addUser, error, userAdd, users, fetchUsers } = useUserStore(
-    (state) => state
-  );
-  const { branches, fetchBranches, addBranch } = useBranchStore(
-    (state) => state
-  );
-
+  const { addUser, error, userAdd, users, fetchUsers } = useUserStore((s) => s);
+  const { branches, fetchBranches, addBranch } = useBranchStore((s) => s);
   const { roles, fetchRoles } = useRoleStore((s) => s);
 
   useEffect(() => {
@@ -69,7 +64,13 @@ export default function AddUserForm() {
     }
 
     try {
-      await addUser(formData);
+      await addUser({
+        ...formData,
+        // Optional: send booleans too, if your API expects them
+        isHead: formData.userType === "head",
+        isManager: formData.userType === "manager",
+      });
+
       setFormData({
         name: "",
         email: "",
@@ -86,7 +87,32 @@ export default function AddUserForm() {
       });
       setErrorValidation("");
     } catch (err) {
-      setErrorValidation("Failed to add user: " + err.message);
+      setErrorValidation(
+        "Failed to add user: " + (err?.message || "Unknown error")
+      );
+    }
+  };
+
+  // Toggleable radio helpers: allow unchecking by clicking the selected radio
+  const handleUserTypeChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      userType: value,
+      ...(value === "head" ? { managerId: "" } : {}),
+      ...(value === "manager" ? { headId: "" } : {}),
+    }));
+  };
+
+  const handleUserTypeMouseDown = (value) => (e) => {
+    if (formData.userType === value) {
+      // Prevent the browser from re-selecting it; clear to no selection
+      e.preventDefault();
+      setFormData((prev) => ({
+        ...prev,
+        userType: "",
+        headId: "",
+        managerId: "",
+      }));
     }
   };
 
@@ -96,6 +122,8 @@ export default function AddUserForm() {
         {errorValidation && (
           <p className="text-red-500 text-sm">{errorValidation}</p>
         )}
+
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
         {/* Grid Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,7 +210,7 @@ export default function AddUserForm() {
             className="md:col-span-2 border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Role</option>
-            {roles.map((role) => (
+            {roles?.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name}
               </option>
@@ -200,43 +228,33 @@ export default function AddUserForm() {
             className="md:col-span-2 border px-3 py-2 rounded-md w-full"
           />
 
-          {/* User type */}
+          {/* User type (toggleable radios) */}
           <div className="md:col-span-2 flex flex-wrap gap-6">
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
                 name="userType"
                 value="head"
                 checked={formData.userType === "head"}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    userType: e.target.value,
-                    managerId: "",
-                  })
-                }
+                onChange={() => handleUserTypeChange("head")}
+                onMouseDown={handleUserTypeMouseDown("head")}
               />
               Head
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
                 name="userType"
                 value="manager"
                 checked={formData.userType === "manager"}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    userType: e.target.value,
-                    headId: "",
-                  })
-                }
+                onChange={() => handleUserTypeChange("manager")}
+                onMouseDown={handleUserTypeMouseDown("manager")}
               />
               Manager
             </label>
           </div>
 
-          {/* Head Dropdown */}
+          {/* Head Dropdown (show unless this user is a head) */}
           {formData.userType !== "head" && (
             <select
               value={formData.headId}
@@ -256,7 +274,7 @@ export default function AddUserForm() {
             </select>
           )}
 
-          {/* Manager Dropdown */}
+          {/* Manager Dropdown (show unless this user is a manager) */}
           {formData.userType !== "manager" && (
             <select
               value={formData.managerId}
@@ -275,11 +293,6 @@ export default function AddUserForm() {
                 ))}
             </select>
           )}
-          {/* <div className="grid grid-cols-1 md:grid-cols-1">
-          <h3 className="font-semibold text-gray-700 mt-4">
-            Login Credentials
-          </h3>
-        </div> */}
 
           {/* Password */}
           <input
@@ -315,6 +328,7 @@ export default function AddUserForm() {
         </div>
       </form>
 
+      {/* Create Branch Modal */}
       <Modal
         isOpen={isBranchModalOpen}
         onClose={() => setIsBranchModalOpen(false)}
@@ -358,15 +372,20 @@ export default function AddUserForm() {
                   });
 
                   await fetchBranches();
-                  // setFormData({
-                  //   ...formData,
-                  //   branchId: newBranch.id,
-                  //   branchName: "",
-                  //   branchLocation: "",
-                  // });
+
+                  // Pre-select the newly created branch if available
+                  setFormData((prev) => ({
+                    ...prev,
+                    branchId: newBranch?.id || prev.branchId,
+                    branchName: "",
+                    branchLocation: "",
+                  }));
+
                   setIsBranchModalOpen(false);
                 } catch (err) {
-                  setErrorValidation("Failed to add branch: " + err.message);
+                  setErrorValidation(
+                    "Failed to add branch: " + (err?.message || "Unknown error")
+                  );
                 }
               }}
             >
