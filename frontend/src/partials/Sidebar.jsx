@@ -11,45 +11,65 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
+  // Subscribe so Sidebar re-renders when role/permissions change
+  // const { user, permissions } = useAuthStore(
+  //   (s) => ({ user: s.user, permissions: s.permissions }),
+  //   shallow
+  // );
+
   const storedSidebarExpanded = localStorage.getItem("sidebar-expanded");
   const [sidebarExpanded, setSidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === "true"
   );
 
   // close on click outside
+  const openRef = React.useRef(sidebarOpen);
   useEffect(() => {
-    const clickHandler = ({ target }) => {
+    openRef.current = sidebarOpen;
+  }, [sidebarOpen]);
+
+  useEffect(() => {
+    const clickHandler = (e) => {
       if (!sidebar.current || !trigger.current) return;
+      if (!openRef.current) return;
       if (
-        !sidebarOpen ||
-        sidebar.current.contains(target) ||
-        trigger.current.contains(target)
+        sidebar.current.contains(e.target) ||
+        trigger.current.contains(e.target)
       )
         return;
       setSidebarOpen(false);
     };
     document.addEventListener("click", clickHandler);
     return () => document.removeEventListener("click", clickHandler);
-  });
+  }, []); // bind once
 
-  // close if the esc key is pressed
   useEffect(() => {
-    const keyHandler = ({ keyCode }) => {
-      if (!sidebarOpen || keyCode !== 27) return;
+    const keyHandler = (e) => {
+      if (!openRef.current || e.key !== "Escape") return;
       setSidebarOpen(false);
     };
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
-  });
+  }, []); // bind once
+
+  // close if the esc key is pressed
+  useEffect(() => {
+    const keyHandler = (e) => {
+      if (!openRef.current || e.key !== "Escape") return;
+      setSidebarOpen(false);
+    };
+    document.addEventListener("keydown", keyHandler);
+    return () => document.removeEventListener("keydown", keyHandler);
+  }, []); // bind once
 
   useEffect(() => {
-    localStorage.setItem("sidebar-expanded", sidebarExpanded);
-    if (sidebarExpanded) {
-      document.querySelector("body").classList.add("sidebar-expanded");
-    } else {
-      document.querySelector("body").classList.remove("sidebar-expanded");
-    }
-  }, [sidebarExpanded]);
+    localStorage.setItem("sidebar-expanded", String(sidebarExpanded));
+    const body = document.body;
+    if (sidebarExpanded) body.classList.add("sidebar-expanded");
+    else body.classList.remove("sidebar-expanded");
+  }, [sidebarExpanded]); // <-- important
+  
+  
 
   return (
     <div className="min-w-fit">
@@ -554,7 +574,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
 
               {/* Settings */}
               <IfCan perm="Settings:view">
-                <SidebarLinkGroup activecondition={pathname.includes("settings")}>
+                <SidebarLinkGroup
+                  activecondition={pathname.includes("settings")}
+                >
                   {(handleClick, open) => {
                     return (
                       <>

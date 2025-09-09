@@ -7,6 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// add to top-level
+enum UserLevel {
+  ADMINISTRATE
+  HEAD
+  MANAGER
+  EXECUTIVE
+  ASSOCIATE
+}
+
 model User {
   id          String  @id @default(uuid())
   UserID      String? @unique
@@ -26,18 +35,31 @@ model User {
   branchId String?
   branch   Branch? @relation(fields: [branchId], references: [id])
 
-  // Investments
-  investments Investment[] @relation("UserInvestments")
+  // ===== New hierarchy source of truth =====
+  userLevel UserLevel @default(ASSOCIATE)
 
-  // Manager Relation
+  // Upstream: Administrate
+  administrateId   String?
+  administrate     User?   @relation("UserAdministrate", fields: [administrateId], references: [id])
+  administrateTeam User[]  @relation("UserAdministrate")
+
+  // Upstream: Head
+  headId   String?
+  head     User?   @relation("UserHead", fields: [headId], references: [id])
+  headTeam User[]  @relation("UserHead")
+
+  // Upstream: Manager
   managerId    String?
   manager      User?   @relation("UserManager", fields: [managerId], references: [id])
   subordinates User[]  @relation("UserManager")
 
-  // Head Relation (new)
-  headId   String?
-  head     User?   @relation("UserHead", fields: [headId], references: [id])
-  headTeam User[]  @relation("UserHead")
+  // Upstream: Executive
+  executiveId   String?
+  executive     User?   @relation("UserExecutive", fields: [executiveId], references: [id])
+  executiveTeam User[]  @relation("UserExecutive")
+
+  // Investments
+  investments Investment[] @relation("UserInvestments")
 
   // Performance
   salesTarget   Float? @default(0)

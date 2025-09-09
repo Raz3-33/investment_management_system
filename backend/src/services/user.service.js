@@ -1,6 +1,54 @@
 import bcrypt from "bcryptjs"; // Import bcryptjs to hash the password
 import { prisma } from "../config/db.js"; // Prisma setup
 
+// helper
+
+const LEVEL = {
+  ADMINISTRATE: "ADMINISTRATE",
+  HEAD: "HEAD",
+  MANAGER: "MANAGER",
+  EXECUTIVE: "EXECUTIVE",
+  ASSOCIATE: "ASSOCIATE",
+};
+
+const assertExists = async (id, message = "Invalid id") => {
+  if (!id) return null;
+  const u = await prisma.user.findUnique({ where: { id } });
+  if (!u) throw new Error(message);
+  return u;
+};
+
+const requireClosestSupervisor = (userLevel, ids) => {
+  switch (userLevel) {
+    case LEVEL.ASSOCIATE:
+      if (!ids.executiveId)
+        throw new Error("Executive is required for Associate.");
+      break;
+    case LEVEL.EXECUTIVE:
+      if (!ids.managerId) throw new Error("Manager is required for Executive.");
+      break;
+    case LEVEL.MANAGER:
+      if (!ids.headId) throw new Error("Head is required for Manager.");
+      break;
+    case LEVEL.HEAD:
+      if (!ids.administrateId)
+        throw new Error("Administrate is required for Head.");
+      break;
+    case LEVEL.ADMINISTRATE:
+    default:
+      break;
+  }
+};
+
+const ensureLevel = (user, expectedLevel, label) => {
+  if (!user) return;
+  if (user.userLevel !== expectedLevel) {
+    throw new Error(`${label} must be a ${expectedLevel} user.`);
+  }
+};
+
+// services
+
 export const getAllUsers = async () => {
   console.log(
     "=============================alajdfl+============================"
@@ -23,7 +71,6 @@ export const getUserById = async (id) => {
     },
   });
 };
-
 export const createUser = async (data) => {
   const {
     name,
@@ -32,94 +79,110 @@ export const createUser = async (data) => {
     roleId,
     designation,
     branchId,
-    managerId,
-    headId,
     countryCode,
     phone,
-    userType,
+
+    // NEW hierarchy inputs from UI:
+    userLevel = LEVEL.ASSOCIATE,
+    administrateId,
+    headId,
+    managerId,
+    executiveId,
+
+    // Optional extras
     image_url,
     salesTarget,
     salesAchieved,
     incentive,
     isActive,
     isLogin,
+
+    // legacy (ignored for logic but accepted):
     isAdmin,
+    userType,
   } = data;
 
-  // Validate roleId exists
+  // Map legacy userType -> level (if someone still sends it)
+  let level = userLevel;
+  if (userType === "head") level = LEVEL.HEAD;
+  if (userType === "manager") level = LEVEL.MANAGER;
+
+  // Basic uniqueness
+  const exists = await prisma.user.findUnique({ where: { email } });
+  if (exists) throw new Error("A user with this email already exists.");
+
+  // Validate referenced records exist
   if (roleId) {
     const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
-    if (!roleExists) {
-      throw new Error("Invalid roleId. The specified role does not exist.");
-    }
+    if (!roleExists) throw new Error("Invalid roleId.");
   }
-
-  // Validate branchId exists
   if (branchId) {
     const branchExists = await prisma.branch.findUnique({
       where: { id: branchId },
     });
-    if (!branchExists) {
-      throw new Error("Invalid branchId. The specified branch does not exist.");
-    }
+    if (!branchExists) throw new Error("Invalid branchId.");
   }
 
-  // Validate managerId exists (if provided)
-  if (managerId) {
-    const managerExists = await prisma.user.findUnique({
-      where: { id: managerId },
-    });
-    if (!managerExists) {
-      throw new Error(
-        "Invalid managerId. The specified manager does not exist."
-      );
-    }
-  }
+  // Enforce nearest supervisor presence
+  requireClosestSupervisor(level, {
+    administrateId,
+    headId,
+    managerId,
+    executiveId,
+  });
 
-  // Validate headId exists (if provided)
-  if (headId) {
-    const headExists = await prisma.user.findUnique({ where: { id: headId } });
-    if (!headExists) {
-      throw new Error("Invalid headId. The specified head does not exist.");
-    }
-  }
+  // Validate supervisors & levels (if provided)
+  const [adminU, headU, managerU, execU] = await Promise.all([
+    assertExists(administrateId, "Invalid administrateId."),
+    assertExists(headId, "Invalid headId."),
+    assertExists(managerId, "Invalid managerId."),
+    assertExists(executiveId, "Invalid executiveId."),
+  ]);
+  if (adminU) ensureLevel(adminU, LEVEL.ADMINISTRATE, "Administrate");
+  if (headU) ensureLevel(headU, LEVEL.HEAD, "Head");
+  if (managerU) ensureLevel(managerU, LEVEL.MANAGER, "Manager");
+  if (execU) ensureLevel(execU, LEVEL.EXECUTIVE, "Executive");
 
-  // Validate that email is unique
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) {
-    throw new Error("A user with this email already exists.");
-  }
-
-  //  Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Derive legacy flags from level (for backward compatibility)
+  const legacyFlags = {
+    isAdmin: level === LEVEL.ADMINISTRATE,
+    isHead: level === LEVEL.HEAD,
+    isManager: level === LEVEL.MANAGER,
+  };
+
+  // Build data object with nested connects (NO raw roleId/branchId here)
+  const dataToCreate = {
+    name,
+    email,
+    password: hashedPassword,
+    designation,
+    countryCode,
+    phone,
+    userLevel: level,
+
+    salesTarget: salesTarget ?? 0,
+    salesAchieved: salesAchieved ?? 0,
+    incentive: incentive ?? 0,
+    isActive: isActive ?? true,
+    isLogin: isLogin ?? false,
+    ...legacyFlags,
+  };
+
+  if (image_url) dataToCreate.image_url = image_url;
+  if (roleId) dataToCreate.role = { connect: { id: roleId } };
+  if (branchId) dataToCreate.branch = { connect: { id: branchId } };
+
+  // Self-relations (only add if your schema/migration includes them)
+  if (administrateId)
+    dataToCreate.administrate = { connect: { id: administrateId } };
+  if (headId) dataToCreate.head = { connect: { id: headId } };
+  if (managerId) dataToCreate.manager = { connect: { id: managerId } };
+  if (executiveId) dataToCreate.executive = { connect: { id: executiveId } };
+
   try {
-    const cleanId = (value) => (value && value.trim() !== "" ? value : null);
-
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        roleId,
-        designation,
-        branchId,
-        managerId: cleanId(managerId),
-        headId: cleanId(headId),
-        countryCode,
-        phone,
-        isHead: userType === "head" ? true : false,
-        isManager: userType === "manager" ? true : false,
-        image_url,
-        salesTarget: salesTarget ?? 0,
-        salesAchieved: salesAchieved ?? 0,
-        incentive: incentive ?? 0,
-        isActive: isActive ?? true,
-        isLogin: isLogin ?? false,
-        isAdmin: isAdmin ?? false,
-      },
-    });
-
+    const newUser = await prisma.user.create({ data: dataToCreate });
     return newUser;
   } catch (error) {
     throw new Error("Error creating user: " + error.message);
@@ -127,72 +190,117 @@ export const createUser = async (data) => {
 };
 
 export const updateUser = async (id, data) => {
-  try {
-    const {
-      name,
-      email,
-      countryCode,
-      phone,
-      roleId,
-      designation,
-      branchId,
+  const {
+    name,
+    email,
+    countryCode,
+    phone,
+    roleId,
+    designation,
+    branchId,
+    password,
+
+    // hierarchy
+    userLevel,
+    administrateId,
+    headId,
+    managerId,
+    executiveId,
+
+    // legacy
+    userType,
+  } = data;
+
+  if (!name || !email || !roleId || !branchId) {
+    throw new Error(
+      "All required fields (name, email, roleId, branchId) must be provided."
+    );
+  }
+
+  const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
+  if (!roleExists) throw new Error("Invalid roleId.");
+
+  const duplicate = await prisma.user.findFirst({
+    where: { email, NOT: { id } },
+    select: { id: true },
+  });
+  if (duplicate) throw new Error("A user with this email already exists.");
+
+  let level = userLevel;
+  if (!level && userType) {
+    if (userType === "head") level = LEVEL.HEAD;
+    if (userType === "manager") level = LEVEL.MANAGER;
+  }
+
+  if (level) {
+    requireClosestSupervisor(level, {
+      administrateId,
       headId,
       managerId,
-      userType,
-      password,
-    } = data;
-
-    // Validate required fields
-    if (!name || !email || !roleId || !branchId) {
-      throw new Error(
-        "All required fields (name, email, roleId, branchId) must be provided."
-      );
-    }
-
-    // Check role existence
-    const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
-    if (!roleExists) {
-      throw new Error("Invalid roleId. The specified role does not exist.");
-    }
-
-    // Check email uniqueness (ignore the current user)
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        email,
-        NOT: { id },
-      },
-      select: { id: true },
+      executiveId,
     });
-    if (existingUser) {
-      throw new Error("A user with this email already exists.");
-    }
 
-    // Build update payload, only including password if provided
-    const updatePayload = {
-      name,
-      email,
-      countryCode,
-      phone,
-      roleId,
-      designation,
-      branchId,
-      headId: headId || null,
-      managerId: managerId || null,
-      isHead: userType === "head",
-      isManager: userType === "manager",
-    };
+    const [adminU, headU, managerU, execU] = await Promise.all([
+      assertExists(administrateId, "Invalid administrateId."),
+      assertExists(headId, "Invalid headId."),
+      assertExists(managerId, "Invalid managerId."),
+      assertExists(executiveId, "Invalid executiveId."),
+    ]);
+    if (adminU) ensureLevel(adminU, LEVEL.ADMINISTRATE, "Administrate");
+    if (headU) ensureLevel(headU, LEVEL.HEAD, "Head");
+    if (managerU) ensureLevel(managerU, LEVEL.MANAGER, "Manager");
+    if (execU) ensureLevel(execU, LEVEL.EXECUTIVE, "Executive");
+  }
 
-    // If password provided, hash and include it
-    if (password && password.trim().length > 0) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updatePayload.password = hashedPassword;
-    }
+  const dataToUpdate = {
+    name,
+    email,
+    countryCode,
+    phone,
+    designation,
+    // relations via connect
+    role: { connect: { id: roleId } },
+    branch: { connect: { id: branchId } },
+  };
 
+  if (level) {
+    dataToUpdate.userLevel = level;
+    dataToUpdate.isAdmin = level === LEVEL.ADMINISTRATE;
+    dataToUpdate.isHead = level === LEVEL.HEAD;
+    dataToUpdate.isManager = level === LEVEL.MANAGER;
+  }
+
+  // Supervisor connects (only connect when an id is supplied)
+  if (administrateId !== undefined) {
+    dataToUpdate.administrate = administrateId
+      ? { connect: { id: administrateId } }
+      : { disconnect: true };
+  }
+  if (headId !== undefined) {
+    dataToUpdate.head = headId
+      ? { connect: { id: headId } }
+      : { disconnect: true };
+  }
+  if (managerId !== undefined) {
+    dataToUpdate.manager = managerId
+      ? { connect: { id: managerId } }
+      : { disconnect: true };
+  }
+  if (executiveId !== undefined) {
+    dataToUpdate.executive = executiveId
+      ? { connect: { id: executiveId } }
+      : { disconnect: true };
+  }
+
+  if (password && password.trim()) {
+    dataToUpdate.password = await bcrypt.hash(password, 10);
+  }
+
+  try {
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: updatePayload,
+      data: dataToUpdate,
     });
-
     return updatedUser;
   } catch (error) {
     throw new Error(`Failed to update user: ${error.message}`);

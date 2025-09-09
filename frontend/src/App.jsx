@@ -38,7 +38,7 @@ function App() {
   return (
     <div className="h-full w-full">
       <ScrollToTopOnNavigate />
-      <AuthRedirector />
+      {/* <AuthRedirector /> */}
 
       <Routes>
         {/* Dashboard (choose a permission name and seed it in DB, e.g. "Dashboard:view") */}

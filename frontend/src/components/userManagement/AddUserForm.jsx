@@ -15,9 +15,14 @@ export default function AddUserForm() {
     branchId: "",
     roleId: "",
     designation: "",
+    // NEW:
+    userLevel: "ASSOCIATE", // ADMINISTRATE | HEAD | MANAGER | EXECUTIVE | ASSOCIATE
+    administrateId: "",
     headId: "",
     managerId: "",
-    userType: "", // "head" | "manager" | ""
+    executiveId: "",
+    // legacy still present but unused by UI:
+    // headId: "", managerId: "", userType: "",
     password: "",
     confirmPassword: "",
   });
@@ -29,6 +34,51 @@ export default function AddUserForm() {
   const { addUser, error, userAdd, users, fetchUsers } = useUserStore((s) => s);
   const { branches, fetchBranches, addBranch } = useBranchStore((s) => s);
   const { roles, fetchRoles } = useRoleStore((s) => s);
+
+  const LEVEL = {
+    ADMINISTRATE: "ADMINISTRATE",
+    HEAD: "HEAD",
+    MANAGER: "MANAGER",
+    EXECUTIVE: "EXECUTIVE",
+    ASSOCIATE: "ASSOCIATE",
+  };
+
+  const usersByLevel = {
+    ADMINISTRATE:
+      users?.filter((u) => u.userLevel === LEVEL.ADMINISTRATE) ?? [],
+    HEAD: users?.filter((u) => u.userLevel === LEVEL.HEAD) ?? [],
+    MANAGER: users?.filter((u) => u.userLevel === LEVEL.MANAGER) ?? [],
+    EXECUTIVE: users?.filter((u) => u.userLevel === LEVEL.EXECUTIVE) ?? [],
+    ASSOCIATE: users?.filter((u) => u.userLevel === LEVEL.ASSOCIATE) ?? [],
+  };
+
+  const showAdministrate = [
+    LEVEL.ASSOCIATE,
+    LEVEL.EXECUTIVE,
+    LEVEL.MANAGER,
+    LEVEL.HEAD,
+  ].includes(formData.userLevel);
+  const showHead = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(
+    formData.userLevel
+  );
+  const showManager = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(
+    formData.userLevel
+  );
+  const showExecutive = [LEVEL.ASSOCIATE].includes(formData.userLevel);
+
+  const onLevelChange = (level) => {
+    setFormData((prev) => ({
+      ...prev,
+      userLevel: level,
+      // clear incompatible upstream ids on change
+      administrateId: showAdministrate ? prev.administrateId : "",
+      headId: showHead ? prev.headId : "",
+      managerId: showManager ? prev.managerId : "",
+      executiveId: showExecutive ? prev.executiveId : "",
+    }));
+  };
+
+  
 
   useEffect(() => {
     setCountries(CountryList.getAll());
@@ -57,18 +107,42 @@ export default function AddUserForm() {
       setErrorValidation("Please fill all required fields.");
       return;
     }
-
     if (formData.password !== formData.confirmPassword) {
       setErrorValidation("Passwords do not match.");
+      return;
+    }
+
+    // Nearest supervisor requirement (client-side UX guard; server also enforces)
+    if (formData.userLevel === LEVEL.ASSOCIATE && !formData.executiveId) {
+      setErrorValidation("Please select an Executive for this Associate.");
+      return;
+    }
+    if (formData.userLevel === LEVEL.EXECUTIVE && !formData.managerId) {
+      setErrorValidation("Please select a Manager for this Executive.");
+      return;
+    }
+    if (formData.userLevel === LEVEL.MANAGER && !formData.headId) {
+      setErrorValidation("Please select a Head for this Manager.");
+      return;
+    }
+    if (formData.userLevel === LEVEL.HEAD && !formData.administrateId) {
+      setErrorValidation("Please select an Administrate for this Head.");
       return;
     }
 
     try {
       await addUser({
         ...formData,
-        // Optional: send booleans too, if your API expects them
-        isHead: formData.userType === "head",
-        isManager: formData.userType === "manager",
+        // strip empty strings to null (optional: can also handle in service)
+        administrateId: formData.administrateId || null,
+        headId: formData.headId || null,
+        managerId: formData.managerId || null,
+        executiveId: formData.executiveId || null,
+        // legacy flags (kept for backward compat on API)
+        isHead: formData.userLevel === "HEAD",
+        isManager: formData.userLevel === "MANAGER",
+        isAdmin: formData.userLevel === "ADMINISTRATE",
+        userType: undefined, // stop sending legacy userType
       });
 
       setFormData({
@@ -79,9 +153,11 @@ export default function AddUserForm() {
         branchId: "",
         roleId: "",
         designation: "",
+        userLevel: "ASSOCIATE",
+        administrateId: "",
         headId: "",
         managerId: "",
-        userType: "",
+        executiveId: "",
         password: "",
         confirmPassword: "",
       });
@@ -229,7 +305,7 @@ export default function AddUserForm() {
           />
 
           {/* User type (toggleable radios) */}
-          <div className="md:col-span-2 flex flex-wrap gap-6">
+          {/* <div className="md:col-span-2 flex flex-wrap gap-6">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
@@ -252,10 +328,40 @@ export default function AddUserForm() {
               />
               Manager
             </label>
-          </div>
+          </div> */}
 
-          {/* Head Dropdown (show unless this user is a head) */}
-          {formData.userType !== "head" && (
+          {/* Level */}
+          <select
+            value={formData.userLevel}
+            onChange={(e) => onLevelChange(e.target.value)}
+            className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+          >
+            <option value="ADMINISTRATE">Administrate</option>
+            <option value="HEAD">Head</option>
+            <option value="MANAGER">Manager</option>
+            <option value="EXECUTIVE">Executive</option>
+            <option value="ASSOCIATE">Associate</option>
+          </select>
+
+          {/* Show upstream selectors based on level */}
+          {showAdministrate && (
+            <select
+              value={formData.administrateId}
+              onChange={(e) =>
+                setFormData({ ...formData, administrateId: e.target.value })
+              }
+              className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+            >
+              <option value="">Select Administrate</option>
+              {usersByLevel.ADMINISTRATE.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {showHead && (
             <select
               value={formData.headId}
               onChange={(e) =>
@@ -264,18 +370,15 @@ export default function AddUserForm() {
               className="md:col-span-2 border px-3 py-2 rounded-md w-full"
             >
               <option value="">Select Head</option>
-              {users
-                ?.filter((u) => u.isHead)
-                .map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
+              {usersByLevel.HEAD.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
             </select>
           )}
 
-          {/* Manager Dropdown (show unless this user is a manager) */}
-          {formData.userType !== "manager" && (
+          {showManager && (
             <select
               value={formData.managerId}
               onChange={(e) =>
@@ -284,13 +387,28 @@ export default function AddUserForm() {
               className="md:col-span-2 border px-3 py-2 rounded-md w-full"
             >
               <option value="">Select Manager</option>
-              {users
-                ?.filter((u) => u.isManager)
-                .map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
+              {usersByLevel.MANAGER.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {showExecutive && (
+            <select
+              value={formData.executiveId}
+              onChange={(e) =>
+                setFormData({ ...formData, executiveId: e.target.value })
+              }
+              className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+            >
+              <option value="">Select Executive</option>
+              {usersByLevel.EXECUTIVE.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
             </select>
           )}
 

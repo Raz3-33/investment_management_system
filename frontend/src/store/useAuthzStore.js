@@ -12,6 +12,17 @@ export const useAuthzStore = create()(
       error: null,
       token: localStorage.getItem("token") ?? null,
 
+      setIsAdmin: (v) => set({ isAdmin: !!v }),
+      setPermissions: (list) =>
+        set({ permissions: new Set(list || []), loading: false }),
+      reset: () =>
+        set({
+          loading: false,
+          isAdmin: false,
+          permissions: new Set(),
+          error: null,
+        }),
+
       setToken: (token) => {
         if (token) localStorage.setItem("token", token);
         else localStorage.removeItem("token");
@@ -19,13 +30,9 @@ export const useAuthzStore = create()(
       },
 
       bootstrap: async () => {
-        const token = get().token ?? localStorage.getItem("token");
+        const token = localStorage.getItem("token");
         if (!token) {
-          set({
-            isAdmin: false,
-            permissions: new Set(),
-            lastLoadedAt: Date.now(),
-          });
+          set({ isAdmin: false, permissions: new Set(), loading: false });
           return;
         }
         set({ loading: true, error: null });
@@ -35,9 +42,8 @@ export const useAuthzStore = create()(
           });
           const { isAdmin, permissions } = res.data || {};
           set({
-            isAdmin: Boolean(isAdmin),
+            isAdmin: !!isAdmin,
             permissions: new Set(permissions || []),
-            lastLoadedAt: Date.now(),
             loading: false,
           });
         } catch (e) {
@@ -53,9 +59,17 @@ export const useAuthzStore = create()(
         }
       },
 
+      // inside useAuthzStore
       can: (perm) => {
-        const { isAdmin, permissions } = get();
-        return isAdmin || permissions.has("*") || permissions.has(perm);
+        const { isAdmin, permissions } = get(); // permissions is a Set
+        if (isAdmin || permissions.has("*")) return true;
+
+        if (Array.isArray(perm)) {
+          // ANY of the listed perms:
+          return perm.some((p) => permissions.has(p));
+          // If you want ALL, swap to: return perm.every((p) => permissions.has(p));
+        }
+        return permissions.has(perm);
       },
 
       clear: () => set({ isAdmin: false, permissions: new Set(), error: null }),

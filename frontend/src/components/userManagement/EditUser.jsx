@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CountryList from "country-list-with-dial-code-and-flag";
 import Button from "../ui/Button";
 import { useUserStore } from "../../store/userStore";
@@ -6,11 +6,17 @@ import { useRoleStore } from "../../store/roleStore";
 import { useBranchStore } from "../../store/branchStore";
 
 export default function EditUserForm({ userId, onClose }) {
-  const { updateUser, getUserById, users, fetchUsers, error } = useUserStore(
-    (s) => s
-  );
+  const { updateUser, getUserById, users, fetchUsers, error } = useUserStore((s) => s);
   const { branches, fetchBranches } = useBranchStore((s) => s);
   const { roles, fetchRoles } = useRoleStore((s) => s);
+
+  const LEVEL = {
+    ADMINISTRATE: "ADMINISTRATE",
+    HEAD: "HEAD",
+    MANAGER: "MANAGER",
+    EXECUTIVE: "EXECUTIVE",
+    ASSOCIATE: "ASSOCIATE",
+  };
 
   const [formData, setFormData] = useState({
     name: "",
@@ -20,9 +26,12 @@ export default function EditUserForm({ userId, onClose }) {
     branchId: "",
     roleId: "",
     designation: "",
+    // hierarchy (new)
+    userLevel: "ASSOCIATE",
+    administrateId: "",
     headId: "",
     managerId: "",
-    userType: "", // "head" | "manager" | ""
+    executiveId: "",
   });
 
   // password (optional change)
@@ -34,6 +43,50 @@ export default function EditUserForm({ userId, onClose }) {
   const [errorValidation, setErrorValidation] = useState("");
   const [countries, setCountries] = useState([]);
 
+  // ----- helpers -----
+  const deriveLevelFromUser = (u) => {
+    if (u?.userLevel) return u.userLevel;
+    if (u?.isAdmin) return LEVEL.ADMINISTRATE;
+    if (u?.isHead) return LEVEL.HEAD;
+    if (u?.isManager) return LEVEL.MANAGER;
+    // fallback guess
+    return LEVEL.ASSOCIATE;
+  };
+
+  const usersByLevel = useMemo(
+    () => ({
+      ADMINISTRATE: users?.filter((u) => u.userLevel === LEVEL.ADMINISTRATE) ?? [],
+      HEAD: users?.filter((u) => u.userLevel === LEVEL.HEAD) ?? [],
+      MANAGER: users?.filter((u) => u.userLevel === LEVEL.MANAGER) ?? [],
+      EXECUTIVE: users?.filter((u) => u.userLevel === LEVEL.EXECUTIVE) ?? [],
+      ASSOCIATE: users?.filter((u) => u.userLevel === LEVEL.ASSOCIATE) ?? [],
+    }),
+    [users]
+  );
+
+  const visibilityFromLevel = (level) => ({
+    showAdministrate: [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER, LEVEL.HEAD].includes(level),
+    showHead:         [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(level),
+    showManager:      [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(level),
+    showExecutive:    [LEVEL.ASSOCIATE].includes(level),
+  });
+
+  const { showAdministrate, showHead, showManager, showExecutive } =
+    visibilityFromLevel(formData.userLevel);
+
+  const onLevelChange = (level) => {
+    const v = visibilityFromLevel(level);
+    setFormData((prev) => ({
+      ...prev,
+      userLevel: level,
+      administrateId: v.showAdministrate ? prev.administrateId : "",
+      headId:         v.showHead ? prev.headId : "",
+      managerId:      v.showManager ? prev.managerId : "",
+      executiveId:    v.showExecutive ? prev.executiveId : "",
+    }));
+  };
+
+  // ----- effects -----
   useEffect(() => {
     setCountries(CountryList.getAll());
   }, []);
@@ -45,41 +98,55 @@ export default function EditUserForm({ userId, onClose }) {
   }, [fetchRoles, fetchBranches, fetchUsers]);
 
   useEffect(() => {
-    if (userId) {
-      const user = getUserById(userId);
-      if (user) {
-        setFormData({
-          name: user.name || "",
-          email: user.email || "",
-          phone: user.phone || "",
-          countryCode: user.countryCode || "+91",
-          branchId: user.branchId || "",
-          roleId: user.roleId || "",
-          designation: user.designation || "",
-          headId: user.headId || "",
-          managerId: user.managerId || "",
-          userType: user.isHead ? "head" : user.isManager ? "manager" : "",
-        });
-      }
-    }
+    if (!userId) return;
+    const u = getUserById(userId);
+    if (!u) return;
+
+    setFormData({
+      name: u.name || "",
+      email: u.email || "",
+      phone: u.phone || "",
+      countryCode: u.countryCode || "+91",
+      branchId: u.branchId || "",
+      roleId: u.roleId || "",
+      designation: u.designation || "",
+      userLevel: deriveLevelFromUser(u),
+      administrateId: u.administrateId || "",
+      headId: u.headId || "",
+      managerId: u.managerId || "",
+      executiveId: u.executiveId || "",
+    });
   }, [userId, getUserById]);
 
   useEffect(() => {
     if (error) setErrorValidation(error);
   }, [error]);
 
+  // ----- submit -----
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // basic required fields
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.phone ||
-      !formData.branchId ||
-      !formData.roleId
-    ) {
+    // required fields
+    if (!formData.name || !formData.email || !formData.phone || !formData.branchId || !formData.roleId) {
       setErrorValidation("Please fill all required fields.");
+      return;
+    }
+
+    // nearest supervisor client-side enforcement
+    if (formData.userLevel === LEVEL.ASSOCIATE && !formData.executiveId) {
+      setErrorValidation("Please select an Executive for this Associate.");
+      return;
+    }
+    if (formData.userLevel === LEVEL.EXECUTIVE && !formData.managerId) {
+      setErrorValidation("Please select a Manager for this Executive.");
+      return;
+    }
+    if (formData.userLevel === LEVEL.MANAGER && !formData.headId) {
+      setErrorValidation("Please select a Head for this Manager.");
+      return;
+    }
+    if (formData.userLevel === LEVEL.HEAD && !formData.administrateId) {
+      setErrorValidation("Please select an Administrate for this Head.");
       return;
     }
 
@@ -101,9 +168,22 @@ export default function EditUserForm({ userId, onClose }) {
 
     try {
       const payload = {
-        ...formData,
-        isHead: formData.userType === "head",
-        isManager: formData.userType === "manager",
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        countryCode: formData.countryCode,
+        roleId: formData.roleId,
+        branchId: formData.branchId,
+        designation: formData.designation,
+
+        // hierarchy
+        userLevel: formData.userLevel,
+        administrateId: formData.administrateId || null,
+        headId: formData.headId || null,
+        managerId: formData.managerId || null,
+        executiveId: formData.executiveId || null,
+
+        // optional password
         ...(newPassword ? { password: newPassword } : {}),
       };
 
@@ -111,43 +191,17 @@ export default function EditUserForm({ userId, onClose }) {
       setErrorValidation("");
       setNewPassword("");
       setConfirmNewPassword("");
-      if (onClose) onClose();
+      onClose?.();
     } catch (err) {
       setErrorValidation("Failed to update user: " + (err?.message || "Unknown error"));
     }
   };
 
-  // Toggleable radio helpers
-  const handleUserTypeChange = (value) => {
-    setFormData((prev) => ({
-      ...prev,
-      userType: value,
-      ...(value === "head" ? { managerId: "" } : {}),
-      ...(value === "manager" ? { headId: "" } : {}),
-    }));
-  };
-
-  const handleUserTypeMouseDown = (value) => (e) => {
-    if (formData.userType === value) {
-      e.preventDefault();
-      setFormData((prev) => ({
-        ...prev,
-        userType: "",
-        headId: "",
-        managerId: "",
-      }));
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {errorValidation && (
-        <p className="text-red-500 text-sm">{errorValidation}</p>
-      )}
+      {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
 
-      <h3 className="font-semibold text-gray-700 border-b pb-1">
-        Basic Information
-      </h3>
+      <h3 className="font-semibold text-gray-700 border-b pb-1">Basic Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input
           type="text"
@@ -168,15 +222,13 @@ export default function EditUserForm({ userId, onClose }) {
       <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
         <select
           value={formData.countryCode}
-          onChange={(e) =>
-            setFormData({ ...formData, countryCode: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
           className="border px-3 py-2 rounded-md"
         >
           <option value="">Country</option>
           {countries.map((c) => (
             <option key={c.code} value={c.dial_code}>
-              {c.flag} {c.name} ({c.dial_code})
+              {c.flag || c.code} {c.name} ({c.dial_code})
             </option>
           ))}
         </select>
@@ -189,15 +241,11 @@ export default function EditUserForm({ userId, onClose }) {
         />
       </div>
 
-      <h3 className="font-semibold text-gray-700 border-b pb-1">
-        Work Information
-      </h3>
+      <h3 className="font-semibold text-gray-700 border-b pb-1">Work Information</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select
           value={formData.branchId}
-          onChange={(e) =>
-            setFormData({ ...formData, branchId: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
           className="border px-3 py-2 rounded-md w-full"
         >
           <option value="">Select Branch</option>
@@ -226,76 +274,83 @@ export default function EditUserForm({ userId, onClose }) {
         type="text"
         placeholder="Designation (Optional)"
         value={formData.designation}
-        onChange={(e) =>
-          setFormData({ ...formData, designation: e.target.value })
-        }
+        onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
         className="border px-3 py-2 rounded-md w-full"
       />
 
-      {/* Toggleable radios */}
-      <div className="flex gap-4 col-span-2">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            name="userType"
-            value="head"
-            checked={formData.userType === "head"}
-            onChange={() => handleUserTypeChange("head")}
-            onMouseDown={handleUserTypeMouseDown("head")}
-          />
-          Head
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            name="userType"
-            value="manager"
-            checked={formData.userType === "manager"}
-            onChange={() => handleUserTypeChange("manager")}
-            onMouseDown={handleUserTypeMouseDown("manager")}
-          />
-          Manager
-        </label>
-      </div>
-
+      {/* Level */}
+      <h3 className="font-semibold text-gray-700 border-b pb-1">Hierarchy</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* If not head, allow selecting head */}
-        {formData.userType !== "head" && (
+        <select
+          value={formData.userLevel}
+          onChange={(e) => onLevelChange(e.target.value)}
+          className="border px-3 py-2 rounded-md w-full"
+        >
+          <option value={LEVEL.ADMINISTRATE}>Administrate</option>
+          <option value={LEVEL.HEAD}>Head</option>
+          <option value={LEVEL.MANAGER}>Manager</option>
+          <option value={LEVEL.EXECUTIVE}>Executive</option>
+          <option value={LEVEL.ASSOCIATE}>Associate</option>
+        </select>
+
+        {/* Supervisor selects */}
+        {showAdministrate && (
           <select
-            value={formData.headId}
-            onChange={(e) =>
-              setFormData({ ...formData, headId: e.target.value })
-            }
+            value={formData.administrateId}
+            onChange={(e) => setFormData({ ...formData, administrateId: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           >
-            <option value="">Select Head</option>
-            {users
-              ?.filter((u) => u.isHead)
-              .map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
+            <option value="">Select Administrate</option>
+            {usersByLevel.ADMINISTRATE.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
           </select>
         )}
 
-        {/* If not manager, allow selecting manager */}
-        {formData.userType !== "manager" && (
+        {showHead && (
+          <select
+            value={formData.headId}
+            onChange={(e) => setFormData({ ...formData, headId: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Head</option>
+            {usersByLevel.HEAD.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {showManager && (
           <select
             value={formData.managerId}
-            onChange={(e) =>
-              setFormData({ ...formData, managerId: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Manager</option>
-            {users
-              ?.filter((u) => u.isManager)
-              .map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
+            {usersByLevel.MANAGER.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {showExecutive && (
+          <select
+            value={formData.executiveId}
+            onChange={(e) => setFormData({ ...formData, executiveId: e.target.value })}
+            className="border px-3 py-2 rounded-md w-full"
+          >
+            <option value="">Select Executive</option>
+            {usersByLevel.EXECUTIVE.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
           </select>
         )}
       </div>
@@ -318,7 +373,6 @@ export default function EditUserForm({ userId, onClose }) {
             type="button"
             onClick={() => setShowNewPassword((s) => !s)}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600"
-            aria-label={showNewPassword ? "Hide password" : "Show password"}
           >
             {showNewPassword ? "Hide" : "Show"}
           </button>
@@ -337,23 +391,15 @@ export default function EditUserForm({ userId, onClose }) {
             type="button"
             onClick={() => setShowConfirmNewPassword((s) => !s)}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600"
-            aria-label={
-              showConfirmNewPassword ? "Hide password" : "Show password"
-            }
           >
             {showConfirmNewPassword ? "Hide" : "Show"}
           </button>
         </div>
       </div>
-      <p className="text-xs text-gray-500">
-        Leave password fields blank to keep the current password unchanged.
-      </p>
+      <p className="text-xs text-gray-500">Leave password fields blank to keep the current password unchanged.</p>
 
       <div className="flex justify-center mt-4">
-        <Button
-          type="submit"
-          className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 rounded-md"
-        >
+        <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 rounded-md">
           Update User
         </Button>
       </div>
