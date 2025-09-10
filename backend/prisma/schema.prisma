@@ -7,93 +7,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// add to top-level
-enum UserLevel {
-  ADMINISTRATE
-  HEAD
-  MANAGER
-  EXECUTIVE
-  ASSOCIATE
-}
-
 model User {
-  id          String  @id @default(uuid())
-  UserID      String? @unique
-  name        String
-  email       String  @unique
-  password    String
-  phone       String?
-  image_url   String?
-  designation String?
-  countryCode String?
-
-  // Role Relation
-  roleId String?
-  role   Role?   @relation(fields: [roleId], references: [id])
-
-  // Branch Relation
-  branchId String?
-  branch   Branch? @relation(fields: [branchId], references: [id])
-
-  // ===== New hierarchy source of truth =====
-  userLevel UserLevel @default(ASSOCIATE)
-
-  // Upstream: Administrate
-  administrateId   String?
-  administrate     User?   @relation("UserAdministrate", fields: [administrateId], references: [id])
-  administrateTeam User[]  @relation("UserAdministrate")
-
-  // Upstream: Head
-  headId   String?
-  head     User?   @relation("UserHead", fields: [headId], references: [id])
-  headTeam User[]  @relation("UserHead")
-
-  // Upstream: Manager
-  managerId    String?
-  manager      User?   @relation("UserManager", fields: [managerId], references: [id])
-  subordinates User[]  @relation("UserManager")
-
-  // Upstream: Executive
-  executiveId   String?
-  executive     User?   @relation("UserExecutive", fields: [executiveId], references: [id])
-  executiveTeam User[]  @relation("UserExecutive")
-
-  // Investments
-  investments Investment[] @relation("UserInvestments")
-
-  // Performance
-  salesTarget   Float? @default(0)
-  salesAchieved Float? @default(0)
-  incentive     Float? @default(0)
-
-  // Status
-  isActive  Boolean @default(true)
-  isLogin   Boolean @default(false)
-  isAdmin   Boolean @default(false)
-  isHead    Boolean @default(false)
-  isManager Boolean @default(false)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Assigned Investors
-  assignedInvestors Investor[]
-
+  id                             String                     @id @default(uuid())
+  UserID                         String?                    @unique
+  name                           String
+  email                          String                     @unique
+  password                       String
+  phone                          String?
+  image_url                      String?
+  designation                    String?
+  countryCode                    String?
+  roleId                         String?
+  branchId                       String?
+  userLevel                      UserLevel                  @default(ASSOCIATE)
+  administrateId                 String?
+  headId                         String?
+  managerId                      String?
+  executiveId                    String?
+  salesTarget                    Float?                     @default(0)
+  salesAchieved                  Float?                     @default(0)
+  incentive                      Float?                     @default(0)
+  isActive                       Boolean                    @default(true)
+  isLogin                        Boolean                    @default(false)
+  isAdmin                        Boolean                    @default(false)
+  isHead                         Boolean                    @default(false)
+  isManager                      Boolean                    @default(false)
+  createdAt                      DateTime                   @default(now())
+  updatedAt                      DateTime                   @updatedAt
   leadSuccessCoordinatorOf       BookingFormOfficeDetails[] @relation("LeadSuccessCoordinator")
   partnerRelationshipExecutiveOf BookingFormOfficeDetails[] @relation("PartnerRelationshipExecutive")
   salesOnboardingManagerOf       BookingFormOfficeDetails[] @relation("SalesOnboardingManager")
+  investments                    Investment[]               @relation("UserInvestments")
+  assignedInvestors              Investor[]
+  administrate                   User?                      @relation("UserAdministrate", fields: [administrateId], references: [id])
+  administrateTeam               User[]                     @relation("UserAdministrate")
+  branch                         Branch?                    @relation(fields: [branchId], references: [id])
+  executive                      User?                      @relation("UserExecutive", fields: [executiveId], references: [id])
+  executiveTeam                  User[]                     @relation("UserExecutive")
+  head                           User?                      @relation("UserHead", fields: [headId], references: [id])
+  headTeam                       User[]                     @relation("UserHead")
+  manager                        User?                      @relation("UserManager", fields: [managerId], references: [id])
+  subordinates                   User[]                     @relation("UserManager")
+  role                           Role?                      @relation(fields: [roleId], references: [id])
 }
 
 model Role {
   id          String           @id @default(uuid())
   name        String           @unique
   description String?
-  users       User[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   permissions RolePermission[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  users       User[]
 }
 
 model Permission {
@@ -105,43 +70,35 @@ model Permission {
 
 model RolePermission {
   id           String     @id @default(uuid())
-  role         Role       @relation(fields: [roleId], references: [id])
   roleId       String
-  permission   Permission @relation(fields: [permissionId], references: [id])
   permissionId String
   access       String?
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  role         Role       @relation(fields: [roleId], references: [id])
 
   @@unique([roleId, permissionId, access])
 }
 
-// Branch model
 model Branch {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  location  String?
-  users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Many-to-many relationship with InvestmentOpportunity
-  investmentOpportunities InvestmentOpportunity[] @relation("OpportunityBranches")
-
-  // Many-to-many relation with OpportunityBranch
-  opportunityBranches OpportunityBranch[]
-
-  investments Investment[]
-
-  officeDetails BookingFormOfficeDetails[]
+  id                      String                     @id @default(uuid())
+  name                    String                     @unique
+  location                String?
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  officeDetails           BookingFormOfficeDetails[]
+  investments             Investment[]
+  opportunityBranches     OpportunityBranch[]
+  users                   User[]
+  investmentOpportunities InvestmentOpportunity[]    @relation("OpportunityBranches")
 }
 
 model Brand {
-  id          String   @id
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  id                    String                  @id
+  name                  String
+  description           String?
+  isActive              Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
   InvestmentOpportunity InvestmentOpportunity[]
 }
 
@@ -150,7 +107,7 @@ model Investor {
   name                  String
   email                 String       @unique
   phone                 String?
-  type                  String // Individual, HNI, NRI, Company etc.
+  type                  String
   address               String?
   pan                   String?
   aadhaar               String?
@@ -159,11 +116,11 @@ model Investor {
   status                String       @default("Pending")
   password              String
   relationshipManagerId String?
-  relationshipManager   User?        @relation(fields: [relationshipManagerId], references: [id])
   documents             String[]
-  investments           Investment[]
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
+  investments           Investment[]
+  relationshipManager   User?        @relation(fields: [relationshipManagerId], references: [id])
 }
 
 model InvestmentType {
@@ -180,44 +137,37 @@ model BusinessCategory {
   opportunities InvestmentOpportunity[]
 }
 
-// Investment Opportunity model
 model InvestmentOpportunity {
-  id        String @id @default(uuid())
-  name      String
-  brandName String
-  brandId   String
-  brand     Brand  @relation(fields: [brandId], references: [id])
-
-  description        String
-  minAmount          Float
-  maxAmount          Float?
-  roiPercent         Float
-  turnOverPercentage Float?
-  turnOverAmount     Float?
-  renewalFee         Float?
-  lockInMonths       Int
-  exitOptions        String?
-  payoutMode         String
-  isActive           Boolean  @default(true)
-  documents          String[]
-
-  investmentTypeId String
-  investmentType   InvestmentType @relation(fields: [investmentTypeId], references: [id])
-
-  businessCategoryId String
-  businessCategory   BusinessCategory @relation(fields: [businessCategoryId], references: [id])
-
-  investments         Investment[]
-  sales               Sales[]
-  branches            Branch[]            @relation("OpportunityBranches")
-  opportunityBranches OpportunityBranch[]
-
-  isMasterFranchise      Boolean @default(false)
-  isSignature            Boolean @default(false)
+  id                     String              @id @default(uuid())
+  name                   String
+  brandName              String
+  brandId                String
+  description            String
+  minAmount              Float
+  maxAmount              Float?
+  roiPercent             Float
+  turnOverPercentage     Float?
+  turnOverAmount         Float?
+  renewalFee             Float?
+  lockInMonths           Int
+  exitOptions            String?
+  payoutMode             String
+  isActive               Boolean             @default(true)
+  documents              String[]
+  investmentTypeId       String
+  businessCategoryId     String
+  isMasterFranchise      Boolean             @default(false)
+  isSignature            Boolean             @default(false)
   signatureStoreLocation String?
-
-  territoryMasters TerritoryMaster[]
-  territories      Territory[]
+  investments            Investment[]
+  opportunityBranches    OpportunityBranch[]
+  sales                  Sales[]
+  territoryMasters       TerritoryMaster[]
+  brand                  Brand               @relation(fields: [brandId], references: [id])
+  businessCategory       BusinessCategory    @relation(fields: [businessCategoryId], references: [id])
+  investmentType         InvestmentType      @relation(fields: [investmentTypeId], references: [id])
+  territories            Territory[]
+  branches               Branch[]            @relation("OpportunityBranches")
 
   @@map("investment_opportunities")
 }
@@ -225,38 +175,28 @@ model InvestmentOpportunity {
 model TerritoryMaster {
   id            String                @id @default(uuid())
   opportunityId String
-  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
   territoryId   String
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
   territory     Territory             @relation(fields: [territoryId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
-// New Model to store the selected branches for an opportunity
 model OpportunityBranch {
   id            String                @id @default(uuid())
   opportunityId String
-  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
   branchId      String
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
   branch        Branch                @relation(fields: [branchId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
 }
 
-// Investment model
 model Investment {
-  id         String   @id @default(uuid())
-  investorId String
-  investor   Investor @relation(fields: [investorId], references: [id])
-
-  opportunityId String
-  createdById   String?
-
-  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
-  createdBy   User?                 @relation("UserInvestments", fields: [createdById], references: [id])
-
+  id              String                @id @default(uuid())
+  investorId      String
+  opportunityId   String
+  createdById     String?
   amount          Float
   date            DateTime
   roiPercent      Float?
@@ -265,17 +205,18 @@ model Investment {
   contractStart   DateTime
   contractEnd     DateTime
   paymentMethod   String
-  agreementSigned Boolean   @default(false)
-  status          String    @default("Ongoing")
-
-  payouts Payout[]
-
-  branchId String
-  branch   Branch @relation(fields: [branchId], references: [id]) // One investment belongs to one branch
+  agreementSigned Boolean               @default(false)
+  status          String                @default("Ongoing")
+  branchId        String
+  branch          Branch                @relation(fields: [branchId], references: [id])
+  createdBy       User?                 @relation("UserInvestments", fields: [createdById], references: [id])
+  investor        Investor              @relation(fields: [investorId], references: [id])
+  opportunity     InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  payouts         Payout[]
 }
 
 model Payout {
-  id           String    @id @default(uuid())
+  id           String     @id @default(uuid())
   investmentId String
   dueDate      DateTime
   amountDue    Float
@@ -284,142 +225,101 @@ model Payout {
   paymentMode  String?
   receiptRef   String?
   notes        String?
-
-  investment Investment @relation(fields: [investmentId], references: [id])
+  investment   Investment @relation(fields: [investmentId], references: [id])
 }
 
 model Sales {
-  id            String   @id @default(uuid())
+  id            String                @id @default(uuid())
   opportunityId String
-  amount        Float // Amount of sales for the day
-  date          DateTime // The date of the sale
-
-  opportunity InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
-}
-
-// New: assignment enum used by the form
-enum AssignmentType {
-  MANUALLY // shows "location" field in UI
-  AUTOMATICALLY // shows "pincode" + resolves "city" in UI
-  USER // no extra field in UI
+  amount        Float
+  date          DateTime
+  opportunity   InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
 }
 
 model Territory {
   id                         String                       @id @default(uuid())
   assignmentType             String
-  location                   String? // required if assignmentType = MANUALLY
-  pincode                    String? // required if assignmentType = AUTOMATICALLY
-  city                       String? // should remain null
-  imageUrl                   String? // URL to territory image stored on S3
-  territoryMasters           TerritoryMaster[]
+  location                   String?
+  pincode                    String?
+  city                       String?
+  imageUrl                   String?
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
-  InvestmentOpportunity      InvestmentOpportunity?       @relation(fields: [investmentOpportunityId], references: [id])
   investmentOpportunityId    String?
   isBooked                   Boolean                      @default(false)
   BookingFormPersonalDetails BookingFormPersonalDetails[]
+  territoryMasters           TerritoryMaster[]
+  InvestmentOpportunity      InvestmentOpportunity?       @relation(fields: [investmentOpportunityId], references: [id])
 
   @@map("territories")
 }
 
-// Section: Personal Details
 model BookingFormPersonalDetails {
-  id                    String    @id @default(uuid())
-  userId                String
-  fullName              String
-  email                 String
-  phoneNumber           String
-  altPhoneNumber        String?
-  territoryId           String
-  territory             Territory @relation(fields: [territoryId], references: [id])
-  state                 String?
-  district              String?
-  city                  String?
-  streetAddress         String?
-  pincode               String?
-  aadharFront           String? //attached document
-  aadharFrontIsApproved Boolean   @default(false)
-
-  aadharBack           String? //attached document
-  aadharBackIsApproved Boolean @default(false)
-
-  panCard           String? //attached document
-  panCardIsApproved Boolean @default(false)
-
-  companyPan           String? //attached document
-  companyPanIsApproved Boolean @default(false)
-
-  gstNumber              String?
-  addressProof           String? //attached document
-  addressProofIsApproved Boolean @default(false)
-
-  attachedImage           String? //attached document
-  attachedImageIsApproved Boolean @default(false)
-
-  oppurtunity        String?
-  isPaymentCompleted Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  officeDetails           BookingFormOfficeDetails?
-  paymentDetails          BookingFormPaymentDetails?
-  paymentScheduledDetails PaymentSceduledDetails[] // changed to array for 1-N
+  id                             String                           @id @default(uuid())
+  userId                         String
+  fullName                       String
+  email                          String
+  phoneNumber                    String
+  altPhoneNumber                 String?
+  territoryId                    String
+  state                          String?
+  district                       String?
+  city                           String?
+  streetAddress                  String?
+  pincode                        String?
+  aadharFront                    String?
+  aadharFrontIsApproved          Boolean                          @default(false)
+  aadharBack                     String?
+  aadharBackIsApproved           Boolean                          @default(false)
+  panCard                        String?
+  panCardIsApproved              Boolean                          @default(false)
+  companyPan                     String?
+  companyPanIsApproved           Boolean                          @default(false)
+  gstNumber                      String?
+  addressProof                   String?
+  addressProofIsApproved         Boolean                          @default(false)
+  attachedImage                  String?
+  attachedImageIsApproved        Boolean                          @default(false)
+  oppurtunity                    String?
+  isPaymentCompleted             Boolean                          @default(false)
+  createdAt                      DateTime                         @default(now())
+  updatedAt                      DateTime                         @updatedAt
+  officeDetails                  BookingFormOfficeDetails?
+  paymentDetails                 BookingFormPaymentDetails?
+  territory                      Territory                        @relation(fields: [territoryId], references: [id])
+  ExpectedPaymentSceduledDetails ExpectedPaymentSceduledDetails[]
+  paymentScheduledDetails        PaymentSceduledDetails[]
 }
 
-// Section: Office Detailsffc
-// model BookingFormOfficeDetails {
-//   id                           String  @id @default(uuid())
-//   officeBranch                 String?
-//   leadSuccessCoordinator       String?
-//   partnerRelationshipExecutive String?
-//   salesOnboardingManager       String?
-//   leadSource                   String?
-
-//   personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
-//   personalDetailsId String                     @unique
-// }
 model BookingFormOfficeDetails {
-  id String @id @default(uuid())
-
-  officeBranchId String?
-  officeBranch   Branch? @relation(fields: [officeBranchId], references: [id])
-
-  leadSuccessCoordinatorId String?
-  leadSuccessCoordinator   User?   @relation("LeadSuccessCoordinator", fields: [leadSuccessCoordinatorId], references: [id])
-
+  id                             String                     @id @default(uuid())
+  officeBranchId                 String?
+  leadSuccessCoordinatorId       String?
   partnerRelationshipExecutiveId String?
-  partnerRelationshipExecutive   User?   @relation("PartnerRelationshipExecutive", fields: [partnerRelationshipExecutiveId], references: [id])
-
-  salesOnboardingManagerId String?
-  salesOnboardingManager   User?   @relation("SalesOnboardingManager", fields: [salesOnboardingManagerId], references: [id])
-
-  leadSource String?
-
-  personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
-  personalDetailsId String                     @unique
+  salesOnboardingManagerId       String?
+  leadSource                     String?
+  personalDetailsId              String                     @unique
+  leadSuccessCoordinator         User?                      @relation("LeadSuccessCoordinator", fields: [leadSuccessCoordinatorId], references: [id])
+  officeBranch                   Branch?                    @relation(fields: [officeBranchId], references: [id])
+  partnerRelationshipExecutive   User?                      @relation("PartnerRelationshipExecutive", fields: [partnerRelationshipExecutiveId], references: [id])
+  personalDetails                BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
+  salesOnboardingManager         User?                      @relation("SalesOnboardingManager", fields: [salesOnboardingManagerId], references: [id])
 }
-
-// Section: Payment Details
 
 model BookingFormPaymentDetails {
-  id              String    @id @default(uuid())
-  dealAmount      Float?
-  tokenReceived   Float?
-  isTokenApproved Boolean   @default(false)
-  tokenDate       DateTime?
-  balanceDue      Float?
-  paymentProof    String? // store file path or URL
-  modeOfPayment   String?
-
-  // Additional Commitment & Remarks
+  id                   String                     @id @default(uuid())
+  dealAmount           Float?
+  tokenReceived        Float?
+  isTokenApproved      Boolean                    @default(false)
+  tokenDate            DateTime?
+  balanceDue           Float?
+  paymentProof         String?
+  modeOfPayment        String?
   additionalCommitment String?
   remarks              String?
-
-  personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
-  personalDetailsId String                     @unique
+  personalDetailsId    String                     @unique
+  personalDetails      BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
 }
-
-// Section: Payment Details
 
 model PaymentSceduledDetails {
   id                String                     @id @default(uuid())
@@ -427,6 +327,28 @@ model PaymentSceduledDetails {
   amount            Float?
   isAmountApproved  Boolean                    @default(false)
   paymentProof      String
-  personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
   personalDetailsId String
+  personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
+}
+
+model ExpectedPaymentSceduledDetails {
+  id                         String                     @id
+  date                       DateTime?
+  amount                     Float?
+  personalDetailsId          String
+  BookingFormPersonalDetails BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
+}
+
+enum UserLevel {
+  ADMINISTRATE
+  HEAD
+  MANAGER
+  EXECUTIVE
+  ASSOCIATE
+}
+
+enum AssignmentType {
+  MANUALLY
+  AUTOMATICALLY
+  USER
 }
