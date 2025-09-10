@@ -256,40 +256,40 @@ model Territory {
 }
 
 model BookingFormPersonalDetails {
-  id                             String                           @id @default(uuid())
-  userId                         String
-  fullName                       String
-  email                          String
-  phoneNumber                    String
-  altPhoneNumber                 String?
-  territoryId                    String
-  state                          String?
-  district                       String?
-  city                           String?
-  streetAddress                  String?
-  pincode                        String?
-  aadharFront                    String?
-  aadharFrontIsApproved          Boolean                          @default(false)
-  aadharBack                     String?
-  aadharBackIsApproved           Boolean                          @default(false)
-  panCard                        String?
-  panCardIsApproved              Boolean                          @default(false)
-  companyPan                     String?
-  companyPanIsApproved           Boolean                          @default(false)
-  gstNumber                      String?
-  addressProof                   String?
-  addressProofIsApproved         Boolean                          @default(false)
-  attachedImage                  String?
-  attachedImageIsApproved        Boolean                          @default(false)
-  oppurtunity                    String?
-  isPaymentCompleted             Boolean                          @default(false)
-  createdAt                      DateTime                         @default(now())
-  updatedAt                      DateTime                         @updatedAt
-  officeDetails                  BookingFormOfficeDetails?
-  paymentDetails                 BookingFormPaymentDetails?
-  territory                      Territory                        @relation(fields: [territoryId], references: [id])
-  ExpectedPaymentSceduledDetails ExpectedPaymentSceduledDetails[]
-  paymentScheduledDetails        PaymentSceduledDetails[]
+  id                              String                           @id @default(uuid())
+  userId                          String
+  fullName                        String
+  email                           String
+  phoneNumber                     String
+  altPhoneNumber                  String?
+  territoryId                     String
+  state                           String?
+  district                        String?
+  city                            String?
+  streetAddress                   String?
+  pincode                         String?
+  aadharFront                     String?
+  aadharFrontIsApproved           Boolean                          @default(false)
+  aadharBack                      String?
+  aadharBackIsApproved            Boolean                          @default(false)
+  panCard                         String?
+  panCardIsApproved               Boolean                          @default(false)
+  companyPan                      String?
+  companyPanIsApproved            Boolean                          @default(false)
+  gstNumber                       String?
+  addressProof                    String?
+  addressProofIsApproved          Boolean                          @default(false)
+  attachedImage                   String?
+  attachedImageIsApproved         Boolean                          @default(false)
+  oppurtunity                     String?
+  isPaymentCompleted              Boolean                          @default(false)
+  createdAt                       DateTime                         @default(now())
+  updatedAt                       DateTime                         @updatedAt
+  officeDetails                   BookingFormOfficeDetails?
+  paymentDetails                  BookingFormPaymentDetails?
+  territory                       Territory                        @relation(fields: [territoryId], references: [id])
+  expectedPaymentScheduledDetails ExpectedPaymentSceduledDetails[]
+  paymentScheduledDetails         PaymentSceduledDetails[]
 }
 
 model BookingFormOfficeDetails {
