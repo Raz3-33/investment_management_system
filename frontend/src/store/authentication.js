@@ -171,13 +171,11 @@ export const useAuthStore = create()(
       }),
       // after rehydrate, restore axios header from persisted token
       onRehydrateStorage: () => (state) => {
-        const token = state?.token || localStorage.getItem("token"); // keep compatibility
-        if (token) {
-          api.defaults.headers.common.authorization = `Bearer ${token}`;
-        } else {
-          delete api.defaults.headers.common.authorization;
-        }
-      },
+        if (!state) return;
+        const arr = Array.isArray(state.permissions) ? state.permissions : [];
+        // convert using set() so subscribers are notified exactly once after hydrate
+        set({ permissions: new Set(arr) });
+      },      
     }
   )
 );

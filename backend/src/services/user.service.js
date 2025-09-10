@@ -47,20 +47,60 @@ const ensureLevel = (user, expectedLevel, label) => {
   }
 };
 
+// user find helper
+// Small typed errors for cleaner controller codes
+const unauthorized = (msg = "Unauthorized") => Object.assign(new Error(msg), { code: "UNAUTHORIZED" });
+const forbidden = (msg = "Forbidden") => Object.assign(new Error(msg), { code: "FORBIDDEN" });
+const notFound = (msg = "Not found") => Object.assign(new Error(msg), { code: "NOT_FOUND" });
+
+// Pull the minimal fields we need to decide scope
+async function getViewer(viewerId) {
+  if (!viewerId) throw unauthorized();
+  const viewer = await prisma.user.findUnique({
+    where: { id: viewerId },
+    select: { id: true, isAdmin: true, userLevel: true },
+  });
+  if (!viewer) throw unauthorized("Viewer not found");
+  return viewer;
+}
+
 // services
 
-export const getAllUsers = async () => {
-  console.log(
-    "=============================alajdfl+============================"
-  );
+/**
+ * List users visible to the viewer.
+ * - Admins: all users
+ * - Others: users directly reporting to viewer via any supervisor column
+ */
+export async function getAllUsers(viewerId, { includeSelf = false } = {}) {
+  const viewer = await getViewer(viewerId);
+
+  if (viewer.isAdmin) {
+    return prisma.user.findMany({
+      include: { role: true, branch: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Direct reports only (no recursion)
+  const where = {
+    OR: [
+      { administrateId: viewer.id },
+      { headId: viewer.id },
+      { managerId: viewer.id },
+      { executiveId: viewer.id },
+    ],
+  };
+
+  if (includeSelf) {
+    where.OR.push({ id: viewer.id });
+  }
 
   return prisma.user.findMany({
-    include: {
-      role: true,
-      branch: true,
-    },
+    where,
+    include: { role: true, branch: true },
+    orderBy: { createdAt: "desc" },
   });
-};
+}
 
 export const getUserById = async (id) => {
   return prisma.user.findUnique({

@@ -23,6 +23,8 @@ import BookingListManagement from "./pages/BookingListManagement/BookingListMana
 import BookingDetailPage from "./components/BookingListManagement/BookingDetailPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuthzStore } from "./store/useAuthzStore";
+import { useAuthStore } from "./store/authentication";
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -34,10 +36,25 @@ function ScrollToTopOnNavigate() {
   return null;
 }
 
+function AuthBoot() {
+  const token = useAuthStore((s) => s.token);
+  const bootstrap = useAuthzStore((s) => s.bootstrap);
+  const reset = useAuthzStore((s) => s.reset);
+
+  React.useEffect(() => {
+    if (token) bootstrap();
+    else reset();
+  }, [token, bootstrap, reset]);
+
+  return null;
+}
+
+
 function App() {
   return (
     <div className="h-full w-full">
       <ScrollToTopOnNavigate />
+      <AuthBoot />
       {/* <AuthRedirector /> */}
 
       <Routes>
@@ -169,9 +186,9 @@ function App() {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute perm="Settings:view">
+            // <ProtectedRoute perm="Settings:view">
               <MainLayout children={<ProfilePage />} />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           }
         />
       </Routes>

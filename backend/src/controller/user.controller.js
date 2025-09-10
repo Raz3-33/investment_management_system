@@ -2,10 +2,11 @@ import * as userService from "../services/user.service.js";
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await userService.getAllUsers();
+    const users = await userService.getAllUsers(req.user?.id);
     res.status(200).json({ success: true, data: users });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    const code = err.code === "FORBIDDEN" ? 403 : err.code === "UNAUTHORIZED" ? 401 : 500;
+    res.status(code).json({ success: false, message: err.message });
   }
 };
 
