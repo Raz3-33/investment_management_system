@@ -15,14 +15,14 @@ export default function AddUserForm() {
     branchId: "",
     roleId: "",
     designation: "",
-    // NEW:
     userLevel: "ASSOCIATE", // ADMINISTRATE | HEAD | MANAGER | EXECUTIVE | ASSOCIATE
     administrateId: "",
     headId: "",
     managerId: "",
+    // NEW:
+    executiveIds: [], // multi-select
+    // (legacy single kept only for API fallback — we won't use it in UI)
     executiveId: "",
-    // legacy still present but unused by UI:
-    // headId: "", managerId: "", userType: "",
     password: "",
     confirmPassword: "",
   });
@@ -43,67 +43,78 @@ export default function AddUserForm() {
     ASSOCIATE: "ASSOCIATE",
   };
 
+  // group users by level
   const usersByLevel = {
-    ADMINISTRATE:
-      users?.filter((u) => u.userLevel === LEVEL.ADMINISTRATE) ?? [],
-    HEAD: users?.filter((u) => u.userLevel === LEVEL.HEAD) ?? [],
-    MANAGER: users?.filter((u) => u.userLevel === LEVEL.MANAGER) ?? [],
-    EXECUTIVE: users?.filter((u) => u.userLevel === LEVEL.EXECUTIVE) ?? [],
-    ASSOCIATE: users?.filter((u) => u.userLevel === LEVEL.ASSOCIATE) ?? [],
+    ADMINISTRATE: users?.filter((u) => u.userLevel === LEVEL.ADMINISTRATE) ?? [],
+    HEAD:         users?.filter((u) => u.userLevel === LEVEL.HEAD) ?? [],
+    MANAGER:      users?.filter((u) => u.userLevel === LEVEL.MANAGER) ?? [],
+    EXECUTIVE:    users?.filter((u) => u.userLevel === LEVEL.EXECUTIVE) ?? [],
+    ASSOCIATE:    users?.filter((u) => u.userLevel === LEVEL.ASSOCIATE) ?? [],
   };
 
-  const showAdministrate = [
-    LEVEL.ASSOCIATE,
-    LEVEL.EXECUTIVE,
-    LEVEL.MANAGER,
-    LEVEL.HEAD,
-  ].includes(formData.userLevel);
-  const showHead = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(
-    formData.userLevel
-  );
-  const showManager = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(
-    formData.userLevel
-  );
-  const showExecutive = [LEVEL.ASSOCIATE].includes(formData.userLevel);
+  // visibility flags
+  const showAdministrate = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER, LEVEL.HEAD].includes(formData.userLevel);
+  const showHead         = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(formData.userLevel);
+  const showManager      = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(formData.userLevel);
+  const showExecutive    = [LEVEL.ASSOCIATE].includes(formData.userLevel);
 
+  // cascading filters
+  const filteredHeads = showHead
+    ? (formData.administrateId
+        ? usersByLevel.HEAD.filter(h => h.administrateId === formData.administrateId)
+        : usersByLevel.HEAD)
+    : [];
+
+  const filteredManagers = showManager
+    ? (formData.headId
+        ? usersByLevel.MANAGER.filter(m => m.headId === formData.headId)
+        : (formData.administrateId
+            ? usersByLevel.MANAGER.filter(m => m.headId && filteredHeads.some(h => h.id === m.headId))
+            : usersByLevel.MANAGER))
+    : [];
+
+  const filteredExecutives = showExecutive
+    ? (formData.managerId
+        ? usersByLevel.EXECUTIVE.filter(e => e.managerId === formData.managerId)
+        : (formData.headId
+            ? usersByLevel.EXECUTIVE.filter(e =>
+                e.managerId && filteredManagers.some(m => m.id === e.managerId)
+              )
+            : (formData.administrateId
+                ? usersByLevel.EXECUTIVE.filter(e =>
+                    e.managerId && usersByLevel.MANAGER.some(m =>
+                      m.id === e.managerId && filteredManagers.some(fm => fm.id === m.id)
+                    )
+                  )
+                : usersByLevel.EXECUTIVE)))
+    : [];
+
+  // level change: recompute visibility + clear incompatible upstream ids
   const onLevelChange = (level) => {
+    const nextShowAdministrate = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER, LEVEL.HEAD].includes(level);
+    const nextShowHead         = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(level);
+    const nextShowManager      = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(level);
+    const nextShowExecutive    = [LEVEL.ASSOCIATE].includes(level);
+
     setFormData((prev) => ({
       ...prev,
       userLevel: level,
-      // clear incompatible upstream ids on change
-      administrateId: showAdministrate ? prev.administrateId : "",
-      headId: showHead ? prev.headId : "",
-      managerId: showManager ? prev.managerId : "",
-      executiveId: showExecutive ? prev.executiveId : "",
+      administrateId: nextShowAdministrate ? prev.administrateId : "",
+      headId:         nextShowHead ? prev.headId : "",
+      managerId:      nextShowManager ? prev.managerId : "",
+      executiveIds:   nextShowExecutive ? (prev.executiveIds ?? []) : [],
     }));
   };
 
-  
-
-  useEffect(() => {
-    setCountries(CountryList.getAll());
-  }, []);
-
-  useEffect(() => {
-    if (error) setErrorValidation(error);
-  }, [error]);
-
-  useEffect(() => {
-    fetchRoles();
-    fetchBranches();
-    fetchUsers();
-  }, [fetchRoles, fetchBranches, fetchUsers, userAdd]);
+  // country list, roles, branches, users
+  useEffect(() => { setCountries(CountryList.getAll()); }, []);
+  useEffect(() => { if (error) setErrorValidation(error); }, [error]);
+  useEffect(() => { fetchRoles(); fetchBranches(); fetchUsers(); }, [fetchRoles, fetchBranches, fetchUsers, userAdd]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.phone ||
-      !formData.branchId ||
-      !formData.roleId
-    ) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.branchId || !formData.roleId) {
       setErrorValidation("Please fill all required fields.");
       return;
     }
@@ -112,9 +123,9 @@ export default function AddUserForm() {
       return;
     }
 
-    // Nearest supervisor requirement (client-side UX guard; server also enforces)
-    if (formData.userLevel === LEVEL.ASSOCIATE && !formData.executiveId) {
-      setErrorValidation("Please select an Executive for this Associate.");
+    // Client-side guard for nearest supervisor
+    if (formData.userLevel === LEVEL.ASSOCIATE && (!formData.executiveIds || formData.executiveIds.length === 0)) {
+      setErrorValidation("Please select at least one Executive for this Associate.");
       return;
     }
     if (formData.userLevel === LEVEL.EXECUTIVE && !formData.managerId) {
@@ -131,18 +142,26 @@ export default function AddUserForm() {
     }
 
     try {
+      // Legacy fallback: send single executiveId as the first selected (if backend still reads it)
+      const firstExecutiveId = formData.executiveIds?.[0] ?? null;
+
       await addUser({
         ...formData,
-        // strip empty strings to null (optional: can also handle in service)
         administrateId: formData.administrateId || null,
-        headId: formData.headId || null,
-        managerId: formData.managerId || null,
-        executiveId: formData.executiveId || null,
-        // legacy flags (kept for backward compat on API)
-        isHead: formData.userLevel === "HEAD",
-        isManager: formData.userLevel === "MANAGER",
-        isAdmin: formData.userLevel === "ADMINISTRATE",
-        userType: undefined, // stop sending legacy userType
+        headId:         formData.headId || null,
+        managerId:      formData.managerId || null,
+
+        // NEW multi-select field:
+        executiveIds:   formData.executiveIds ?? [],
+
+        // legacy single (safe fallback, backend can ignore):
+        executiveId:    firstExecutiveId,
+
+        // legacy flags (kept for compatibility)
+        isHead:   formData.userLevel === "HEAD",
+        isManager:formData.userLevel === "MANAGER",
+        isAdmin:  formData.userLevel === "ADMINISTRATE",
+        userType: undefined,
       });
 
       setFormData({
@@ -157,48 +176,21 @@ export default function AddUserForm() {
         administrateId: "",
         headId: "",
         managerId: "",
+        executiveIds: [],
         executiveId: "",
         password: "",
         confirmPassword: "",
       });
       setErrorValidation("");
     } catch (err) {
-      setErrorValidation(
-        "Failed to add user: " + (err?.message || "Unknown error")
-      );
-    }
-  };
-
-  // Toggleable radio helpers: allow unchecking by clicking the selected radio
-  const handleUserTypeChange = (value) => {
-    setFormData((prev) => ({
-      ...prev,
-      userType: value,
-      ...(value === "head" ? { managerId: "" } : {}),
-      ...(value === "manager" ? { headId: "" } : {}),
-    }));
-  };
-
-  const handleUserTypeMouseDown = (value) => (e) => {
-    if (formData.userType === value) {
-      // Prevent the browser from re-selecting it; clear to no selection
-      e.preventDefault();
-      setFormData((prev) => ({
-        ...prev,
-        userType: "",
-        headId: "",
-        managerId: "",
-      }));
+      setErrorValidation("Failed to add user: " + (err?.message || "Unknown error"));
     }
   };
 
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {errorValidation && (
-          <p className="text-red-500 text-sm">{errorValidation}</p>
-        )}
-
+        {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
         {/* Grid Container */}
@@ -217,9 +209,7 @@ export default function AddUserForm() {
             type="email"
             placeholder="Email"
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           />
 
@@ -229,9 +219,7 @@ export default function AddUserForm() {
             <div className="grid grid-cols-12 gap-2">
               <select
                 value={formData.countryCode}
-                onChange={(e) =>
-                  setFormData({ ...formData, countryCode: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
                 className="col-span-3 sm:col-span-2 md:col-span-4 border px-3 py-2 rounded-md"
               >
                 <option value="">Code</option>
@@ -246,9 +234,7 @@ export default function AddUserForm() {
                 type="tel"
                 placeholder="Phone number"
                 value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="col-span-7 sm:col-span-8 md:col-span-8 border px-3 py-2 rounded-md"
               />
             </div>
@@ -258,38 +244,27 @@ export default function AddUserForm() {
           <select
             value={formData.branchId}
             onChange={(e) => {
-              if (e.target.value === "add_new") {
-                setIsBranchModalOpen(true);
-                return;
-              }
+              if (e.target.value === "add_new") { setIsBranchModalOpen(true); return; }
               setFormData({ ...formData, branchId: e.target.value });
             }}
             className="md:col-span-2 border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Branch</option>
             {branches?.map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.name}
-              </option>
+              <option key={branch.id} value={branch.id}>{branch.name}</option>
             ))}
-            <option value="add_new" className="text-blue-600 font-semibold">
-              ➕ Add New Branch
-            </option>
+            <option value="add_new" className="text-blue-600 font-semibold">➕ Add New Branch</option>
           </select>
 
           {/* Role */}
           <select
             value={formData.roleId}
-            onChange={(e) =>
-              setFormData({ ...formData, roleId: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
             className="md:col-span-2 border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Role</option>
             {roles?.map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
+              <option key={role.id} value={role.id}>{role.name}</option>
             ))}
           </select>
 
@@ -298,37 +273,9 @@ export default function AddUserForm() {
             type="text"
             placeholder="Designation (Optional)"
             value={formData.designation}
-            onChange={(e) =>
-              setFormData({ ...formData, designation: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
             className="md:col-span-2 border px-3 py-2 rounded-md w-full"
           />
-
-          {/* User type (toggleable radios) */}
-          {/* <div className="md:col-span-2 flex flex-wrap gap-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="userType"
-                value="head"
-                checked={formData.userType === "head"}
-                onChange={() => handleUserTypeChange("head")}
-                onMouseDown={handleUserTypeMouseDown("head")}
-              />
-              Head
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="userType"
-                value="manager"
-                checked={formData.userType === "manager"}
-                onChange={() => handleUserTypeChange("manager")}
-                onMouseDown={handleUserTypeMouseDown("manager")}
-              />
-              Manager
-            </label>
-          </div> */}
 
           {/* Level */}
           <select
@@ -343,71 +290,74 @@ export default function AddUserForm() {
             <option value="ASSOCIATE">Associate</option>
           </select>
 
-          {/* Show upstream selectors based on level */}
+          {/* Administrate (parent of Head) */}
           {showAdministrate && (
             <select
               value={formData.administrateId}
-              onChange={(e) =>
-                setFormData({ ...formData, administrateId: e.target.value })
-              }
+              onChange={(e) => {
+                const administrateId = e.target.value;
+                setFormData(prev => ({ ...prev, administrateId, headId: "", managerId: "", executiveIds: [] }));
+              }}
               className="md:col-span-2 border px-3 py-2 rounded-md w-full"
             >
               <option value="">Select Administrate</option>
               {usersByLevel.ADMINISTRATE.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
+                <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </select>
           )}
 
+          {/* Head (filtered by Administrate) */}
           {showHead && (
             <select
               value={formData.headId}
-              onChange={(e) =>
-                setFormData({ ...formData, headId: e.target.value })
-              }
-              className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+              onChange={(e) => {
+                const headId = e.target.value;
+                setFormData(prev => ({ ...prev, headId, managerId: "", executiveIds: [] }));
+              }}
+              disabled={!formData.administrateId}
+              className="md:col-span-2 border px-3 py-2 rounded-md w-full disabled:bg-gray-100"
             >
-              <option value="">Select Head</option>
-              {usersByLevel.HEAD.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
+              <option value="">{formData.administrateId ? "Select Head" : "Select Administrate first"}</option>
+              {filteredHeads.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </select>
           )}
 
+          {/* Manager (filtered by Head) */}
           {showManager && (
             <select
               value={formData.managerId}
-              onChange={(e) =>
-                setFormData({ ...formData, managerId: e.target.value })
-              }
-              className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+              onChange={(e) => {
+                const managerId = e.target.value;
+                setFormData(prev => ({ ...prev, managerId, executiveIds: [] }));
+              }}
+              disabled={!formData.headId}
+              className="md:col-span-2 border px-3 py-2 rounded-md w-full disabled:bg-gray-100"
             >
-              <option value="">Select Manager</option>
-              {usersByLevel.MANAGER.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
+              <option value="">{formData.headId ? "Select Manager" : "Select Head first"}</option>
+              {filteredManagers.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </select>
           )}
 
+          {/* Executive (filtered by Manager) — MULTI SELECT */}
           {showExecutive && (
             <select
-              value={formData.executiveId}
-              onChange={(e) =>
-                setFormData({ ...formData, executiveId: e.target.value })
-              }
-              className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+              multiple
+              value={formData.executiveIds}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                setFormData({ ...formData, executiveIds: selected });
+              }}
+              disabled={!formData.managerId}
+              className="md:col-span-2 border px-3 py-2 rounded-md w-full disabled:bg-gray-100 h-40"
             >
-              <option value="">Select Executive</option>
-              {usersByLevel.EXECUTIVE.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
+              <option value="" disabled>{formData.managerId ? "Select Executive(s)" : "Select Manager first"}</option>
+              {filteredExecutives.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </select>
           )}
@@ -417,9 +367,7 @@ export default function AddUserForm() {
             type="password"
             placeholder="Password"
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           />
 
@@ -428,19 +376,14 @@ export default function AddUserForm() {
             type="password"
             placeholder="Confirm Password"
             value={formData.confirmPassword}
-            onChange={(e) =>
-              setFormData({ ...formData, confirmPassword: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           />
         </div>
 
         {/* Submit Button */}
         <div className="flex justify-center">
-          <Button
-            type="submit"
-            className="bg-blue-600 text-white hover:bg-blue-700 transition duration-300 w-40 h-11"
-          >
+          <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 transition duration-300 w-40 h-11">
             Add User
           </Button>
         </div>
@@ -457,18 +400,14 @@ export default function AddUserForm() {
             type="text"
             placeholder="Branch Name"
             value={formData.branchName || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, branchName: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           />
           <input
             type="text"
             placeholder="Location"
             value={formData.branchLocation || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, branchLocation: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, branchLocation: e.target.value })}
             className="border px-3 py-2 rounded-md w-full"
           />
 
@@ -491,7 +430,6 @@ export default function AddUserForm() {
 
                   await fetchBranches();
 
-                  // Pre-select the newly created branch if available
                   setFormData((prev) => ({
                     ...prev,
                     branchId: newBranch?.id || prev.branchId,
@@ -501,9 +439,7 @@ export default function AddUserForm() {
 
                   setIsBranchModalOpen(false);
                 } catch (err) {
-                  setErrorValidation(
-                    "Failed to add branch: " + (err?.message || "Unknown error")
-                  );
+                  setErrorValidation("Failed to add branch: " + (err?.message || "Unknown error"));
                 }
               }}
             >

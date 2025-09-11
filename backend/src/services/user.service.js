@@ -20,10 +20,15 @@ const assertExists = async (id, message = "Invalid id") => {
 
 const requireClosestSupervisor = (userLevel, ids) => {
   switch (userLevel) {
-    case LEVEL.ASSOCIATE:
-      if (!ids.executiveId)
+    case LEVEL.ASSOCIATE: {
+      const hasExecArray =
+        Array.isArray(ids.executiveIds) && ids.executiveIds.length > 0;
+      const hasLegacySingle = !!ids.executiveId;
+      if (!hasExecArray && !hasLegacySingle) {
         throw new Error("Executive is required for Associate.");
+      }
       break;
+    }
     case LEVEL.EXECUTIVE:
       if (!ids.managerId) throw new Error("Manager is required for Executive.");
       break;
@@ -49,9 +54,12 @@ const ensureLevel = (user, expectedLevel, label) => {
 
 // user find helper
 // Small typed errors for cleaner controller codes
-const unauthorized = (msg = "Unauthorized") => Object.assign(new Error(msg), { code: "UNAUTHORIZED" });
-const forbidden = (msg = "Forbidden") => Object.assign(new Error(msg), { code: "FORBIDDEN" });
-const notFound = (msg = "Not found") => Object.assign(new Error(msg), { code: "NOT_FOUND" });
+const unauthorized = (msg = "Unauthorized") =>
+  Object.assign(new Error(msg), { code: "UNAUTHORIZED" });
+const forbidden = (msg = "Forbidden") =>
+  Object.assign(new Error(msg), { code: "FORBIDDEN" });
+const notFound = (msg = "Not found") =>
+  Object.assign(new Error(msg), { code: "NOT_FOUND" });
 
 // Pull the minimal fields we need to decide scope
 async function getViewer(viewerId) {
@@ -63,6 +71,21 @@ async function getViewer(viewerId) {
   if (!viewer) throw unauthorized("Viewer not found");
   return viewer;
 }
+
+const assertAllExistAtLevel = async (ids, expectedLevel, label) => {
+  if (!ids || !ids.length) return [];
+  const found = await prisma.user.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, userLevel: true },
+  });
+  if (found.length !== ids.length) throw new Error(`Some ${label} not found.`);
+  found.forEach((u) => {
+    if (u.userLevel !== expectedLevel) {
+      throw new Error(`${label} must be ${expectedLevel} users.`);
+    }
+  });
+  return found.map((u) => u.id);
+};
 
 // services
 
@@ -111,6 +134,7 @@ export const getUserById = async (id) => {
     },
   });
 };
+// =======================
 export const createUser = async (data) => {
   const {
     name,
@@ -122,14 +146,17 @@ export const createUser = async (data) => {
     countryCode,
     phone,
 
-    // NEW hierarchy inputs from UI:
+    // hierarchy
     userLevel = LEVEL.ASSOCIATE,
     administrateId,
     headId,
     managerId,
+
+    // multi-exec (new) + legacy single accepted but not written directly
+    executiveIds,
     executiveId,
 
-    // Optional extras
+    // extras
     image_url,
     salesTarget,
     salesAchieved,
@@ -137,21 +164,31 @@ export const createUser = async (data) => {
     isActive,
     isLogin,
 
-    // legacy (ignored for logic but accepted):
+    // legacy flags (ignored for logic)
     isAdmin,
     userType,
   } = data;
 
-  // Map legacy userType -> level (if someone still sends it)
+  // Map legacy userType -> level
   let level = userLevel;
   if (userType === "head") level = LEVEL.HEAD;
   if (userType === "manager") level = LEVEL.MANAGER;
 
-  // Basic uniqueness
+  // Merge & dedupe execs (accept legacy single from callers that still send it)
+  const finalExecutiveIds = Array.from(
+    new Set(
+      [
+        ...(Array.isArray(executiveIds) ? executiveIds : []),
+        ...(executiveId ? [executiveId] : []),
+      ].filter(Boolean)
+    )
+  );
+
+  // Uniqueness
   const exists = await prisma.user.findUnique({ where: { email } });
   if (exists) throw new Error("A user with this email already exists.");
 
-  // Validate referenced records exist
+  // Foreigns exist
   if (roleId) {
     const roleExists = await prisma.role.findUnique({ where: { id: roleId } });
     if (!roleExists) throw new Error("Invalid roleId.");
@@ -163,36 +200,51 @@ export const createUser = async (data) => {
     if (!branchExists) throw new Error("Invalid branchId.");
   }
 
-  // Enforce nearest supervisor presence
+  // Nearest supervisor presence (supports array)
   requireClosestSupervisor(level, {
     administrateId,
     headId,
     managerId,
-    executiveId,
+    executiveId, // legacy
+    executiveIds: finalExecutiveIds,
   });
 
-  // Validate supervisors & levels (if provided)
-  const [adminU, headU, managerU, execU] = await Promise.all([
+  // Extra human-friendly checks
+  if (level === LEVEL.EXECUTIVE && !managerId)
+    throw new Error("Manager is required for Executive.");
+  if (level === LEVEL.MANAGER && !headId)
+    throw new Error("Head is required for Manager.");
+  if (level === LEVEL.HEAD && !administrateId)
+    throw new Error("Administrate is required for Head.");
+  if (level === LEVEL.ASSOCIATE && finalExecutiveIds.length === 0) {
+    throw new Error("At least one Executive is required for an Associate.");
+  }
+
+  // Validate levels
+  const [adminU, headU, managerU] = await Promise.all([
     assertExists(administrateId, "Invalid administrateId."),
     assertExists(headId, "Invalid headId."),
     assertExists(managerId, "Invalid managerId."),
-    assertExists(executiveId, "Invalid executiveId."),
   ]);
   if (adminU) ensureLevel(adminU, LEVEL.ADMINISTRATE, "Administrate");
   if (headU) ensureLevel(headU, LEVEL.HEAD, "Head");
   if (managerU) ensureLevel(managerU, LEVEL.MANAGER, "Manager");
-  if (execU) ensureLevel(execU, LEVEL.EXECUTIVE, "Executive");
+  if (finalExecutiveIds.length) {
+    await assertAllExistAtLevel(
+      finalExecutiveIds,
+      LEVEL.EXECUTIVE,
+      "Executives"
+    );
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Derive legacy flags from level (for backward compatibility)
   const legacyFlags = {
     isAdmin: level === LEVEL.ADMINISTRATE,
     isHead: level === LEVEL.HEAD,
     isManager: level === LEVEL.MANAGER,
   };
 
-  // Build data object with nested connects (NO raw roleId/branchId here)
   const dataToCreate = {
     name,
     email,
@@ -208,18 +260,33 @@ export const createUser = async (data) => {
     isActive: isActive ?? true,
     isLogin: isLogin ?? false,
     ...legacyFlags,
+
+    ...(image_url ? { image_url } : {}),
+
+    ...(roleId ? { role: { connect: { id: roleId } } } : {}),
+    ...(branchId ? { branch: { connect: { id: branchId } } } : {}),
+
+    ...(administrateId
+      ? { administrate: { connect: { id: administrateId } } }
+      : {}),
+    ...(headId ? { head: { connect: { id: headId } } } : {}),
+    ...(managerId ? { manager: { connect: { id: managerId } } } : {}),
+
+    // multi-exec via pivot
+    ...(level === LEVEL.ASSOCIATE && finalExecutiveIds.length
+      ? {
+          myExecutives: {
+            create: finalExecutiveIds.map((eid) => ({
+              // IMPORTANT: connect the related executive; Prisma will set associateId automatically
+              executive: { connect: { id: eid } },
+            })),
+          },
+        }
+      : {}),
   };
 
-  if (image_url) dataToCreate.image_url = image_url;
-  if (roleId) dataToCreate.role = { connect: { id: roleId } };
-  if (branchId) dataToCreate.branch = { connect: { id: branchId } };
-
-  // Self-relations (only add if your schema/migration includes them)
-  if (administrateId)
-    dataToCreate.administrate = { connect: { id: administrateId } };
-  if (headId) dataToCreate.head = { connect: { id: headId } };
-  if (managerId) dataToCreate.manager = { connect: { id: managerId } };
-  if (executiveId) dataToCreate.executive = { connect: { id: executiveId } };
+  // IMPORTANT: DO NOT write the legacy single `executive` relation (your schema doesn’t have it anymore)
+  // if (executiveId) dataToCreate.executive = { connect: { id: executiveId } }; // ❌ remove
 
   try {
     const newUser = await prisma.user.create({ data: dataToCreate });
@@ -229,6 +296,7 @@ export const createUser = async (data) => {
   }
 };
 
+// =======================
 export const updateUser = async (id, data) => {
   const {
     name,
@@ -240,14 +308,15 @@ export const updateUser = async (id, data) => {
     branchId,
     password,
 
-    // hierarchy
     userLevel,
     administrateId,
     headId,
     managerId,
+
+    // multi-exec (new) + legacy single accepted but not written directly
+    executiveIds,
     executiveId,
 
-    // legacy
     userType,
   } = data;
 
@@ -272,24 +341,50 @@ export const updateUser = async (id, data) => {
     if (userType === "manager") level = LEVEL.MANAGER;
   }
 
-  if (level) {
-    requireClosestSupervisor(level, {
-      administrateId,
-      headId,
-      managerId,
-      executiveId,
-    });
+  const finalExecutiveIds = Array.from(
+    new Set(
+      [
+        ...(Array.isArray(executiveIds) ? executiveIds : []),
+        ...(executiveId ? [executiveId] : []),
+      ].filter(Boolean)
+    )
+  );
 
-    const [adminU, headU, managerU, execU] = await Promise.all([
-      assertExists(administrateId, "Invalid administrateId."),
-      assertExists(headId, "Invalid headId."),
-      assertExists(managerId, "Invalid managerId."),
-      assertExists(executiveId, "Invalid executiveId."),
-    ]);
-    if (adminU) ensureLevel(adminU, LEVEL.ADMINISTRATE, "Administrate");
-    if (headU) ensureLevel(headU, LEVEL.HEAD, "Head");
-    if (managerU) ensureLevel(managerU, LEVEL.MANAGER, "Manager");
-    if (execU) ensureLevel(execU, LEVEL.EXECUTIVE, "Executive");
+  const current = await prisma.user.findUnique({
+    where: { id },
+    select: { userLevel: true },
+  });
+  const targetLevel = level ?? current?.userLevel ?? LEVEL.ASSOCIATE;
+
+  // Validate supervisor presence when changing to a level that needs one
+  if (targetLevel === LEVEL.EXECUTIVE && managerId === "") {
+    throw new Error("Manager is required for Executive.");
+  }
+  if (targetLevel === LEVEL.MANAGER && headId === "") {
+    throw new Error("Head is required for Manager.");
+  }
+  if (targetLevel === LEVEL.HEAD && administrateId === "") {
+    throw new Error("Administrate is required for Head.");
+  }
+
+  if (administrateId) {
+    const u = await assertExists(administrateId, "Invalid administrateId.");
+    ensureLevel(u, LEVEL.ADMINISTRATE, "Administrate");
+  }
+  if (headId) {
+    const u = await assertExists(headId, "Invalid headId.");
+    ensureLevel(u, LEVEL.HEAD, "Head");
+  }
+  if (managerId) {
+    const u = await assertExists(managerId, "Invalid managerId.");
+    ensureLevel(u, LEVEL.MANAGER, "Manager");
+  }
+  if (finalExecutiveIds.length) {
+    await assertAllExistAtLevel(
+      finalExecutiveIds,
+      LEVEL.EXECUTIVE,
+      "Executives"
+    );
   }
 
   const dataToUpdate = {
@@ -298,7 +393,6 @@ export const updateUser = async (id, data) => {
     countryCode,
     phone,
     designation,
-    // relations via connect
     role: { connect: { id: roleId } },
     branch: { connect: { id: branchId } },
   };
@@ -310,7 +404,6 @@ export const updateUser = async (id, data) => {
     dataToUpdate.isManager = level === LEVEL.MANAGER;
   }
 
-  // Supervisor connects (only connect when an id is supplied)
   if (administrateId !== undefined) {
     dataToUpdate.administrate = administrateId
       ? { connect: { id: administrateId } }
@@ -326,11 +419,17 @@ export const updateUser = async (id, data) => {
       ? { connect: { id: managerId } }
       : { disconnect: true };
   }
-  if (executiveId !== undefined) {
-    dataToUpdate.executive = executiveId
-      ? { connect: { id: executiveId } }
-      : { disconnect: true };
+
+  // Replace-all semantics for executives if an array is supplied
+  if (Array.isArray(executiveIds)) {
+    dataToUpdate.myExecutives = {
+      deleteMany: {}, // remove existing assignments
+      create: executiveIds.map((eid) => ({
+        executive: { connect: { id: eid } },
+      })),
+    };
   }
+  // Do NOT write legacy single here either
 
   if (password && password.trim()) {
     dataToUpdate.password = await bcrypt.hash(password, 10);

@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ExecutiveAssignment {
+  associateId String
+  executiveId String
+  createdAt   DateTime @default(now())
+  associate User @relation("AssociateExec_Associate", fields: [associateId], references: [id], onDelete: Cascade)
+  executive User @relation("AssociateExec_Executive", fields: [executiveId], references: [id], onDelete: Cascade)
+  @@id([associateId, executiveId])
+}
+
+
 model User {
   id                             String                     @id @default(uuid())
   UserID                         String?                    @unique
@@ -23,7 +33,6 @@ model User {
   administrateId                 String?
   headId                         String?
   managerId                      String?
-  executiveId                    String?
   salesTarget                    Float?                     @default(0)
   salesAchieved                  Float?                     @default(0)
   incentive                      Float?                     @default(0)
@@ -42,13 +51,14 @@ model User {
   administrate                   User?                      @relation("UserAdministrate", fields: [administrateId], references: [id])
   administrateTeam               User[]                     @relation("UserAdministrate")
   branch                         Branch?                    @relation(fields: [branchId], references: [id])
-  executive                      User?                      @relation("UserExecutive", fields: [executiveId], references: [id])
-  executiveTeam                  User[]                     @relation("UserExecutive")
-  head                           User?                      @relation("UserHead", fields: [headId], references: [id])
-  headTeam                       User[]                     @relation("UserHead")
-  manager                        User?                      @relation("UserManager", fields: [managerId], references: [id])
-  subordinates                   User[]                     @relation("UserManager")
-  role                           Role?                      @relation(fields: [roleId], references: [id])
+  executivesOfMe                 ExecutiveAssignment[]      @relation("AssociateExec_Executive") // I (Executive) have many associates
+  myExecutives                   ExecutiveAssignment[]      @relation("AssociateExec_Associate") // I (Associate) have many executives
+
+  head         User?  @relation("UserHead", fields: [headId], references: [id])
+  headTeam     User[] @relation("UserHead")
+  manager      User?  @relation("UserManager", fields: [managerId], references: [id])
+  subordinates User[] @relation("UserManager")
+  role         Role?  @relation(fields: [roleId], references: [id])
 }
 
 model Role {

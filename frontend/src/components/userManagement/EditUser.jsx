@@ -26,11 +26,14 @@ export default function EditUserForm({ userId, onClose }) {
     branchId: "",
     roleId: "",
     designation: "",
-    // hierarchy (new)
+    // hierarchy
     userLevel: "ASSOCIATE",
     administrateId: "",
     headId: "",
     managerId: "",
+    // NEW multi-exec
+    executiveIds: [],
+    // legacy single kept only as backend fallback (not used in UI)
     executiveId: "",
   });
 
@@ -49,7 +52,6 @@ export default function EditUserForm({ userId, onClose }) {
     if (u?.isAdmin) return LEVEL.ADMINISTRATE;
     if (u?.isHead) return LEVEL.HEAD;
     if (u?.isManager) return LEVEL.MANAGER;
-    // fallback guess
     return LEVEL.ASSOCIATE;
   };
 
@@ -64,32 +66,62 @@ export default function EditUserForm({ userId, onClose }) {
     [users]
   );
 
+  // visibility flags based on level
   const visibilityFromLevel = (level) => ({
     showAdministrate: [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER, LEVEL.HEAD].includes(level),
-    showHead:         [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(level),
-    showManager:      [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(level),
-    showExecutive:    [LEVEL.ASSOCIATE].includes(level),
+    showHead: [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(level),
+    showManager: [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(level),
+    showExecutive: [LEVEL.ASSOCIATE].includes(level),
   });
 
-  const { showAdministrate, showHead, showManager, showExecutive } =
-    visibilityFromLevel(formData.userLevel);
+  const { showAdministrate, showHead, showManager, showExecutive } = visibilityFromLevel(formData.userLevel);
 
+  // cascading filters (same as AddUserForm)
+  const filteredHeads = showHead
+    ? (formData.administrateId
+        ? usersByLevel.HEAD.filter((h) => h.administrateId === formData.administrateId)
+        : usersByLevel.HEAD)
+    : [];
+
+  const filteredManagers = showManager
+    ? (formData.headId
+        ? usersByLevel.MANAGER.filter((m) => m.headId === formData.headId)
+        : (formData.administrateId
+            ? usersByLevel.MANAGER.filter((m) => m.headId && filteredHeads.some((h) => h.id === m.headId))
+            : usersByLevel.MANAGER))
+    : [];
+
+  const filteredExecutives = showExecutive
+    ? (formData.managerId
+        ? usersByLevel.EXECUTIVE.filter((e) => e.managerId === formData.managerId)
+        : (formData.headId
+            ? usersByLevel.EXECUTIVE.filter((e) =>
+                e.managerId && filteredManagers.some((m) => m.id === e.managerId)
+              )
+            : (formData.administrateId
+                ? usersByLevel.EXECUTIVE.filter((e) =>
+                    e.managerId && usersByLevel.MANAGER.some((m) =>
+                      m.id === e.managerId && filteredManagers.some((fm) => fm.id === m.id)
+                    )
+                  )
+                : usersByLevel.EXECUTIVE)))
+    : [];
+
+  // level change: recompute visibility + clear incompatible upstream ids
   const onLevelChange = (level) => {
     const v = visibilityFromLevel(level);
     setFormData((prev) => ({
       ...prev,
       userLevel: level,
       administrateId: v.showAdministrate ? prev.administrateId : "",
-      headId:         v.showHead ? prev.headId : "",
-      managerId:      v.showManager ? prev.managerId : "",
-      executiveId:    v.showExecutive ? prev.executiveId : "",
+      headId: v.showHead ? prev.headId : "",
+      managerId: v.showManager ? prev.managerId : "",
+      executiveIds: v.showExecutive ? (prev.executiveIds ?? []) : [],
     }));
   };
 
   // ----- effects -----
-  useEffect(() => {
-    setCountries(CountryList.getAll());
-  }, []);
+  useEffect(() => { setCountries(CountryList.getAll()); }, []);
 
   useEffect(() => {
     fetchRoles();
@@ -97,10 +129,20 @@ export default function EditUserForm({ userId, onClose }) {
     fetchUsers();
   }, [fetchRoles, fetchBranches, fetchUsers]);
 
+  // Load user
   useEffect(() => {
     if (!userId) return;
     const u = getUserById(userId);
     if (!u) return;
+
+    // Pull current executive assignments if present in the user object
+    // Prefer `myExecutives` (array of assignments with executiveId), fallback to legacy single `executiveId`
+    const existingExecIds = Array.from(
+      new Set([
+        ...((u.myExecutives?.map?.((ea) => ea.executiveId)) || []),
+        ...(u.executiveId ? [u.executiveId] : []),
+      ].filter(Boolean))
+    );
 
     setFormData({
       name: u.name || "",
@@ -114,13 +156,12 @@ export default function EditUserForm({ userId, onClose }) {
       administrateId: u.administrateId || "",
       headId: u.headId || "",
       managerId: u.managerId || "",
-      executiveId: u.executiveId || "",
+      executiveIds: existingExecIds,
+      executiveId: existingExecIds[0] || "",
     });
   }, [userId, getUserById]);
 
-  useEffect(() => {
-    if (error) setErrorValidation(error);
-  }, [error]);
+  useEffect(() => { if (error) setErrorValidation(error); }, [error]);
 
   // ----- submit -----
   const handleSubmit = async (e) => {
@@ -133,8 +174,8 @@ export default function EditUserForm({ userId, onClose }) {
     }
 
     // nearest supervisor client-side enforcement
-    if (formData.userLevel === LEVEL.ASSOCIATE && !formData.executiveId) {
-      setErrorValidation("Please select an Executive for this Associate.");
+    if (formData.userLevel === LEVEL.ASSOCIATE && (!formData.executiveIds || formData.executiveIds.length === 0)) {
+      setErrorValidation("Please select at least one Executive for this Associate.");
       return;
     }
     if (formData.userLevel === LEVEL.EXECUTIVE && !formData.managerId) {
@@ -167,6 +208,8 @@ export default function EditUserForm({ userId, onClose }) {
     }
 
     try {
+      const firstExecutiveId = formData.executiveIds?.[0] ?? null; // legacy fallback only
+
       const payload = {
         name: formData.name,
         email: formData.email,
@@ -181,7 +224,11 @@ export default function EditUserForm({ userId, onClose }) {
         administrateId: formData.administrateId || null,
         headId: formData.headId || null,
         managerId: formData.managerId || null,
-        executiveId: formData.executiveId || null,
+
+        // NEW multi
+        executiveIds: formData.executiveIds || [],
+        // legacy single (backend may ignore)
+        executiveId: firstExecutiveId,
 
         // optional password
         ...(newPassword ? { password: newPassword } : {}),
@@ -278,7 +325,7 @@ export default function EditUserForm({ userId, onClose }) {
         className="border px-3 py-2 rounded-md w-full"
       />
 
-      {/* Level */}
+      {/* Level & hierarchy */}
       <h3 className="font-semibold text-gray-700 border-b pb-1">Hierarchy</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select
@@ -293,11 +340,14 @@ export default function EditUserForm({ userId, onClose }) {
           <option value={LEVEL.ASSOCIATE}>Associate</option>
         </select>
 
-        {/* Supervisor selects */}
+        {/* Administrate */}
         {showAdministrate && (
           <select
             value={formData.administrateId}
-            onChange={(e) => setFormData({ ...formData, administrateId: e.target.value })}
+            onChange={(e) => {
+              const administrateId = e.target.value;
+              setFormData((prev) => ({ ...prev, administrateId, headId: "", managerId: "", executiveIds: [] }));
+            }}
             className="border px-3 py-2 rounded-md w-full"
           >
             <option value="">Select Administrate</option>
@@ -309,14 +359,19 @@ export default function EditUserForm({ userId, onClose }) {
           </select>
         )}
 
+        {/* Head (filtered) */}
         {showHead && (
           <select
             value={formData.headId}
-            onChange={(e) => setFormData({ ...formData, headId: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
+            onChange={(e) => {
+              const headId = e.target.value;
+              setFormData((prev) => ({ ...prev, headId, managerId: "", executiveIds: [] }));
+            }}
+            disabled={!formData.administrateId}
+            className="border px-3 py-2 rounded-md w-full disabled:bg-gray-100"
           >
-            <option value="">Select Head</option>
-            {usersByLevel.HEAD.map((u) => (
+            <option value="">{formData.administrateId ? "Select Head" : "Select Administrate first"}</option>
+            {filteredHeads.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}
               </option>
@@ -324,14 +379,19 @@ export default function EditUserForm({ userId, onClose }) {
           </select>
         )}
 
+        {/* Manager (filtered) */}
         {showManager && (
           <select
             value={formData.managerId}
-            onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
+            onChange={(e) => {
+              const managerId = e.target.value;
+              setFormData((prev) => ({ ...prev, managerId, executiveIds: [] }));
+            }}
+            disabled={!formData.headId}
+            className="border px-3 py-2 rounded-md w-full disabled:bg-gray-100"
           >
-            <option value="">Select Manager</option>
-            {usersByLevel.MANAGER.map((u) => (
+            <option value="">{formData.headId ? "Select Manager" : "Select Head first"}</option>
+            {filteredManagers.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}
               </option>
@@ -339,14 +399,22 @@ export default function EditUserForm({ userId, onClose }) {
           </select>
         )}
 
+        {/* Executives (multi) */}
         {showExecutive && (
           <select
-            value={formData.executiveId}
-            onChange={(e) => setFormData({ ...formData, executiveId: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
+            multiple
+            value={formData.executiveIds}
+            onChange={(e) => {
+              const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+              setFormData({ ...formData, executiveIds: selected });
+            }}
+            disabled={!formData.managerId}
+            className="border px-3 py-2 rounded-md w-full disabled:bg-gray-100 h-40"
           >
-            <option value="">Select Executive</option>
-            {usersByLevel.EXECUTIVE.map((u) => (
+            <option value="" disabled>
+              {formData.managerId ? "Select Executive(s)" : "Select Manager first"}
+            </option>
+            {filteredExecutives.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name}
               </option>
