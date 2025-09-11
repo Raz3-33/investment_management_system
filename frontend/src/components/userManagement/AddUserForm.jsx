@@ -15,13 +15,11 @@ export default function AddUserForm() {
     branchId: "",
     roleId: "",
     designation: "",
-    userLevel: "ASSOCIATE", // ADMINISTRATE | HEAD | MANAGER | EXECUTIVE | ASSOCIATE
+    userLevel: "ASSOCIATE",
     administrateId: "",
     headId: "",
     managerId: "",
-    // NEW:
-    executiveIds: [], // multi-select
-    // (legacy single kept only for API fallback — we won't use it in UI)
+    executiveIds: [],
     executiveId: "",
     password: "",
     confirmPassword: "",
@@ -43,22 +41,19 @@ export default function AddUserForm() {
     ASSOCIATE: "ASSOCIATE",
   };
 
-  // group users by level
   const usersByLevel = {
     ADMINISTRATE: users?.filter((u) => u.userLevel === LEVEL.ADMINISTRATE) ?? [],
-    HEAD:         users?.filter((u) => u.userLevel === LEVEL.HEAD) ?? [],
-    MANAGER:      users?.filter((u) => u.userLevel === LEVEL.MANAGER) ?? [],
-    EXECUTIVE:    users?.filter((u) => u.userLevel === LEVEL.EXECUTIVE) ?? [],
-    ASSOCIATE:    users?.filter((u) => u.userLevel === LEVEL.ASSOCIATE) ?? [],
+    HEAD: users?.filter((u) => u.userLevel === LEVEL.HEAD) ?? [],
+    MANAGER: users?.filter((u) => u.userLevel === LEVEL.MANAGER) ?? [],
+    EXECUTIVE: users?.filter((u) => u.userLevel === LEVEL.EXECUTIVE) ?? [],
+    ASSOCIATE: users?.filter((u) => u.userLevel === LEVEL.ASSOCIATE) ?? [],
   };
 
-  // visibility flags
   const showAdministrate = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER, LEVEL.HEAD].includes(formData.userLevel);
   const showHead         = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(formData.userLevel);
   const showManager      = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE].includes(formData.userLevel);
   const showExecutive    = [LEVEL.ASSOCIATE].includes(formData.userLevel);
 
-  // cascading filters
   const filteredHeads = showHead
     ? (formData.administrateId
         ? usersByLevel.HEAD.filter(h => h.administrateId === formData.administrateId)
@@ -89,7 +84,6 @@ export default function AddUserForm() {
                 : usersByLevel.EXECUTIVE)))
     : [];
 
-  // level change: recompute visibility + clear incompatible upstream ids
   const onLevelChange = (level) => {
     const nextShowAdministrate = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER, LEVEL.HEAD].includes(level);
     const nextShowHead         = [LEVEL.ASSOCIATE, LEVEL.EXECUTIVE, LEVEL.MANAGER].includes(level);
@@ -106,7 +100,6 @@ export default function AddUserForm() {
     }));
   };
 
-  // country list, roles, branches, users
   useEffect(() => { setCountries(CountryList.getAll()); }, []);
   useEffect(() => { if (error) setErrorValidation(error); }, [error]);
   useEffect(() => { fetchRoles(); fetchBranches(); fetchUsers(); }, [fetchRoles, fetchBranches, fetchUsers, userAdd]);
@@ -123,7 +116,6 @@ export default function AddUserForm() {
       return;
     }
 
-    // Client-side guard for nearest supervisor
     if (formData.userLevel === LEVEL.ASSOCIATE && (!formData.executiveIds || formData.executiveIds.length === 0)) {
       setErrorValidation("Please select at least one Executive for this Associate.");
       return;
@@ -142,7 +134,6 @@ export default function AddUserForm() {
     }
 
     try {
-      // Legacy fallback: send single executiveId as the first selected (if backend still reads it)
       const firstExecutiveId = formData.executiveIds?.[0] ?? null;
 
       await addUser({
@@ -150,14 +141,8 @@ export default function AddUserForm() {
         administrateId: formData.administrateId || null,
         headId:         formData.headId || null,
         managerId:      formData.managerId || null,
-
-        // NEW multi-select field:
         executiveIds:   formData.executiveIds ?? [],
-
-        // legacy single (safe fallback, backend can ignore):
         executiveId:    firstExecutiveId,
-
-        // legacy flags (kept for compatibility)
         isHead:   formData.userLevel === "HEAD",
         isManager:formData.userLevel === "MANAGER",
         isAdmin:  formData.userLevel === "ADMINISTRATE",
@@ -188,206 +173,212 @@ export default function AddUserForm() {
   };
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+    <div className="w-full overflow-x-hidden">
+      {/* Centered + constrained for laptop widths; padding for breathing room */}
+      <div className="mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 py-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {errorValidation && <p className="text-red-500 text-sm">{errorValidation}</p>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        {/* Grid Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Name */}
-          <input
-            type="text"
-            placeholder="Name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
-          />
+          {/* Section: Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <input
+              type="text"
+              placeholder="Name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="border px-3 py-2 rounded-md w-full min-w-0"
+            />
 
-          {/* Email */}
-          <input
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
-          />
+            <input
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="border px-3 py-2 rounded-md w-full min-w-0"
+            />
 
-          {/* Phone (Country Code + Phone) */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-2">Phone</label>
-            <div className="grid grid-cols-12 gap-2">
-              <select
-                value={formData.countryCode}
-                onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                className="col-span-3 sm:col-span-2 md:col-span-4 border px-3 py-2 rounded-md"
-              >
-                <option value="">Code</option>
-                {countries.map((c) => (
-                  <option key={c.code} value={c.dial_code}>
-                    {c.flag || c.code} {c.name} ({c.dial_code})
-                  </option>
-                ))}
-              </select>
+            {/* Phone (Code + Number) — compact grid to prevent overflow */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-2">Phone</label>
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                <select
+                  value={formData.countryCode}
+                  onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+                  className="col-span-1 border px-3 py-2 rounded-md min-w-0"
+                >
+                  <option value="">Code</option>
+                  {countries.map((c) => (
+                    <option key={c.code} value={c.dial_code}>
+                      {(c.flag || c.code)} {c.name} ({c.dial_code})
+                    </option>
+                  ))}
+                </select>
 
-              <input
-                type="tel"
-                placeholder="Phone number"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="col-span-7 sm:col-span-8 md:col-span-8 border px-3 py-2 rounded-md"
-              />
+                <input
+                  type="tel"
+                  placeholder="Phone number"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="col-span-3 sm:col-span-4 border px-3 py-2 rounded-md w-full min-w-0"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Branch */}
-          <select
-            value={formData.branchId}
-            onChange={(e) => {
-              if (e.target.value === "add_new") { setIsBranchModalOpen(true); return; }
-              setFormData({ ...formData, branchId: e.target.value });
-            }}
-            className="md:col-span-2 border px-3 py-2 rounded-md w-full"
-          >
-            <option value="">Select Branch</option>
-            {branches?.map((branch) => (
-              <option key={branch.id} value={branch.id}>{branch.name}</option>
-            ))}
-            <option value="add_new" className="text-blue-600 font-semibold">➕ Add New Branch</option>
-          </select>
-
-          {/* Role */}
-          <select
-            value={formData.roleId}
-            onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-            className="md:col-span-2 border px-3 py-2 rounded-md w-full"
-          >
-            <option value="">Select Role</option>
-            {roles?.map((role) => (
-              <option key={role.id} value={role.id}>{role.name}</option>
-            ))}
-          </select>
-
-          {/* Designation */}
-          <input
-            type="text"
-            placeholder="Designation (Optional)"
-            value={formData.designation}
-            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-            className="md:col-span-2 border px-3 py-2 rounded-md w-full"
-          />
-
-          {/* Level */}
-          <select
-            value={formData.userLevel}
-            onChange={(e) => onLevelChange(e.target.value)}
-            className="md:col-span-2 border px-3 py-2 rounded-md w-full"
-          >
-            <option value="ADMINISTRATE">Administrate</option>
-            <option value="HEAD">Head</option>
-            <option value="MANAGER">Manager</option>
-            <option value="EXECUTIVE">Executive</option>
-            <option value="ASSOCIATE">Associate</option>
-          </select>
-
-          {/* Administrate (parent of Head) */}
-          {showAdministrate && (
+          {/* Section: Work */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <select
-              value={formData.administrateId}
+              value={formData.branchId}
               onChange={(e) => {
-                const administrateId = e.target.value;
-                setFormData(prev => ({ ...prev, administrateId, headId: "", managerId: "", executiveIds: [] }));
+                if (e.target.value === "add_new") { setIsBranchModalOpen(true); return; }
+                setFormData({ ...formData, branchId: e.target.value });
               }}
-              className="md:col-span-2 border px-3 py-2 rounded-md w-full"
+              className="border px-3 py-2 rounded-md w-full min-w-0"
             >
-              <option value="">Select Administrate</option>
-              {usersByLevel.ADMINISTRATE.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
+              <option value="">Select Branch</option>
+              {branches?.map((branch) => (
+                <option key={branch.id} value={branch.id}>{branch.name}</option>
+              ))}
+              <option value="add_new" className="text-blue-600 font-semibold">➕ Add New Branch</option>
+            </select>
+
+            <select
+              value={formData.roleId}
+              onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
+              className="border px-3 py-2 rounded-md w-full min-w-0"
+            >
+              <option value="">Select Role</option>
+              {roles?.map((role) => (
+                <option key={role.id} value={role.id}>{role.name}</option>
               ))}
             </select>
-          )}
 
-          {/* Head (filtered by Administrate) */}
-          {showHead && (
+            <input
+              type="text"
+              placeholder="Designation (Optional)"
+              value={formData.designation}
+              onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+              className="md:col-span-2 border px-3 py-2 rounded-md w-full min-w-0"
+            />
+          </div>
+
+          {/* Section: Hierarchy */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <select
-              value={formData.headId}
-              onChange={(e) => {
-                const headId = e.target.value;
-                setFormData(prev => ({ ...prev, headId, managerId: "", executiveIds: [] }));
-              }}
-              disabled={!formData.administrateId}
-              className="md:col-span-2 border px-3 py-2 rounded-md w-full disabled:bg-gray-100"
+              value={formData.userLevel}
+              onChange={(e) => onLevelChange(e.target.value)}
+              className="border px-3 py-2 rounded-md w-full min-w-0"
             >
-              <option value="">{formData.administrateId ? "Select Head" : "Select Administrate first"}</option>
-              {filteredHeads.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
+              <option value="ADMINISTRATE">Administrate</option>
+              <option value="HEAD">Head</option>
+              <option value="MANAGER">Manager</option>
+              <option value="EXECUTIVE">Executive</option>
+              <option value="ASSOCIATE">Associate</option>
             </select>
-          )}
 
-          {/* Manager (filtered by Head) */}
-          {showManager && (
-            <select
-              value={formData.managerId}
-              onChange={(e) => {
-                const managerId = e.target.value;
-                setFormData(prev => ({ ...prev, managerId, executiveIds: [] }));
-              }}
-              disabled={!formData.headId}
-              className="md:col-span-2 border px-3 py-2 rounded-md w-full disabled:bg-gray-100"
+            {/* Administrate */}
+            {showAdministrate && (
+              <select
+                value={formData.administrateId}
+                onChange={(e) => {
+                  const administrateId = e.target.value;
+                  setFormData(prev => ({ ...prev, administrateId, headId: "", managerId: "", executiveIds: [] }));
+                }}
+                className="border px-3 py-2 rounded-md w-full min-w-0"
+              >
+                <option value="">Select Administrate</option>
+                {usersByLevel.ADMINISTRATE.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Head */}
+            {showHead && (
+              <select
+                value={formData.headId}
+                onChange={(e) => {
+                  const headId = e.target.value;
+                  setFormData(prev => ({ ...prev, headId, managerId: "", executiveIds: [] }));
+                }}
+                disabled={!formData.administrateId}
+                className="border px-3 py-2 rounded-md w-full min-w-0 disabled:bg-gray-100"
+              >
+                <option value="">{formData.administrateId ? "Select Head" : "Select Administrate first"}</option>
+                {filteredHeads.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Manager */}
+            {showManager && (
+              <select
+                value={formData.managerId}
+                onChange={(e) => {
+                  const managerId = e.target.value;
+                  setFormData(prev => ({ ...prev, managerId, executiveIds: [] }));
+                }}
+                disabled={!formData.headId}
+                className="border px-3 py-2 rounded-md w-full min-w-0 disabled:bg-gray-100"
+              >
+                <option value="">{formData.headId ? "Select Manager" : "Select Head first"}</option>
+                {filteredManagers.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Executives (multi) */}
+            {showExecutive && (
+              <select
+                multiple
+                value={formData.executiveIds}
+                onChange={(e) => {
+                  const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                  setFormData({ ...formData, executiveIds: selected });
+                }}
+                disabled={!formData.managerId}
+                className="md:col-span-2 border px-3 py-2 rounded-md w-full min-w-0 disabled:bg-gray-100 h-40"
+              >
+                <option value="" disabled>{formData.managerId ? "Select Executive(s)" : "Select Manager first"}</option>
+                {filteredExecutives.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Section: Passwords */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <input
+              type="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="border px-3 py-2 rounded-md w-full min-w-0"
+            />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              className="border px-3 py-2 rounded-md w-full min-w-0"
+            />
+          </div>
+
+          {/* Submit (sticky on small screens to avoid scrolling way down) */}
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              className="bg-blue-600 text-white hover:bg-blue-700 transition duration-300 w-40 h-11"
             >
-              <option value="">{formData.headId ? "Select Manager" : "Select Head first"}</option>
-              {filteredManagers.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
-          )}
-
-          {/* Executive (filtered by Manager) — MULTI SELECT */}
-          {showExecutive && (
-            <select
-              multiple
-              value={formData.executiveIds}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                setFormData({ ...formData, executiveIds: selected });
-              }}
-              disabled={!formData.managerId}
-              className="md:col-span-2 border px-3 py-2 rounded-md w-full disabled:bg-gray-100 h-40"
-            >
-              <option value="" disabled>{formData.managerId ? "Select Executive(s)" : "Select Manager first"}</option>
-              {filteredExecutives.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
-          )}
-
-          {/* Password */}
-          <input
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
-          />
-
-          {/* Confirm Password */}
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            className="border px-3 py-2 rounded-md w-full"
-          />
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-center">
-          <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 transition duration-300 w-40 h-11">
-            Add User
-          </Button>
-        </div>
-      </form>
+              Add User
+            </Button>
+          </div>
+        </form>
+      </div>
 
       {/* Create Branch Modal */}
       <Modal
@@ -448,6 +439,6 @@ export default function AddUserForm() {
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }
