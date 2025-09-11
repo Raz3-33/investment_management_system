@@ -2,11 +2,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 
 model User {
   id                             String                     @id @default(uuid())
@@ -333,11 +333,11 @@ model PaymentSceduledDetails {
 }
 
 model ExpectedPaymentSceduledDetails {
-  id                         String                     @id
-  date                       DateTime?
-  amount                     Float?
-  personalDetailsId          String
-  BookingFormPersonalDetails BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
+  id                String                     @id @default(uuid())
+  date              DateTime?
+  amount            Float?
+  personalDetailsId String
+  personalDetails   BookingFormPersonalDetails @relation(fields: [personalDetailsId], references: [id])
 }
 
 enum UserLevel {
@@ -347,7 +347,6 @@ enum UserLevel {
   EXECUTIVE
   ASSOCIATE
 }
-
 
 enum AssignmentType {
   MANUALLY
