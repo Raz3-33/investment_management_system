@@ -134,6 +134,8 @@ export const getUserById = async (id) => {
     },
   });
 };
+
+
 // =======================
 export const createUser = async (data) => {
   const {
@@ -442,6 +444,8 @@ export const updateUser = async (id, data) => {
     });
     return updatedUser;
   } catch (error) {
+    console.log(error,"errorerrorerrorerrorerrorerror");
+    
     throw new Error(`Failed to update user: ${error.message}`);
   }
 };

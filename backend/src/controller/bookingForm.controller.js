@@ -25,6 +25,7 @@ export const getBookingById = async (req, res) => {
   }
 };
 
+// Update Payment Approval (Token Approval)
 export const updatePaymentApproval = async (req, res) => {
   try {
     const { id } = req.params;
@@ -48,10 +49,11 @@ export const updatePaymentApproval = async (req, res) => {
   }
 };
 
+// Convert Booking to Investment
 export const convertToInvestment = async (req, res) => {
   try {
     const { personalDetailsId } = req.params;
-    const userId = req.user?.id || null; // if you attach auth user
+    const userId = req.user?.id || null; // If user is authenticated
     const result = await bookingFormService.convertToInvestment({
       personalDetailsId,
       createdById: userId,
@@ -70,8 +72,51 @@ export const convertToInvestment = async (req, res) => {
   }
 };
 
+// Mark Territory as Booked
+export const markTerritoryBooked = async (req, res) => {
+  try {
+    const { personalDetailsId } = req.params;
+    const result = await bookingFormService.markTerritoryBooked({
+      personalDetailsId,
+      user: req.user,
+    });
 
-// controller/bookingForm.controller.js
+    if (!result.success) {
+      return res
+        .status(result.statusCode || 400)
+        .json({ success: false, message: result.message });
+    }
+
+    return res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Unmark Territory as Booked (Revoke Booking)
+export const unmarkTerritoryBooked = async (req, res) => {
+  try {
+    const { personalDetailsId } = req.params; // Get the personal details ID from the route
+    const result = await bookingFormService.unmarkTerritoryBooked({
+      personalDetailsId,
+      user: req.user, // Pass the current user from the request
+    });
+
+    if (!result.success) {
+      return res
+        .status(result.statusCode || 400)
+        .json({ success: false, message: result.message });
+    }
+
+    return res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    console.error("Error in unmarkTerritoryBooked:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Approve Document
+// Controller update for document approval
 export const updateDocumentApproval = async (req, res) => {
   try {
     const { personalDetailsId } = req.params;
@@ -96,38 +141,16 @@ export const updateDocumentApproval = async (req, res) => {
   }
 };
 
-// controller/bookingForm.controller.js
+// Approve Scheduled Payment
 export const updateScheduledPaymentApproval = async (req, res) => {
   try {
-    const { id } = req.params;           // schedule row id
-    const { status } = req.body;         // "Approved" | "Pending"
+    const { id } = req.params; // schedule row id
+    const { status } = req.body; // "Approved" | "Pending"
     const result = await bookingFormService.updateScheduledPaymentApproval(
       id,
       status,
       req.user
     );
-
-    if (!result.success) {
-      return res
-        .status(result.statusCode || 400)
-        .json({ success: false, message: result.message });
-    }
-
-    return res.status(200).json({ success: true, data: result.data });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-
-
-export const markTerritoryBooked = async (req, res) => {
-  try {
-    const { personalDetailsId } = req.params;
-    const result = await bookingFormService.markTerritoryBooked({
-      personalDetailsId,
-      user: req.user,
-    });
 
     if (!result.success) {
       return res

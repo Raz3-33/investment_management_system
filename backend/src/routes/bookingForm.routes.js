@@ -60,3 +60,9 @@ router.post(
   bookingFormController.markTerritoryBooked
 );
 
+router.post(
+  "/unmark-booked/:personalDetailsId",
+  verifyToken,
+  checkPermission("Booking Management:approve"),
+  bookingFormController.unmarkTerritoryBooked
+);

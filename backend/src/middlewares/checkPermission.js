@@ -22,6 +22,7 @@ export const checkPermission = (requiredPermission) => {
           },
         },
       });
+console.log(user,"user?.isAdminuser?.isAdminuser?.isAdminuser?.isAdminuser?.isAdmin");
 
       // Check if the user has the isAdmin flag
       if (user?.isAdmin) {
