@@ -11,11 +11,11 @@ model ExecutiveAssignment {
   associateId String
   executiveId String
   createdAt   DateTime @default(now())
-  associate User @relation("AssociateExec_Associate", fields: [associateId], references: [id], onDelete: Cascade)
-  executive User @relation("AssociateExec_Executive", fields: [executiveId], references: [id], onDelete: Cascade)
+  associate   User     @relation("AssociateExec_Associate", fields: [associateId], references: [id], onDelete: Cascade)
+  executive   User     @relation("AssociateExec_Executive", fields: [executiveId], references: [id], onDelete: Cascade)
+
   @@id([associateId, executiveId])
 }
-
 
 model User {
   id                             String                     @id @default(uuid())
@@ -59,6 +59,9 @@ model User {
   manager      User?  @relation("UserManager", fields: [managerId], references: [id])
   subordinates User[] @relation("UserManager")
   role         Role?  @relation(fields: [roleId], references: [id])
+
+  // 1-N relation: A user can have many BookingFormPersonalDetails
+  bookingFormDetails BookingFormPersonalDetails[]
 }
 
 model Role {
@@ -267,6 +270,7 @@ model Territory {
 model BookingFormPersonalDetails {
   id                              String                           @id @default(uuid())
   userId                          String
+  user                            User                             @relation(fields: [userId], references: [id])
   fullName                        String
   email                           String
   phoneNumber                     String
@@ -276,7 +280,7 @@ model BookingFormPersonalDetails {
   district                        String?
   city                            String?
   streetAddress                   String?
-  pincode                         String?
+  pincode                         String? 
   aadharFront                     String?
   aadharFrontIsApproved           Boolean                          @default(false)
   aadharBack                      String?
