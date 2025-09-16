@@ -44,6 +44,7 @@ export default function EditInvestmentOpportunityForm({
     // selectedTerritoryIds: [], // Multi-select territories
     isSignatureStore: false, // Signature store checkbox
     // location: "", // Location for signature store
+    isStockist: false,
   });
 
   const [errorValidation, setErrorValidation] = useState(""); // Error message state
@@ -76,6 +77,7 @@ export default function EditInvestmentOpportunityForm({
         //   ) || [], // If there are territories
         isSignatureStore: investmentOpportunity?.isSignature || false, // If it's a Signature Store
         // location: investmentOpportunity?.signatureStoreLocation || "", // Signature store location
+        isStockist: investmentOpportunity?.isStockist || false,
       });
     }
   }, [investmentOpportunity]);
@@ -138,7 +140,6 @@ export default function EditInvestmentOpportunityForm({
       !payoutMode ||
       !renewalFee
     ) {
-
       console.log({
         name: name,
         description: description,
@@ -154,9 +155,7 @@ export default function EditInvestmentOpportunityForm({
         renewalFee: renewalFee,
       });
 
-      setErrorValidation(
-        "All fields are required ."
-      );
+      setErrorValidation("All fields are required .");
       return;
     }
 
@@ -191,6 +190,7 @@ export default function EditInvestmentOpportunityForm({
         isMasterFranchise: isStore, // Master Franchise flag
         isSignature: isSignatureStore, // Signature Store flag
         // signatureStoreLocation: isSignatureStore ? location : "", // Signature Store location
+        isStockist: formData.isStockist,
       };
 
       // Call the store's updateInvestmentOpportunity function to send data to the backend
@@ -513,6 +513,7 @@ export default function EditInvestmentOpportunityForm({
                 // if unchecked, clear territories to avoid stale selections
                 // selectedTerritoryIds: checked ? prev.selectedTerritoryIds : [],
                 isSignatureStore: false, // Disable signature store checkbox
+                isStockist: false,
               }));
             }}
             className="h-4 w-4"
@@ -536,12 +537,34 @@ export default function EditInvestmentOpportunityForm({
                 // location: checked ? prev.location : "",
                 // selectedTerritoryIds: [], // Clear territories
                 isStore: false, // Disable Store checkbox
+                isStockist: false,
               }));
             }}
             className="h-4 w-4"
           />
           <label htmlFor="isSignatureStore" className="text-sm select-none">
             Signature Store
+          </label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            id="isStockist"
+            type="checkbox"
+            checked={formData.isStockist}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                isStockist: checked,
+                isStore: false,
+                isSignatureStore: false,
+              }));
+            }}
+            className="h-4 w-4"
+          />
+          <label htmlFor="isStockist" className="text-sm select-none">
+            Stockist
           </label>
         </div>
 

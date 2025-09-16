@@ -41,13 +41,33 @@ export const getInvestmentOpportunityById = async (id) => {
       investmentType: { select: { id: true, name: true } },
       businessCategory: { select: { id: true, name: true } },
 
-      // existing Master data
+      // Master territory mappings
       territoryMasters: {
-        select: { territory: { select: { id: true, name: true } } },
+        select: {
+          territory: {
+            select: {
+              id: true,
+              assignmentType: true,
+              location: true,
+              pincode: true,
+              city: true,
+              imageUrl: true,
+            },
+          },
+        },
       },
 
-      // NEW: Stockist territories via M:N
-      territories: { select: { id: true, name: true } },
+      // Direct territories (used for Stockist in your new flow)
+      territories: {
+        select: {
+          id: true,
+          assignmentType: true,
+          location: true,
+          pincode: true,
+          city: true,
+          imageUrl: true,
+        },
+      },
 
       opportunityBranches: {
         select: { branch: { select: { id: true, name: true } } },
@@ -55,7 +75,6 @@ export const getInvestmentOpportunityById = async (id) => {
     },
   });
 };
-
 
 export const createInvestmentOpportunity = async (data) => {
   const {
@@ -72,9 +91,9 @@ export const createInvestmentOpportunity = async (data) => {
     exitOptions,
     payoutMode,
     renewalFee,
-    isStore,        // Master Franchise
-    isSignature,    // Signature Store
-    isStockist,     // Stockist (no territories)
+    isStore, // Master Franchise
+    isSignature, // Signature Store
+    isStockist, // Stockist (no territories)
   } = data;
 
   // Validate referentials (unchanged)
@@ -124,7 +143,6 @@ export const createInvestmentOpportunity = async (data) => {
         isMasterFranchise: !!isStore,
         isSignature: !!isSignature,
         isStockist: !!isStockist,
-
       },
     });
 
@@ -213,9 +231,14 @@ export const updateInvestmentOpportunity = async (id, data) => {
 
     // Existing branch sync (unchanged)
     if (selectedBranchIds && selectedBranchIds.length > 0) {
-      await prisma.opportunityBranch.deleteMany({ where: { opportunityId: id } });
+      await prisma.opportunityBranch.deleteMany({
+        where: { opportunityId: id },
+      });
       await prisma.opportunityBranch.createMany({
-        data: selectedBranchIds.map((branchId) => ({ opportunityId: id, branchId })),
+        data: selectedBranchIds.map((branchId) => ({
+          opportunityId: id,
+          branchId,
+        })),
       });
     }
 
@@ -224,7 +247,10 @@ export const updateInvestmentOpportunity = async (id, data) => {
       await prisma.territoryMaster.deleteMany({ where: { opportunityId: id } });
       if (selectedTerritoryIds.length) {
         await prisma.territoryMaster.createMany({
-          data: selectedTerritoryIds.map((territoryId) => ({ opportunityId: id, territoryId })),
+          data: selectedTerritoryIds.map((territoryId) => ({
+            opportunityId: id,
+            territoryId,
+          })),
           skipDuplicates: true,
         });
       }
@@ -239,7 +265,6 @@ export const updateInvestmentOpportunity = async (id, data) => {
     throw new Error("Error updating investment opportunity: " + error.message);
   }
 };
-
 
 // Delete an investment opportunity
 export const deleteInvestmentOpportunity = async (id) => {

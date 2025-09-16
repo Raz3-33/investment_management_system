@@ -406,14 +406,16 @@ export default function TerritoryManagement() {
     (o) => o.id === formData.opportunityId
   );
 
-  let assignmentOptions = [];
+ let assignmentOptions = [];
   if (selectedOpportunity) {
-    if (selectedOpportunity.isMasterFranchise) {
+    const mf = Boolean(selectedOpportunity.isMasterFranchise);
+    const sk = Boolean(selectedOpportunity.isStockist);
+    const sg = Boolean(selectedOpportunity.isSignature);
+
+    if (mf || sk) {
+      // Stockist behaves the same as Master Franchise
       assignmentOptions = ["Manually", "Automatically"];
-    } else if (
-      !selectedOpportunity.isMasterFranchise &&
-      selectedOpportunity.isSignature
-    ) {
+    } else if (!mf && !sk && sg) {
       assignmentOptions = ["User"];
     }
   }

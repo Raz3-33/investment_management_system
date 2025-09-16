@@ -80,6 +80,26 @@ export const create = async (data) => {
     const { opportunityId, assignmentType } = data;
     const type = assignmentType.toUpperCase();
 
+    const opp = await prisma.investmentOpportunity.findUnique({
+      where: { id: opportunityId },
+      select: { isMasterFranchise: true, isSignature: true, isStockist: true },
+    });
+    if (!opp) throw new Error("Invalid opportunityId");
+
+    const allowsManualAuto = opp.isMasterFranchise || opp.isStockist;
+    if (type === "USER" && !opp.isSignature) {
+      throw new Error(
+        "USER assignment allowed only for Signature opportunities"
+      );
+    }
+    if (
+      (type === "MANUALLY" || type === "AUTOMATICALLY") &&
+      !allowsManualAuto
+    ) {
+      throw new Error(
+        "MANUALLY/AUTOMATICALLY allowed only for Master Franchise or Stockist"
+      );
+    }
     let createdRecords = [];
 
     if (type === "MANUALLY") {
@@ -155,6 +175,32 @@ export const update = async (id, data) => {
 
     validateUpdate({ ...data, assignmentType: normalizedType });
 
+    // If opportunity or assignmentType is changing, enforce rules
+    const targetOpportunityId =
+      data.opportunityId || existing.investmentOpportunityId;
+    if (!targetOpportunityId) throw new Error("opportunityId is required");
+    const opp = await prisma.investmentOpportunity.findUnique({
+      where: { id: targetOpportunityId },
+      select: { isMasterFranchise: true, isSignature: true, isStockist: true },
+    });
+    if (!opp) throw new Error("Invalid opportunityId");
+
+    if (normalizedType) {
+      const allowsManualAuto = opp.isMasterFranchise || opp.isStockist;
+      if (normalizedType === "USER" && !opp.isSignature) {
+        throw new Error(
+          "USER assignment allowed only for Signature opportunities"
+        );
+      }
+      if (
+        (normalizedType === "MANUALLY" || normalizedType === "AUTOMATICALLY") &&
+        !allowsManualAuto
+      ) {
+        throw new Error(
+          "MANUALLY/AUTOMATICALLY allowed only for Master Franchise or Stockist"
+        );
+      }
+    }
     const patch = {};
 
     // Only set fields that exist in the schema
