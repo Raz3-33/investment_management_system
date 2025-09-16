@@ -2,16 +2,22 @@
 import { create } from "zustand";
 import { api } from "../services/api";
 
-
 export const useAuthzStore = create()((set, get) => ({
   loading: false,
   isAdmin: false,
   permissions: new Set(),
   error: null,
-
   setIsAdmin: (v) => set({ isAdmin: !!v }),
-  setPermissions: (list) => set({ permissions: new Set(list || []), loading: false }),
-  reset: () => set({ loading: false, isAdmin: false, permissions: new Set(), error: null }),
+  setPermissions: (list) =>
+    set({ permissions: new Set(list || []), loading: false }),
+  reset: () =>
+    set({
+      loading: false,
+      isAdmin: false,
+      permissions: new Set(),
+      error: null,
+    }),
+    clearAuth: () => set({ ...initialAuth }, true),
 
   bootstrap: async () => {
     const token = localStorage.getItem("token");

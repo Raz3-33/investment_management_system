@@ -28,9 +28,11 @@ export const getBookingById = async (id) => {
       paymentDetails: true,
       territory: true,
       paymentScheduledDetails: true,
+      expectedPaymentScheduledDetails: true, // Include this in the response
     },
   });
 };
+
 
 // services/bookingForm.service.js (or booking.service.js)
 // Assumes `prisma` is imported and available
@@ -235,14 +237,14 @@ export async function convertToInvestment({
           .join(", ");
         msgParts.push(`Pending approvals: ${labels}`);
       }
-      if (hasPendingAmount) {
-        msgParts.push(
-          `Pending amount: ₹${summary.pendingAmount.toLocaleString("en-IN")}`
-        );
-      }
-      const message = msgParts.length
-        ? msgParts.join(" | ")
-        : "Payments are not fully approved";
+      // if (hasPendingAmount) {
+      //   msgParts.push(
+      //     `Pending amount: ₹${summary.pendingAmount.toLocaleString("en-IN")}`
+      //   );
+      // }
+      // const message = msgParts.length
+      //   ? msgParts.join(" | ")
+      //   : "Payments are not fully approved";
 
       const err = new Error(message);
       // attach details for controller (if you want to relay it)
@@ -382,6 +384,8 @@ export async function convertToInvestment({
 }
 
 // services/bookingForm.service.js
+// In your service file (e.g., bookingForm.service.js)
+
 export const updateDocumentApproval = async (
   personalDetailsId,
   docKey,
@@ -393,7 +397,6 @@ export const updateDocumentApproval = async (
     const roleName = user?.role?.name?.toLowerCase?.() || "";
     const isFinance = roleName === "finance";
     const isAdmin = user?.isAdmin === true;
-    // (Optionally allow ops/kyc)
     const allowed =
       isFinance ||
       isAdmin; /* || roleName === "kyc" || roleName === "operations" */
@@ -401,7 +404,8 @@ export const updateDocumentApproval = async (
       return {
         success: false,
         statusCode: 403,
-        message: "Forbidden: Only finance/admin can approve documents",
+        message:
+          "Forbidden: Only finance/admin can approve or revoke documents",
       };
     }
 
@@ -436,9 +440,7 @@ export const updateDocumentApproval = async (
       };
     }
 
-    const isApproved = status === "Approved";
-
-    // Load record (to ensure document exists before approving)
+    // Load record (to ensure document exists before approving or revoking)
     const pd = await prisma.bookingFormPersonalDetails.findUnique({
       where: { id: personalDetailsId },
       select: {
@@ -461,14 +463,19 @@ export const updateDocumentApproval = async (
       return {
         success: false,
         statusCode: 400,
-        message: `Cannot approve: ${docKey} is missing`,
+        message: `Cannot approve/revoke: ${docKey} is missing`,
       };
     }
 
+    // Check if we're approving or revoking
+    const isApproved = status === "Approved";
+    const newStatus = isApproved ? true : false; // toggle between true and false (approve/revoke)
+
+    // Update document approval
     const updated = await prisma.bookingFormPersonalDetails.update({
       where: { id: personalDetailsId },
       data: {
-        [approvalField]: isApproved,
+        [approvalField]: newStatus, // set the new status (true or false)
       },
       select: {
         id: true,
@@ -650,7 +657,11 @@ export const markTerritoryBooked = async ({ personalDetailsId, user }) => {
       if (booking.territory?.isBooked) {
         return {
           success: true,
-          data: { territoryId: booking.territoryId, isBooked: true, already: true },
+          data: {
+            territoryId: booking.territoryId,
+            isBooked: true,
+            already: true,
+          },
         };
       }
 
@@ -669,28 +680,28 @@ export const markTerritoryBooked = async ({ personalDetailsId, user }) => {
       const hasPendingAmount =
         typeof summary.pendingAmount === "number" && summary.pendingAmount > 0;
 
-      if (hasUnapproved || hasPendingAmount) {
-        const msgParts = [];
-        if (hasUnapproved) {
-          const labels = summary.pendingItems
-            .map((x) => `Payment ${x.index}`)
-            .join(", ");
-          msgParts.push(`Pending approvals: ${labels}`);
-        }
-        if (hasPendingAmount) {
-          msgParts.push(
-            `Pending amount: ₹${summary.pendingAmount.toLocaleString("en-IN")}`
-          );
-        }
-        return {
-          success: false,
-          statusCode: 400,
-          message:
-            msgParts.length > 0
-              ? msgParts.join(" | ")
-              : "Payments are not fully approved",
-        };
-      }
+      // if (hasUnapproved || hasPendingAmount) {
+      //   const msgParts = [];
+      //   if (hasUnapproved) {
+      //     const labels = summary.pendingItems
+      //       .map((x) => `Payment ${x.index}`)
+      //       .join(", ");
+      //     msgParts.push(`Pending approvals: ${labels}`);
+      //   }
+      //   // if (hasPendingAmount) {
+      //   //   msgParts.push(
+      //   //     `Pending amount: ₹${summary.pendingAmount.toLocaleString("en-IN")}`
+      //   //   );
+      //   // }
+      //   return {
+      //     success: false,
+      //     statusCode: 400,
+      //     message:
+      //       msgParts.length > 0
+      //         ? msgParts.join(" | ")
+      //         : "Payments are not fully approved",
+      //   };
+      // }
 
       // Flip isBooked = true
       const updated = await tx.territory.update({
@@ -712,3 +723,159 @@ export const markTerritoryBooked = async ({ personalDetailsId, user }) => {
     };
   }
 };
+
+export const unmarkTerritoryBooked = async ({ personalDetailsId, user }) => {
+  try {
+    // Check if the user has the proper role (finance/admin)
+    const roleName = user?.role?.name?.toLowerCase() || "";
+    const isFinance = roleName === "finance";
+    const isAdmin = user?.isAdmin === true;
+    if (!isFinance && !isAdmin) {
+      return {
+        success: false,
+        statusCode: 403,
+        message: "Forbidden: Only finance/admin can unmark booking",
+      };
+    }
+
+    if (!personalDetailsId) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: "personalDetailsId is required",
+      };
+    }
+
+    const data = await prisma.$transaction(async (tx) => {
+      // Load the booking data to check if it exists and get territory details
+      const booking = await tx.bookingFormPersonalDetails.findUnique({
+        where: { id: personalDetailsId },
+        include: {
+          territory: true,
+        },
+      });
+
+      if (!booking) {
+        return {
+          success: false,
+          statusCode: 404,
+          message: "Booking (personal details) not found",
+        };
+      }
+
+      if (!booking.territoryId) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: "No territory associated with this booking",
+        };
+      }
+
+      // If already not booked, short-circuit
+      if (!booking.territory?.isBooked) {
+        return {
+          success: true,
+          data: {
+            territoryId: booking.territoryId,
+            isBooked: false,
+            already: true,
+          },
+        };
+      }
+
+      // Flip isBooked to false (unmark booking)
+      const updated = await tx.territory.update({
+        where: { id: booking.territoryId },
+        data: { isBooked: false },
+        select: { id: true, isBooked: true },
+      });
+
+      return { success: true, data: updated };
+    });
+
+    return data;
+  } catch (err) {
+    console.error("Error in unmarkTerritoryBooked:", err);
+    return {
+      success: false,
+      statusCode: 500,
+      message: err.message || "Failed to unmark booking",
+    };
+  }
+};
+
+// Convert Booking to Investment
+// export async function convertToInvestment({ personalDetailsId, createdById = null }) {
+//   if (!personalDetailsId) throw new Error("personalDetailsId is required");
+
+//   return prisma.$transaction(async (tx) => {
+//     const booking = await tx.bookingFormPersonalDetails.findUnique({
+//       where: { id: personalDetailsId },
+//       include: {
+//         territory: { include: { InvestmentOpportunity: true } },
+//         officeDetails: {
+//           include: {
+//             officeBranch: true,
+//             leadSuccessCoordinator: true,
+//             partnerRelationshipExecutive: true,
+//             salesOnboardingManager: true,
+//           },
+//         },
+//         paymentDetails: true,
+//       },
+//     });
+
+//     if (!booking) throw new Error("Booking (personal details) not found");
+
+//     const { email, fullName, phoneNumber, state, district, city, streetAddress, pincode } = booking;
+//     const opportunity = booking.territory?.InvestmentOpportunity || null;
+//     const branchId = booking.officeDetails?.officeBranchId;
+
+//     if (!opportunity || !branchId) throw new Error("Investment opportunity or branch missing");
+
+//     // Validate payments are fully approved
+//     const pd = booking.paymentDetails;
+//     if (!pd) throw new Error("Payment details not found for this booking");
+
+//     const summary = summarizePayments(pd);
+//     if (summary.pendingItems.length > 0 || summary.pendingAmount > 0) {
+//       throw new Error("Payments are not fully approved");
+//     }
+
+//     const address = [streetAddress, city, district, state, pincode].filter(Boolean).join(", ");
+//     const randomPassword = Math.random().toString(36).slice(-10);
+
+//     const investor = await tx.investor.upsert({
+//       where: { email },
+//       create: {
+//         name: fullName,
+//         email,
+//         phone: phoneNumber || null,
+//         type: "Individual",
+//         address,
+//         password: randomPassword,
+//         status: "Pending",
+//         documents: [/* Aadhar and other docs */],
+//       },
+//       update: { /* Update logic */ },
+//     });
+
+//     // Create Investment
+//     const investment = await tx.investment.create({
+//       data: {
+//         investorId: investor.id,
+//         opportunityId: opportunity.id,
+//         createdById,
+//         amount: pd.dealAmount,
+//         date: pd.tokenDate || new Date(),
+//         contractStart: new Date(),
+//         contractEnd: addMonths(new Date(), opportunity.lockInMonths),
+//         payoutMode: opportunity.payoutMode,
+//         status: "Ongoing",
+//         branchId,
+//       },
+//     });
+
+//     return { investor, investment };
+//   });
+// }

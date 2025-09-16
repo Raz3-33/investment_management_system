@@ -12,9 +12,20 @@ export const createInvestment = async (data) => {
     agreementSigned,
     coolOffPeriod,
     status,
-    selectedBranchId, 
+    // selectedBranchId, 
   } = data;
-console.log(data,"branchIdbranchIdbranchIdbranchIdbranchIdbranchIdbranchId");
+
+  console.log({amount,
+    investorId,
+    opportunityId,
+    payoutMode,
+    contractStart,
+    contractEnd,
+    paymentMethod,
+    agreementSigned,
+    coolOffPeriod,
+    status},"================================================");
+  
 
   // Convert amount to proper type
   const amountFloat = parseFloat(amount);
@@ -57,9 +68,9 @@ console.log(data,"branchIdbranchIdbranchIdbranchIdbranchIdbranchIdbranchId");
     );
   }
 
-  if (!selectedBranchId) {
-    throw new Error("Branch ID is required.");
-  }
+  // if (!selectedBranchId) {
+  //   throw new Error("Branch ID is required.");
+  // }
 
   try {
     // Create a new investment record in the database
@@ -77,7 +88,7 @@ console.log(data,"branchIdbranchIdbranchIdbranchIdbranchIdbranchIdbranchId");
         status,
         date: new Date(),
         // Directly assign the selectedBranchId relation
-        branchId:selectedBranchId, // Connect the single branch
+        // branchId:selectedBranchId, // Connect the single branch
       },
     });
 

@@ -144,6 +144,9 @@ export default function EditUserForm({ userId, onClose }) {
       ].filter(Boolean))
     );
 
+    console.log(u,"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+    
+
     setFormData({
       name: u.name || "",
       email: u.email || "",

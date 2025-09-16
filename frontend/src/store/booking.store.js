@@ -128,7 +128,6 @@ export const useBookingStore = create(
         }
       },
 
-      // inside create(...) in useBookingStore
       updateScheduledPaymentApproval: async (scheduledId, status) => {
         set({ loading: true, error: null });
         try {
@@ -206,6 +205,45 @@ export const useBookingStore = create(
         } catch (err) {
           set({
             error: err.response?.data?.message || "Failed to mark as booked",
+            loading: false,
+          });
+          throw err;
+        }
+      },
+
+      unmarkTerritoryBooked: async (personalDetailsId) => {
+        set({ loading: true, error: null });
+        try {
+          const res = await api.post(
+            `/bookings/unmark-booked/${personalDetailsId}`,
+            {},
+            get()._getAuth()
+          );
+          set({ loading: false });
+          return res.data?.data;
+        } catch (err) {
+          set({
+            error:
+              err.response?.data?.message || "Failed to unmark as booked",
+            loading: false,
+          });
+          throw err;
+        }
+      },
+
+      getBookingConversionStatus: async (personalDetailsId) => {
+        set({ loading: true, error: null });
+        try {
+          const res = await api.get(
+            `/bookings/converted-status/${personalDetailsId}`,
+            get()._getAuth()
+          );
+          set({ loading: false });
+          return res.data?.data?.isConverted;
+        } catch (err) {
+          set({
+            error:
+              err.response?.data?.message || "Failed to fetch conversion status",
             loading: false,
           });
           throw err;

@@ -99,7 +99,7 @@ model Branch {
   createdAt               DateTime                   @default(now())
   updatedAt               DateTime                   @updatedAt
   officeDetails           BookingFormOfficeDetails[]
-  investments             Investment[]
+  // investments             Investment[]
   opportunityBranches     OpportunityBranch[]
   users                   User[]
   investmentOpportunities InvestmentOpportunity[]    @relation("OpportunityBranches")
@@ -171,6 +171,7 @@ model InvestmentOpportunity {
   businessCategoryId     String
   isMasterFranchise      Boolean             @default(false)
   isSignature            Boolean             @default(false)
+  isStockist             Boolean?             @default(false)
   signatureStoreLocation String?
   investments            Investment[]
   opportunityBranches    OpportunityBranch[]
@@ -220,8 +221,8 @@ model Investment {
   paymentMethod   String
   agreementSigned Boolean               @default(false)
   status          String                @default("Ongoing")
-  branchId        String
-  branch          Branch                @relation(fields: [branchId], references: [id])
+  // branchId        String
+  // branch          Branch                @relation(fields: [branchId], references: [id])
   createdBy       User?                 @relation("UserInvestments", fields: [createdById], references: [id])
   investor        Investor              @relation(fields: [investorId], references: [id])
   opportunity     InvestmentOpportunity @relation(fields: [opportunityId], references: [id])

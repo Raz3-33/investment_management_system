@@ -11,7 +11,6 @@ export default function AddInvestmentForm({ closeModal }) {
     investmentOpportunities,
     fetchInvestmentOpportunities,
     fetchInvestmentOpportunityWithBranches,
-    investmentOpportunitiesWithBranch, // Store for branches related to selected opportunity
   } = useInvestmentOpportunityStore((state) => state);
 
   const [formData, setFormData] = useState({
@@ -25,7 +24,7 @@ export default function AddInvestmentForm({ closeModal }) {
     paymentMethod: "",
     agreementSigned: false,
     status: "Ongoing",
-    selectedBranchId: "", // Store selected branch ID
+    // selectedBranchId: "", // Store selected branch ID
     coolOffPeriod: "", // Store cool off period date
   });
 
@@ -41,35 +40,27 @@ export default function AddInvestmentForm({ closeModal }) {
     if (error) setErrorValidation(error);
   }, [error]);
 
+
   // Handle when opportunity changes
   const handleOpportunityChange = async (e) => {
     const selectedId = e.target.value;
 
-    setFormData((prev) => {
-      // Find the selected opportunity
-      const selectedOpp = investmentOpportunities.find(
-        (opp) => opp.id === selectedId
-      );
-      // If found, auto-fill amount with minAmount and payoutMode, else keep previous values
-      return {
-        ...prev,
-        opportunityId: selectedId,
-        amount: selectedOpp ? selectedOpp.minAmount : "",
-        payoutMode: selectedOpp
-          ? selectedOpp.payoutMode || ""
-          : prev.payoutMode,
-      };
-    });
-    // setFormData({ ...formData, opportunityId: selectedId });
-
-    // Fetch associated branches for the selected opportunity
-    await fetchInvestmentOpportunityWithBranches(selectedId);
-
-    // Find selected opportunity from the list
-    const selectedOp = investmentOpportunities.find(
-      (op) => op.id === selectedId
+    const selectedOpp = investmentOpportunities.find(
+      (opp) => opp.id === selectedId
     );
-    setSelectedOpportunity(selectedOp);
+
+    // clear branch immediately to avoid showing a stale name
+    setFormData((prev) => ({
+      ...prev,
+      opportunityId: selectedId,
+      amount: selectedOpp ? selectedOpp.minAmount : "",
+      payoutMode: selectedOpp ? selectedOpp.payoutMode || "" : prev.payoutMode,
+    }));
+
+    setSelectedOpportunity(selectedOpp);
+
+    // kicks off store update; the useEffect above will select the first branch when it arrives
+    await fetchInvestmentOpportunityWithBranches(selectedId);
   };
 
   // Handle form submission
@@ -85,7 +76,7 @@ export default function AddInvestmentForm({ closeModal }) {
       contractStart,
       contractEnd,
       paymentMethod,
-      selectedBranchId,
+      // selectedBranchId,
       coolOffPeriod,
     } = formData;
 
@@ -98,7 +89,7 @@ export default function AddInvestmentForm({ closeModal }) {
       !contractStart ||
       !contractEnd ||
       !paymentMethod ||
-      !selectedBranchId || // Ensure a branch is selected
+      // !selectedBranchId || // Ensure a branch is selected
       !coolOffPeriod // Ensure cool off period is selected
     ) {
       setErrorValidation("All fields are required.");
@@ -149,7 +140,7 @@ export default function AddInvestmentForm({ closeModal }) {
         contractStart: "",
         contractEnd: "",
         paymentMethod: "",
-        selectedBranchId: "", // Reset the selected branch ID
+        // selectedBranchId: "", // Reset the selected branch ID
         coolOffPeriod: "", // Reset coolOffPeriod
         agreementSigned: false,
         status: "Ongoing",
@@ -219,25 +210,19 @@ export default function AddInvestmentForm({ closeModal }) {
         </div>
 
         {/* Branch Selection */}
-        <div>
-          <label className="block mb-1">Select Branch</label>
-          <select
-            value={formData.selectedBranchId}
-            onChange={(e) =>
-              setFormData({ ...formData, selectedBranchId: e.target.value })
+        {/* <div>
+          <label className="block mb-1">Branch</label>
+          <input
+            type="text"
+            value={
+              investmentOpportunitiesWithBranch?.opportunityBranches?.find(
+                (b) => b.branch.id === formData.selectedBranchId
+              )?.branch?.name || ""
             }
-            className="border px-3 py-2 rounded-md w-full"
-          >
-            <option value="">Select Branch</option>
-            {investmentOpportunitiesWithBranch?.opportunityBranches?.map(
-              (items) => (
-                <option key={items?.branch.id} value={items?.branch?.id}>
-                  {items?.branch?.name}
-                </option>
-              )
-            )}
-          </select>
-        </div>
+            readOnly
+            className="border px-3 py-2 rounded-md w-full bg-gray-100 cursor-not-allowed"
+          />
+        </div> */}
 
         {/* Payout Mode */}
         <div>
