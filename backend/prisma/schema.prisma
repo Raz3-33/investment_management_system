@@ -281,7 +281,7 @@ model BookingFormPersonalDetails {
   district                        String?
   city                            String?
   streetAddress                   String?
-  pincode                         String?
+  pincode                         String? 
   aadharFront                     String?
   aadharFrontIsApproved           Boolean                          @default(false)
   aadharBack                      String?
