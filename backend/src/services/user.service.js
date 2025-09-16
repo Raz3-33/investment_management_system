@@ -166,8 +166,6 @@ export const createUser = async (data) => {
     isActive,
     isLogin,
 
-    // legacy flags (ignored for logic)
-    isAdmin,
     userType,
   } = data;
 
@@ -242,7 +240,6 @@ export const createUser = async (data) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const legacyFlags = {
-    isAdmin: level === LEVEL.ADMINISTRATE,
     isHead: level === LEVEL.HEAD,
     isManager: level === LEVEL.MANAGER,
   };

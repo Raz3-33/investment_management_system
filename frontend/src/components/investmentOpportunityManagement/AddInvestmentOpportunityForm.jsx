@@ -50,6 +50,7 @@ export default function AddInvestmentOpportunityForm() {
     selectedTerritoryIds: [], // multi-select territories
     isSignature: false, // Signature store checkbox state
     signatureStoreLocation: "", // signatureStoreLocation field for signature store
+    isStockist: false,
   });
 
   const [errorValidation, setErrorValidation] = useState("");
@@ -81,6 +82,16 @@ export default function AddInvestmentOpportunityForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const modesSelected =
+      Number(formData.isStore) +
+      Number(formData.isSignature) +
+      Number(formData.isStockist);
+    if (modesSelected > 1) {
+      setErrorValidation(
+        "Choose only one: Master Franchise OR Signature Store OR Stockist."
+      );
+      return;
+    }
     // Required fields
     if (
       !formData.name ||
@@ -471,6 +482,28 @@ export default function AddInvestmentOpportunityForm() {
             </label>
           </div>
 
+          {/* Stockist */}
+          <div className="flex items-center gap-2">
+            <input
+              id="isStockist"
+              type="checkbox"
+              checked={formData.isStockist}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setFormData((prev) => ({
+                  ...prev,
+                  isStockist: checked,
+                  // keep it mutually exclusive with others
+                  isStore: checked ? false : prev.isStore,
+                  isSignature: checked ? false : prev.isSignature,
+                }));
+              }}
+              className="h-4 w-4"
+            />
+            <label htmlFor="isStockist" className="text-sm select-none">
+              Stockist
+            </label>
+          </div>
           {/* signatureStoreLocation for Signature Store */}
           {/* {formData.isSignature && (
           <input

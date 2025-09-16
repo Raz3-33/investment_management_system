@@ -5,6 +5,15 @@ CREATE TYPE "UserLevel" AS ENUM ('ADMINISTRATE', 'HEAD', 'MANAGER', 'EXECUTIVE',
 CREATE TYPE "AssignmentType" AS ENUM ('MANUALLY', 'AUTOMATICALLY', 'USER');
 
 -- CreateTable
+CREATE TABLE "ExecutiveAssignment" (
+    "associateId" TEXT NOT NULL,
+    "executiveId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ExecutiveAssignment_pkey" PRIMARY KEY ("associateId","executiveId")
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "UserID" TEXT,
@@ -21,7 +30,6 @@ CREATE TABLE "User" (
     "administrateId" TEXT,
     "headId" TEXT,
     "managerId" TEXT,
-    "executiveId" TEXT,
     "salesTarget" DOUBLE PRECISION DEFAULT 0,
     "salesAchieved" DOUBLE PRECISION DEFAULT 0,
     "incentive" DOUBLE PRECISION DEFAULT 0,
@@ -151,6 +159,7 @@ CREATE TABLE "investment_opportunities" (
     "businessCategoryId" TEXT NOT NULL,
     "isMasterFranchise" BOOLEAN NOT NULL DEFAULT false,
     "isSignature" BOOLEAN NOT NULL DEFAULT false,
+    "isStockist" BOOLEAN NOT NULL DEFAULT false,
     "signatureStoreLocation" TEXT,
 
     CONSTRAINT "investment_opportunities_pkey" PRIMARY KEY ("id")
@@ -194,7 +203,6 @@ CREATE TABLE "Investment" (
     "paymentMethod" TEXT NOT NULL,
     "agreementSigned" BOOLEAN NOT NULL DEFAULT false,
     "status" TEXT NOT NULL DEFAULT 'Ongoing',
-    "branchId" TEXT NOT NULL,
 
     CONSTRAINT "Investment_pkey" PRIMARY KEY ("id")
 );
@@ -372,13 +380,16 @@ CREATE UNIQUE INDEX "BookingFormPaymentDetails_personalDetailsId_key" ON "Bookin
 CREATE INDEX "_OpportunityBranches_B_index" ON "_OpportunityBranches"("B");
 
 -- AddForeignKey
+ALTER TABLE "ExecutiveAssignment" ADD CONSTRAINT "ExecutiveAssignment_associateId_fkey" FOREIGN KEY ("associateId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ExecutiveAssignment" ADD CONSTRAINT "ExecutiveAssignment_executiveId_fkey" FOREIGN KEY ("executiveId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_administrateId_fkey" FOREIGN KEY ("administrateId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_executiveId_fkey" FOREIGN KEY ("executiveId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_headId_fkey" FOREIGN KEY ("headId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -420,9 +431,6 @@ ALTER TABLE "OpportunityBranch" ADD CONSTRAINT "OpportunityBranch_branchId_fkey"
 ALTER TABLE "OpportunityBranch" ADD CONSTRAINT "OpportunityBranch_opportunityId_fkey" FOREIGN KEY ("opportunityId") REFERENCES "investment_opportunities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Investment" ADD CONSTRAINT "Investment_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Investment" ADD CONSTRAINT "Investment_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -439,6 +447,9 @@ ALTER TABLE "Sales" ADD CONSTRAINT "Sales_opportunityId_fkey" FOREIGN KEY ("oppo
 
 -- AddForeignKey
 ALTER TABLE "territories" ADD CONSTRAINT "territories_investmentOpportunityId_fkey" FOREIGN KEY ("investmentOpportunityId") REFERENCES "investment_opportunities"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BookingFormPersonalDetails" ADD CONSTRAINT "BookingFormPersonalDetails_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BookingFormPersonalDetails" ADD CONSTRAINT "BookingFormPersonalDetails_territoryId_fkey" FOREIGN KEY ("territoryId") REFERENCES "territories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -472,4 +483,3 @@ ALTER TABLE "_OpportunityBranches" ADD CONSTRAINT "_OpportunityBranches_A_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "_OpportunityBranches" ADD CONSTRAINT "_OpportunityBranches_B_fkey" FOREIGN KEY ("B") REFERENCES "investment_opportunities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

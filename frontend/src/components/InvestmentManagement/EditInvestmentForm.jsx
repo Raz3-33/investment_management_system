@@ -113,19 +113,6 @@ export default function EditInvestmentForm({ investmentId, closeModal }) {
     }
   }, [investmentOpportunities, investment?.opportunityId]);
 
-  useEffect(() => {
-    console.log(
-      investmentOpportunitiesWithBranch,
-      "investmentOpportunitiesWithBranch"
-    );
-    // Find the selected opportunity from the list
-    if (investment?.branchId) {
-      setFormData((prev) => ({
-        ...prev,
-        selectedBranchId: investment.branchId, // Pre-set the branch ID
-      }));
-    }
-  }, [investment, investmentOpportunitiesWithBranch]);
 
   // Handle when opportunity changes
   const handleOpportunityChange = async (e) => {

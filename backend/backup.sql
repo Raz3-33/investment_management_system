@@ -223,8 +223,7 @@ CREATE TABLE public."Investment" (
     "contractEnd" timestamp(3) without time zone NOT NULL,
     "paymentMethod" text NOT NULL,
     "agreementSigned" boolean DEFAULT false NOT NULL,
-    status text DEFAULT 'Ongoing'::text NOT NULL,
-    "branchId" text NOT NULL
+    status text DEFAULT 'Ongoing'::text NOT NULL
 );
 
 
@@ -511,6 +510,7 @@ ALTER TABLE public.territories OWNER TO postgres;
 --
 
 COPY public."BookingFormOfficeDetails" (id, "officeBranchId", "leadSuccessCoordinatorId", "partnerRelationshipExecutiveId", "salesOnboardingManagerId", "leadSource", "personalDetailsId") FROM stdin;
+cee1abc0-a3ba-4d02-8bef-172ce48955b3	934d8948-2b0b-4f2f-9542-989b0e86d127	7fef156b-4d71-4d2b-b922-85bd9507db3a	e40952a0-e953-43d5-884e-13cb264448c6	4a96a431-f86f-4b78-ab47-583803d4d566	Social Media	5d695118-e707-4d90-9180-f57ff5291bc7
 \.
 
 
@@ -519,6 +519,7 @@ COPY public."BookingFormOfficeDetails" (id, "officeBranchId", "leadSuccessCoordi
 --
 
 COPY public."BookingFormPaymentDetails" (id, "dealAmount", "tokenReceived", "isTokenApproved", "tokenDate", "balanceDue", "paymentProof", "modeOfPayment", "additionalCommitment", remarks, "personalDetailsId") FROM stdin;
+95f75994-bb31-4434-a7a5-c17f545291ba	3000000	1000000	f	2025-09-13 00:00:00	3000000	https://ebg-dms-bucket.s3.amazonaws.com/aacd7729-87bf-4599-abc6-47b8657c45de-3.jpg	Bank Transfer	Additional Commitment\r\n	Remarks\r\n	5d695118-e707-4d90-9180-f57ff5291bc7
 \.
 
 
@@ -527,6 +528,7 @@ COPY public."BookingFormPaymentDetails" (id, "dealAmount", "tokenReceived", "isT
 --
 
 COPY public."BookingFormPersonalDetails" (id, "userId", "fullName", email, "phoneNumber", "altPhoneNumber", "territoryId", state, district, city, "streetAddress", pincode, "aadharFront", "aadharFrontIsApproved", "aadharBack", "aadharBackIsApproved", "panCard", "panCardIsApproved", "companyPan", "companyPanIsApproved", "gstNumber", "addressProof", "addressProofIsApproved", "attachedImage", "attachedImageIsApproved", oppurtunity, "isPaymentCompleted", "createdAt", "updatedAt") FROM stdin;
+5d695118-e707-4d90-9180-f57ff5291bc7	fd3bf2e0-6ffe-4666-bdab-55c58a021a11	raziq raz	raziqsur@gmail.com	07204474711	09034567839	615a290c-37e5-47a0-bef1-ccb58a0478d9	Karnataka	Udupi	kushalnagar	kuvempubadavane	571234	https://ebg-dms-bucket.s3.amazonaws.com/34cd5499-c72f-45de-a7e7-521d67d50073-3.jpg	f	https://ebg-dms-bucket.s3.amazonaws.com/e7b892af-b715-467c-ba29-e2281ae05f53-Acer%20logo%20white.png	f	https://ebg-dms-bucket.s3.amazonaws.com/5047b92b-ea32-441c-a937-aab27cb85900-Asset%202.png	f	https://ebg-dms-bucket.s3.amazonaws.com/ecddf94a-c4dd-4ac5-b53b-ca514b4b11af-Acer%20Appliance%20Deck_ASv1.pdf	f	27ABCDE1234F2Z5	https://ebg-dms-bucket.s3.amazonaws.com/33228cfb-2c40-4c23-9e00-fe699b1e5ed1-1_LyZcwuLWv2FArOumCxobpA.png	f	\N	f	masterfranchise	f	2025-09-13 04:50:11.8	2025-09-13 07:59:22.946
 \.
 
 
@@ -536,6 +538,7 @@ COPY public."BookingFormPersonalDetails" (id, "userId", "fullName", email, "phon
 
 COPY public."Branch" (id, name, location, "createdAt", "updatedAt") FROM stdin;
 934d8948-2b0b-4f2f-9542-989b0e86d127	kochi	kochi	2025-09-09 19:14:05.637	2025-09-09 19:14:05.637
+53be0806-b2e7-40c6-85ad-d4e0e5e8e4d6	mumbai	mumbai	2025-09-16 07:41:20.728	2025-09-16 07:41:20.728
 \.
 
 
@@ -544,6 +547,9 @@ COPY public."Branch" (id, name, location, "createdAt", "updatedAt") FROM stdin;
 --
 
 COPY public."Brand" (id, name, description, "isActive", "createdAt", "updatedAt") FROM stdin;
+53be0806-b2e7-40c6-85ad-d4e0e5e8e4d6	ACER	This is Acer Brand	t	2025-09-13 04:07:15.582	2025-09-13 04:07:15.582
+f7424bf9-3385-454f-943f-07e872f7c9bb	Daewoo	Daewoo	t	2025-09-13 04:26:09.719	2025-09-13 04:26:09.719
+53f71645-ad87-421a-b92f-76cc4799f1d5	Non-stop	Non-stop	t	2025-09-16 07:41:45.318	2025-09-16 07:41:45.318
 \.
 
 
@@ -552,6 +558,7 @@ COPY public."Brand" (id, name, description, "isActive", "createdAt", "updatedAt"
 --
 
 COPY public."BusinessCategory" (id, name, description) FROM stdin;
+5cb5e915-41dd-4251-a4fd-1c9dac5e0aa8	Ev	Ev
 \.
 
 
@@ -562,6 +569,7 @@ COPY public."BusinessCategory" (id, name, description) FROM stdin;
 COPY public."ExecutiveAssignment" ("associateId", "executiveId", "createdAt") FROM stdin;
 2fff1f05-70a0-4f0e-a991-803f876b9d75	4a96a431-f86f-4b78-ab47-583803d4d566	2025-09-13 02:28:12.799
 2fff1f05-70a0-4f0e-a991-803f876b9d75	e40952a0-e953-43d5-884e-13cb264448c6	2025-09-13 02:28:12.799
+7fef156b-4d71-4d2b-b922-85bd9507db3a	e40952a0-e953-43d5-884e-13cb264448c6	2025-09-13 04:46:34.212
 \.
 
 
@@ -570,6 +578,8 @@ COPY public."ExecutiveAssignment" ("associateId", "executiveId", "createdAt") FR
 --
 
 COPY public."ExpectedPaymentSceduledDetails" (id, date, amount, "personalDetailsId") FROM stdin;
+bb83cf4a-5e64-488d-b94e-581e62cdc4ff	2025-09-15 00:00:00	10000	5d695118-e707-4d90-9180-f57ff5291bc7
+ad4175ae-2748-416c-9917-95673260b547	2025-09-23 00:00:00	200000	5d695118-e707-4d90-9180-f57ff5291bc7
 \.
 
 
@@ -577,7 +587,7 @@ COPY public."ExpectedPaymentSceduledDetails" (id, date, amount, "personalDetails
 -- Data for Name: Investment; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Investment" (id, "investorId", "opportunityId", "createdById", amount, date, "roiPercent", "payoutMode", "coolOffPeriod", "contractStart", "contractEnd", "paymentMethod", "agreementSigned", status, "branchId") FROM stdin;
+COPY public."Investment" (id, "investorId", "opportunityId", "createdById", amount, date, "roiPercent", "payoutMode", "coolOffPeriod", "contractStart", "contractEnd", "paymentMethod", "agreementSigned", status) FROM stdin;
 \.
 
 
@@ -586,6 +596,8 @@ COPY public."Investment" (id, "investorId", "opportunityId", "createdById", amou
 --
 
 COPY public."InvestmentType" (id, name, description) FROM stdin;
+6ddd6e60-5f3d-41a7-bab0-9602839d667c	Fixed	Fixed
+5113e057-56b5-4f14-a692-d467422cdb12	Monthly	this investment type for Monthly payment
 \.
 
 
@@ -594,6 +606,7 @@ COPY public."InvestmentType" (id, name, description) FROM stdin;
 --
 
 COPY public."Investor" (id, name, email, phone, type, address, pan, aadhaar, "gstNumber", "referredBy", status, password, "relationshipManagerId", documents, "createdAt", "updatedAt") FROM stdin;
+286bc20d-4c56-492f-becb-8b503265658d	Albert	albert@gmail.com	9034567839	Individual	kottarakera	AAAAA9999A	234567890123	JSHDL2342	aayan	Pending	$2b$10$58q08HFpKlTcmjMR1tJei.VRPckdQeznwR8kedO7MkAO6z9Cjj6DK	\N	\N	2025-09-16 07:46:06.49	2025-09-16 07:46:06.49
 \.
 
 
@@ -610,6 +623,7 @@ COPY public."OpportunityBranch" (id, "opportunityId", "branchId", "createdAt", "
 --
 
 COPY public."PaymentSceduledDetails" (id, date, amount, "isAmountApproved", "paymentProof", "personalDetailsId") FROM stdin;
+6a7f6126-d628-403f-9ee9-912cb6504469	2025-09-14 00:00:00	1000000	f	https://ebg-dms-bucket.s3.amazonaws.com/97be784d-84fb-49fb-9708-4a25556d2841-3d-render-spotlights-grunge-brick-wall.jpg	5d695118-e707-4d90-9180-f57ff5291bc7
 \.
 
 
@@ -655,6 +669,9 @@ COPY public."Role" (id, name, description, "createdAt", "updatedAt") FROM stdin;
 3714e4f5-9071-4bf0-9402-4b95bb02379f	Manager	Manager	2025-09-09 19:14:33.17	2025-09-09 19:14:33.17
 a925d9e0-184f-412e-99b7-d37d7e106967	Sales	this is sales	2025-09-10 06:53:14.672	2025-09-10 06:54:41.782
 7c35ee02-cb84-4916-999d-70b54e1246f5	FInance		2025-09-13 02:26:59.127	2025-09-13 02:26:59.127
+3f2e3ff7-0072-4bf1-8f8c-be27cad0252e	Sales & Onboarding Manager	Sales & Onboarding Manager	2025-09-13 04:39:15.444	2025-09-13 04:39:15.444
+b8d3afc0-897f-4d06-9889-011b3dec59a0	Lead Success Coordinator	Lead Success Coordinator	2025-09-13 04:43:52.462	2025-09-13 04:43:52.462
+eef7bae4-bc79-4e65-8a13-9a8d565c63a2	Partner Relationship Executive	Partner Relationship Executive	2025-09-13 04:44:12.563	2025-09-13 04:44:12.563
 \.
 
 
@@ -691,6 +708,18 @@ caa10406-8364-4559-bff3-ee01b96bc2f2	7c35ee02-cb84-4916-999d-70b54e1246f5	c4b70d
 20cf20c4-66a8-4d58-bf9e-af2d5edf16c3	7c35ee02-cb84-4916-999d-70b54e1246f5	ce531e27-31bb-4b17-8fa5-cc6f3f7f6d12	view
 eb045aaa-8651-48e3-a644-40d188c0b3a9	7c35ee02-cb84-4916-999d-70b54e1246f5	38c8ce76-e421-4d87-abc7-0b176b6c07fd	approve
 2f7b9b96-350b-43aa-903c-ef8b92aeb9b7	7c35ee02-cb84-4916-999d-70b54e1246f5	a01b48be-2232-49a9-af67-7e3b742cbecd	view
+c89a46be-f194-42f3-ba1d-09143852f5a4	3f2e3ff7-0072-4bf1-8f8c-be27cad0252e	885ef343-34e5-4c6d-af3a-ceab8fd04cf9	approve
+d59f223d-6f1f-4318-8079-d2c172ae7544	3f2e3ff7-0072-4bf1-8f8c-be27cad0252e	0ce5e6da-d1ea-40a3-8d50-d504faa57642	view
+3a8e0f0e-81d6-4852-8f23-a63633986764	3f2e3ff7-0072-4bf1-8f8c-be27cad0252e	aae98841-24fd-4a9a-b438-1787791d4581	delete
+ac0d5c8c-d327-4afe-bb75-51cc97e6512a	3f2e3ff7-0072-4bf1-8f8c-be27cad0252e	2bda9f49-ed92-4276-b43f-06a55ba8e015	update
+c4f5b8da-5f29-445d-9705-6f97c21ab0d6	b8d3afc0-897f-4d06-9889-011b3dec59a0	2bda9f49-ed92-4276-b43f-06a55ba8e015	update
+a91d5076-96f7-46b9-8eae-454146ff3f2f	b8d3afc0-897f-4d06-9889-011b3dec59a0	0ce5e6da-d1ea-40a3-8d50-d504faa57642	view
+7ca24d4e-6c54-41d0-b10d-bc52e05197ea	b8d3afc0-897f-4d06-9889-011b3dec59a0	885ef343-34e5-4c6d-af3a-ceab8fd04cf9	approve
+dbd95f1f-c631-41a2-bd02-67131f4a82ee	b8d3afc0-897f-4d06-9889-011b3dec59a0	aae98841-24fd-4a9a-b438-1787791d4581	delete
+b7433eb4-209f-4c46-bc1a-ccb7f7a2788a	eef7bae4-bc79-4e65-8a13-9a8d565c63a2	aae98841-24fd-4a9a-b438-1787791d4581	delete
+5a3195b2-f9a8-444d-b00e-190c31c860ea	eef7bae4-bc79-4e65-8a13-9a8d565c63a2	2bda9f49-ed92-4276-b43f-06a55ba8e015	update
+57c4a179-fdde-4284-aaa9-b6ab9aeef8e9	eef7bae4-bc79-4e65-8a13-9a8d565c63a2	885ef343-34e5-4c6d-af3a-ceab8fd04cf9	approve
+2dfedf56-b592-48c2-8f73-49d934ad4b2f	eef7bae4-bc79-4e65-8a13-9a8d565c63a2	0ce5e6da-d1ea-40a3-8d50-d504faa57642	view
 \.
 
 
@@ -721,14 +750,15 @@ c05732f2-1ec1-4c35-aa6a-1ee79d28746d	\N	rameez	rameez@gmail.com	$2b$10$iYyjQxuP2
 03380d31-ee9c-4b86-b31c-2007bed166a5	\N	ichu	ichu@gmail.com	$2b$10$FXJRd0Tsew0kagmaC6PfeOHyPap1N/vRYUQw2TbX4tIpOTYDbIJEW	7204474711	\N	sales	+91	a925d9e0-184f-412e-99b7-d37d7e106967	934d8948-2b0b-4f2f-9542-989b0e86d127	HEAD	309bcf6d-a268-4d05-b976-8234baceace7	\N	\N	0	0	0	t	f	f	t	f	2025-09-11 19:29:00.827	2025-09-11 19:29:00.827
 e60be397-3c54-485e-b309-3cc7884f8c8a	\N	affu	affu@gmail.com	$2b$10$ZJoYn3RgTDCjxND6hQVGDePqRTNIIejUp9Q76nzPO1zROquooUELu	7204474711	\N	sales	+91	a925d9e0-184f-412e-99b7-d37d7e106967	934d8948-2b0b-4f2f-9542-989b0e86d127	MANAGER	309bcf6d-a268-4d05-b976-8234baceace7	03380d31-ee9c-4b86-b31c-2007bed166a5	\N	0	0	0	t	f	f	f	t	2025-09-11 19:30:45.966	2025-09-11 19:30:45.966
 18190ddc-2178-4a97-86f1-58cc8893a889	\N	hari	hari@gmail.com	$2b$10$zQJVKPeD2m7J6TshUKS4CO3RGFe1dPqUMLBtOuKKIl2.0B5LtZq1S	9740413086	\N	sales	+91	a925d9e0-184f-412e-99b7-d37d7e106967	934d8948-2b0b-4f2f-9542-989b0e86d127	MANAGER	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	\N	0	0	0	t	f	f	f	t	2025-09-11 19:31:18.778	2025-09-11 19:31:18.778
-7fef156b-4d71-4d2b-b922-85bd9507db3a	\N	shafi	shafi@gmail.com	$2b$10$LGw4YTOz3xa5BFStbYrGY.x7ZEAtWVUZzFpIQdCSjDTd/a0umvxQG	9034567839	\N	executive	+91	a925d9e0-184f-412e-99b7-d37d7e106967	934d8948-2b0b-4f2f-9542-989b0e86d127	EXECUTIVE	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	18190ddc-2178-4a97-86f1-58cc8893a889	0	0	0	t	f	f	f	f	2025-09-11 19:33:01.164	2025-09-11 19:33:01.164
-4a96a431-f86f-4b78-ab47-583803d4d566	\N	mahi	mahi@gmail.com	$2b$10$sZ5SA1n5AjrjfEzofHw4uuHkdK0y3xyDpHsxcPVnVBuc5.sc9dbqu	9740413086	\N	sales	+91	a925d9e0-184f-412e-99b7-d37d7e106967	934d8948-2b0b-4f2f-9542-989b0e86d127	EXECUTIVE	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	18190ddc-2178-4a97-86f1-58cc8893a889	0	0	0	t	f	f	f	f	2025-09-11 19:33:54.296	2025-09-11 19:33:54.296
 4549f391-c644-48d4-9423-c601cd65aec4	\N	Vishnu	vishnu@gmail.com	$2b$10$xPHxg8Qquw42gg7fvLZKTu2itj/Jwj6tjKOQMtkGBxnrIyLA/J73a	78009098736	\N	Administrate	+91	3714e4f5-9071-4bf0-9402-4b95bb02379f	934d8948-2b0b-4f2f-9542-989b0e86d127	MANAGER	4549f391-c644-48d4-9423-c601cd65aec4	fd3bf2e0-6ffe-4666-bdab-55c58a021a11	\N	0	0	0	t	t	f	f	t	2025-09-09 19:23:07.865	2025-09-10 11:06:11.892
-e40952a0-e953-43d5-884e-13cb264448c6	\N	aksha	aksha@gmail.com	$2b$10$OTAq0btrAZydLW3ztAjzE.pFphyyKYaTDsdKdBR1es1oavf2HU1ui	9034567839	\N	sales	+91	a925d9e0-184f-412e-99b7-d37d7e106967	934d8948-2b0b-4f2f-9542-989b0e86d127	EXECUTIVE	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	18190ddc-2178-4a97-86f1-58cc8893a889	0	0	0	t	f	f	f	f	2025-09-11 21:21:58.875	2025-09-11 21:28:33.964
 168c5d7d-de54-4c43-ac1d-967291485753	\N	Albert	albert@gmail.com	$2b$10$0kj2ilFCsbdar1Q1Jalgje9G2E1CWFIieTMTn7vkuF3aKH1wADK1u	9740413086	\N	head	+91	3714e4f5-9071-4bf0-9402-4b95bb02379f	934d8948-2b0b-4f2f-9542-989b0e86d127	HEAD	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	\N	\N	0	0	0	t	t	f	t	f	2025-09-11 19:26:35.545	2025-09-13 02:18:47.078
 2fff1f05-70a0-4f0e-a991-803f876b9d75	\N	Finance	finance@ebikego.in	$2b$10$bRJXKMcF8HlxLpeaWq7QQOT92MYjrJTsebVhlpKKbvg1zvoqMMqiy	9034567839	\N	Finance	+91	7c35ee02-cb84-4916-999d-70b54e1246f5	934d8948-2b0b-4f2f-9542-989b0e86d127	ASSOCIATE	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	18190ddc-2178-4a97-86f1-58cc8893a889	0	0	0	t	t	f	f	f	2025-09-13 02:28:12.799	2025-09-13 02:28:35.755
 fd3bf2e0-6ffe-4666-bdab-55c58a021a11	\N	amal	amal@ebikego.in	$2b$10$4WyTUTmibFvMo/OTEl580OoaWWxEtotasjwj2swJQThvEAofavgpC	9740413086	\N	BDM	+91	a925d9e0-184f-412e-99b7-d37d7e106967	934d8948-2b0b-4f2f-9542-989b0e86d127	MANAGER	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	\N	0	0	0	t	t	f	f	t	2025-09-10 06:53:49.526	2025-09-13 02:40:41.589
-3de86c36-c195-49c3-9cf6-609a0a01feda	\N	Raziq	raziqsur@gmail.com	$2b$10$BcnKeV9GqQPtx50YXcS1qubp3gOv8.EEH5.P7uUUiCcidlCfrrH4G	9087654321	https://media.istockphoto.com/id/1413766112/photo/successful-mature-businessman-looking-at-camera-with-confidence.jpg?s=612x612&w=0&k=20&c=NJSugBzNuZqb7DJ8ZgLfYKb3qPr2EJMvKZ21Sj5Sfq4=	\N	\N	\N	\N	ADMINISTRATE	\N	\N	\N	0	0	0	t	t	t	f	f	2025-09-09 19:11:44.902	2025-09-13 02:33:16.842
+4a96a431-f86f-4b78-ab47-583803d4d566	\N	mahi	mahi@gmail.com	$2b$10$sZ5SA1n5AjrjfEzofHw4uuHkdK0y3xyDpHsxcPVnVBuc5.sc9dbqu	9740413086	\N	sales	+91	3f2e3ff7-0072-4bf1-8f8c-be27cad0252e	934d8948-2b0b-4f2f-9542-989b0e86d127	MANAGER	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	\N	0	0	0	t	f	f	f	t	2025-09-11 19:33:54.296	2025-09-13 04:40:02.925
+e40952a0-e953-43d5-884e-13cb264448c6	\N	aksha	aksha@gmail.com	$2b$10$OTAq0btrAZydLW3ztAjzE.pFphyyKYaTDsdKdBR1es1oavf2HU1ui	9034567839	\N	sales	+91	eef7bae4-bc79-4e65-8a13-9a8d565c63a2	934d8948-2b0b-4f2f-9542-989b0e86d127	EXECUTIVE	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	4a96a431-f86f-4b78-ab47-583803d4d566	0	0	0	t	f	f	f	f	2025-09-11 21:21:58.875	2025-09-13 07:03:43.017
+7fef156b-4d71-4d2b-b922-85bd9507db3a	\N	shafi	shafi@gmail.com	$2b$10$LGw4YTOz3xa5BFStbYrGY.x7ZEAtWVUZzFpIQdCSjDTd/a0umvxQG	9034567839	\N	executive	+91	b8d3afc0-897f-4d06-9889-011b3dec59a0	934d8948-2b0b-4f2f-9542-989b0e86d127	ASSOCIATE	2ba2c777-f5fd-4e3f-ab92-57d6073225c3	168c5d7d-de54-4c43-ac1d-967291485753	4a96a431-f86f-4b78-ab47-583803d4d566	0	0	0	t	f	f	f	f	2025-09-11 19:33:01.164	2025-09-13 04:46:34.212
+3de86c36-c195-49c3-9cf6-609a0a01feda	\N	Raziq	raziqsur@gmail.com	$2b$10$BcnKeV9GqQPtx50YXcS1qubp3gOv8.EEH5.P7uUUiCcidlCfrrH4G	9087654321	https://media.istockphoto.com/id/1413766112/photo/successful-mature-businessman-looking-at-camera-with-confidence.jpg?s=612x612&w=0&k=20&c=NJSugBzNuZqb7DJ8ZgLfYKb3qPr2EJMvKZ21Sj5Sfq4=	\N	\N	\N	\N	ADMINISTRATE	\N	\N	\N	0	0	0	t	t	t	f	f	2025-09-09 19:11:44.902	2025-09-16 07:36:04.909
+8b51915d-e056-4917-823c-a4dc7ba6dbbf	\N	admin	admin@gmail.com	$2b$10$kZJ34lXoEFK/QpHBSsW6Xuw39JlBtZWFXAQTs8MNXhFos0h//Y5MW	9034567839	\N	Admin	+91	3714e4f5-9071-4bf0-9402-4b95bb02379f	934d8948-2b0b-4f2f-9542-989b0e86d127	ADMINISTRATE	\N	\N	\N	0	0	0	t	t	t	f	f	2025-09-16 07:38:45.523	2025-09-16 07:39:18.092
 \.
 
 
@@ -759,6 +789,7 @@ ee982eba-f226-40c4-bf8e-a10a234f5d6d	c59f3903e455b742f6f277236b9b583b25b8a1b8221
 --
 
 COPY public.investment_opportunities (id, name, "brandName", "brandId", description, "minAmount", "maxAmount", "roiPercent", "turnOverPercentage", "turnOverAmount", "renewalFee", "lockInMonths", "exitOptions", "payoutMode", "isActive", documents, "investmentTypeId", "businessCategoryId", "isMasterFranchise", "isSignature", "signatureStoreLocation") FROM stdin;
+e7eb3545-1556-4e1f-bc75-10f234d7edff	Bi-Cycle	Daewoo	53be0806-b2e7-40c6-85ad-d4e0e5e8e4d6	this is Investment Opportunity	3000000	\N	2	3	60000	20000	24	2 years	Monthly	t	\N	6ddd6e60-5f3d-41a7-bab0-9602839d667c	5cb5e915-41dd-4251-a4fd-1c9dac5e0aa8	t	f	\N
 \.
 
 
@@ -767,6 +798,8 @@ COPY public.investment_opportunities (id, name, "brandName", "brandId", descript
 --
 
 COPY public.territories (id, "assignmentType", location, pincode, city, "imageUrl", "createdAt", "updatedAt", "investmentOpportunityId", "isBooked") FROM stdin;
+615a290c-37e5-47a0-bef1-ccb58a0478d9	MANUALLY	kochi	\N	\N	https://ebg-dms-bucket.s3.amazonaws.com/0e3750a7-2a24-4e35-bb85-3cb0d7fb1d6f-profit_category.png	2025-09-13 04:19:59.608	2025-09-13 07:59:14.954	e7eb3545-1556-4e1f-bc75-10f234d7edff	f
+0087e721-43b3-4eea-b958-95575b61734b	AUTOMATICALLY	\N	571234	Kodagu	https://ebg-dms-bucket.s3.amazonaws.com/e89e94d1-42e8-4a90-a661-02d637fc5f19-Asset%202.png	2025-09-16 07:40:23.644	2025-09-16 07:40:23.644	e7eb3545-1556-4e1f-bc75-10f234d7edff	f
 \.
 
 
@@ -1103,6 +1136,14 @@ ALTER TABLE ONLY public."BookingFormPersonalDetails"
 
 
 --
+-- Name: BookingFormPersonalDetails BookingFormPersonalDetails_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."BookingFormPersonalDetails"
+    ADD CONSTRAINT "BookingFormPersonalDetails_userId_fkey" FOREIGN KEY ("userId") REFERENCES public."User"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
 -- Name: ExecutiveAssignment ExecutiveAssignment_associateId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1124,14 +1165,6 @@ ALTER TABLE ONLY public."ExecutiveAssignment"
 
 ALTER TABLE ONLY public."ExpectedPaymentSceduledDetails"
     ADD CONSTRAINT "ExpectedPaymentSceduledDetails_personalDetailsId_fkey" FOREIGN KEY ("personalDetailsId") REFERENCES public."BookingFormPersonalDetails"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-
-
---
--- Name: Investment Investment_branchId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Investment"
-    ADD CONSTRAINT "Investment_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES public."Branch"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
