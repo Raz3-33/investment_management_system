@@ -242,9 +242,9 @@ export async function convertToInvestment({
       //     `Pending amount: ₹${summary.pendingAmount.toLocaleString("en-IN")}`
       //   );
       // }
-      // const message = msgParts.length
-      //   ? msgParts.join(" | ")
-      //   : "Payments are not fully approved";
+      const message = msgParts.length
+        ? msgParts.join(" | ")
+        : "Payments are not fully approved";
 
       const err = new Error(message);
       // attach details for controller (if you want to relay it)
@@ -305,7 +305,7 @@ export async function convertToInvestment({
       where: {
         investorId: investor.id,
         opportunityId: opportunity.id,
-        branchId,
+        // branchId,
       },
     });
     if (existingInvestment) {
@@ -348,7 +348,7 @@ export async function convertToInvestment({
         paymentMethod,
         agreementSigned: false,
         status: "Ongoing",
-        branchId,
+        // branchId,
       },
     });
 
@@ -378,7 +378,7 @@ export async function convertToInvestment({
         name: opportunity.name,
         brandName: opportunity.brandName,
       },
-      branchId,
+      // branchId,
     };
   });
 }
