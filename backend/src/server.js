@@ -23,6 +23,8 @@ import settingRouter from "./routes/settings.routes.js";
 import authenticationRoute from "./routes/authentication.routes.js";
 import dashBoardRoute from "./routes/dashBoard.routes.js";
 import profileRoute from "./routes/profile.route.js";
+import notificationsRouter from "./routes/notifications.routes.js";
+
 
 dotenv.config();
 
@@ -89,6 +91,9 @@ app.use("/api/sales", salesRoutes);
 
 // settings
 app.use("/api/settings", settingRouter);
+
+// notification
+app.use("/api/notifications", notificationsRouter);
 
 // app.get("/", (req, res) => {
 //   res.send("API is running!");

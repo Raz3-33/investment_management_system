@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect } from "react";
+import React, { lazy, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import "./css/style.css";
@@ -25,6 +25,10 @@ import BookingDetailPage from "./components/BookingListManagement/BookingDetailP
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuthzStore } from "./store/useAuthzStore";
 import { useAuthStore } from "./store/authentication";
+const NotificationsPage = lazy(() =>
+  import("./pages/notification/NotificationsPage")
+);
+
 
 function ScrollToTopOnNavigate() {
   const location = useLocation();
@@ -40,6 +44,7 @@ function AuthBoot() {
   const token = useAuthStore((s) => s.token);
   const bootstrap = useAuthzStore((s) => s.bootstrap);
   const reset = useAuthzStore((s) => s.reset);
+  
 
   React.useEffect(() => {
     if (token) bootstrap();
@@ -48,7 +53,6 @@ function AuthBoot() {
 
   return null;
 }
-
 
 function App() {
   return (
@@ -187,8 +191,30 @@ function App() {
           path="/profile"
           element={
             // <ProtectedRoute perm="Settings:view">
-              <MainLayout children={<ProfilePage />} />
+            <MainLayout children={<ProfilePage />} />
             // </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ NEW: Notifications route */}
+        <Route
+          path="/notifications"
+          element={
+            // <ProtectedRoute perm="Notifications:view">
+              <MainLayout>
+                <NotificationsPage />
+              </MainLayout>
+            // </ProtectedRoute>
+          }
+        />
+
+        {/* (Optional) 404 */}
+        <Route
+          path="*"
+          element={
+            <MainLayout>
+              <div className="p-8 text-gray-600">Not Found</div>
+            </MainLayout>
           }
         />
       </Routes>

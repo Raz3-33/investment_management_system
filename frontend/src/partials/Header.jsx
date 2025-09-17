@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import SearchModal from "../components/ModalSearch";
 import Notifications from "../components/DropdownNotifications";
+import NotificationsDropdown from "../components/NotificationsDropdown";
+
 import Help from "../components/DropdownHelp";
 import UserMenu from "../components/DropdownProfile";
 import ThemeToggle from "../components/ThemeToggle";
@@ -78,6 +80,8 @@ function Header({ sidebarOpen, setSidebarOpen, variant = "default" }) {
             {/* <Help align="right" /> */}
             {/* <ThemeToggle /> */}
             {/*  Divider */}
+            <NotificationsDropdown align="right" />
+
             <hr className="w-px h-6 bg-gray-200 dark:bg-gray-700/60 border-none" />
             <UserMenu align="right" />
           </div>
