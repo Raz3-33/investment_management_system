@@ -100,6 +100,7 @@ const token = jwt.sign(
       image_url: user.image_url,
       role: user.role,
       branch: user.branch,
+      isAdmin:user.isAdmin
     },
   };
 };

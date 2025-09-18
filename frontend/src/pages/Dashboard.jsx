@@ -16,6 +16,7 @@ import DashboardCard11 from "../partials/dashboard/DashboardCard11";
 import DashboardCard12 from "../partials/dashboard/DashboardCard12";
 import DashboardCard13 from "../partials/dashboard/DashboardCard13";
 import Banner from "../partials/Banner";
+import NotificationsPage from "./notification/NotificationsPage";
 
 function Dashboard() {
   const { dashBoardData, fetchDashBoard } = useDashBoardStore((state) => state);
@@ -90,6 +91,7 @@ function Dashboard() {
             {/* Card (Income/Expenses) */}
             {/* <DashboardCard13 /> */}
           </div>
+          <NotificationsPage />
         </div>
       </main>
 

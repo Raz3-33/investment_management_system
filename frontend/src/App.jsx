@@ -196,7 +196,7 @@ function App() {
           }
         />
 
-        {/* ✅ NEW: Notifications route */}
+        {/*  NEW: Notifications route */}
         <Route
           path="/notifications"
           element={

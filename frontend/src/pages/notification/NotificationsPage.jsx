@@ -1,50 +1,122 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNotificationsStore } from "../../store/notifications.store";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { useAuthStore } from "../../store/authentication"; // <-- must expose { user }
+
+const ALL_TABS = ["legal", "finance", "admin"];
 
 export default function NotificationsPage() {
+  const { user } = useAuthStore(); // expects: user?.isAdmin, user?.role?.name
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialRole = searchParams.get("role") || "legal";
-  const [role, setRole] = useState(initialRole);
+
+  // Determine allowed tabs for this user
+  const { allowedTabs, isAdmin } = useMemo(() => {
+    console.log(user,"==============0=-0=-0=-0=-0=-0=-0");
+    
+    const admin = !!user?.isAdmin;
+    if (admin) return { allowedTabs: [...ALL_TABS], isAdmin: true };
+
+    const userRole = (user?.role?.name || "").toLowerCase();
+    if (userRole === "legal") return { allowedTabs: ["legal"], isAdmin: false };
+    if (userRole === "finance")
+      return { allowedTabs: ["finance"], isAdmin: false };
+
+    // Fallback: no recognized role -> show nothing (or only legal if you prefer)
+    return { allowedTabs: [], isAdmin: false };
+  }, [user]);
+
+  // Role coming from URL, but clamp it to what's allowed
+  const initialRoleParam =
+    searchParams.get("role") || (allowedTabs[0] ?? "legal");
+  const initialRole = ALL_TABS.includes(initialRoleParam)
+    ? initialRoleParam
+    : allowedTabs[0] ?? "legal";
+
+  const [role, setRole] = useState(initialRoleParam);
   const [status, setStatus] = useState("pending");
+
+  // If URL (or reload) picks a disallowed role, snap to first allowed
+  useEffect(() => {
+    if (!allowedTabs.includes(role) && allowedTabs.length > 0) {
+      setRole(allowedTabs[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedTabs.join("|")]);
 
   const { lists, fetchList, summaries, fetchSummary } = useNotificationsStore();
   const data = lists?.[role] || { items: [], cursor: null, hasMore: false };
 
+  // Fetch summary + list whenever role/status changes
   useEffect(() => {
-    fetchSummary(role);
-    fetchList(role, { status, limit: 30 });
+    if (allowedTabs.includes(role)) {
+      fetchSummary(role);
+      fetchList(role, { status, limit: 30 });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, status]);
 
-   useEffect(() => {
-   setSearchParams({ role, status });
-  }, [role, status, setSearchParams]);
+  // Keep URL in sync—but always write the clamped role
+  useEffect(() => {
+    if (allowedTabs.length > 0) {
+      const safeRole = allowedTabs.includes(role) ? role : allowedTabs[0];
+      setSearchParams({ role: safeRole, status });
+    }
+  }, [role, status, setSearchParams, allowedTabs]);
+
+  // Helper to render a tab button with locking
+  const TabButton = ({ r }) => {
+    const allowed = allowedTabs.includes(r);
+    const active = role === r;
+    const base = "px-3 py-1.5 rounded-lg text-sm border transition-colors";
+    const activeCls = "bg-gray-900 text-white border-gray-900";
+    const inactiveCls =
+      "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700";
+    const lockedCls = "opacity-50 cursor-not-allowed relative";
+    return (
+      <button
+        key={r}
+        onClick={() => allowed && setRole(r)}
+        disabled={!allowed}
+        aria-disabled={!allowed}
+        title={!allowed ? "Locked for your role" : ""}
+        className={[
+          base,
+          active ? activeCls : inactiveCls,
+          !allowed ? lockedCls : "",
+        ].join(" ")}
+      >
+        {r[0].toUpperCase() + r.slice(1)} ({summaries?.[r]?.pending ?? 0}{" "}
+        pending)
+        {!allowed && (
+          <span className="ml-2 text-[10px] uppercase tracking-wide">
+            • Locked
+          </span>
+        )}
+      </button>
+    );
+  };
+
+  // If somehow no tabs are allowed (unexpected), show a guard
+  if (allowedTabs.length === 0) {
+    return (
+      <div className="p-6 text-sm text-gray-600 dark:text-gray-300">
+        You don’t have access to Notifications.
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex gap-2">
-          {["legal", "finance", "admin"].map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-3 py-1.5 rounded-lg text-sm border
-              ${
-                role === r
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700"
-              }`}
-            >
-              {r[0].toUpperCase() + r.slice(1)} ({summaries?.[r]?.pending ?? 0}{" "}
-              pending)
-            </button>
+          {ALL_TABS.map((r) => (
+            <TabButton key={r} r={r} />
           ))}
         </div>
         <div>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => setStatus(e.target.value, "pending" | "all")}
             className="px-2 py-1 text-sm border rounded-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
           >
             <option value="pending">Pending</option>
