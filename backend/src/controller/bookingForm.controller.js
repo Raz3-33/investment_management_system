@@ -1,4 +1,8 @@
 import * as bookingFormService from "../services/bookingForm.service.js";
+import fs from "fs";
+import sanitizedConfig from "../config.js";
+import { uploadFileToS3, deleteFileFromS3ByUrl } from "../utils/s3Utils.js";
+import { prisma } from "../config/db.js";
 
 // Get all bookings
 export const getAllBookings = async (req, res) => {
@@ -161,5 +165,114 @@ export const updateScheduledPaymentApproval = async (req, res) => {
     return res.status(200).json({ success: true, data: result.data });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// controller/bookingForm.controller.js
+export const replaceDocumentFile = async (req, res) => {
+  try {
+    const { personalDetailsId, docKey } = req.params;
+
+    // whitelist of editable doc fields
+    const validDocKeys = new Set([
+      "aadharFront",
+      "aadharBack",
+      "panCard",
+      "companyPan",
+      "addressProof",
+      "attachedImage",
+      // if you later want to support 'paymentProof' edit, add here too
+    ]);
+
+    if (!validDocKeys.has(docKey)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid docKey "${docKey}"`,
+      });
+    }
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "File is required" });
+    }
+
+    // Load current record
+    const existing = await prisma.bookingFormPersonalDetails.findUnique({
+      where: { id: personalDetailsId },
+      select: {
+        id: true,
+        [docKey]: true,
+      },
+    });
+    if (!existing) {
+      // cleanup tmp file
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch {}
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
+    }
+
+    // Read buffer from disk (you already use disk storage)
+    const buffer = fs.readFileSync(req.file.path);
+
+    // Upload to S3
+    const newUrl = await uploadFileToS3(
+      {
+        buffer,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+      },
+      sanitizedConfig.S3_BUCKET_NAME
+    );
+
+    // Remove temp file
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch {}
+
+    // Map docKey -> approval flag to reset
+    const docKeyToApproval = {
+      aadharFront: "aadharFrontIsApproved",
+      aadharBack: "aadharBackIsApproved",
+      panCard: "panCardIsApproved",
+      companyPan: "companyPanIsApproved",
+      addressProof: "addressProofIsApproved",
+      attachedImage: "attachedImageIsApproved",
+    };
+    const approvalField = docKeyToApproval[docKey];
+
+    // Update row with new URL & reset approval to false
+    const updated = await prisma.bookingFormPersonalDetails.update({
+      where: { id: personalDetailsId },
+      data: {
+        [docKey]: newUrl,
+        ...(approvalField ? { [approvalField]: false } : {}),
+      },
+      select: {
+        id: true,
+        [docKey]: true,
+        ...(approvalField ? { [approvalField]: true } : {}),
+      },
+    });
+
+    // Delete the old file from S3 (best-effort)
+    const oldUrl = existing[docKey];
+    if (oldUrl && oldUrl !== newUrl) {
+      try {
+        await deleteFileFromS3ByUrl(oldUrl);
+      } catch (e) {
+        // log and continue; don't fail the request
+        console.error("S3 delete failed for", oldUrl, e?.message);
+      }
+    }
+
+    return res.status(200).json({ success: true, data: updated });
+  } catch (err) {
+    console.error("replaceDocumentFile error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Upload failed" });
   }
 };

@@ -2,6 +2,7 @@ import express from "express";
 import * as bookingFormController from "../controller/bookingForm.controller.js";
 import { verifyToken } from "../middlewares/tokenVerification.js";
 import { checkPermission } from "../middlewares/checkPermission.js";
+import upload from "../utils/multer.js";
 
 const router = express.Router();
 
@@ -65,4 +66,13 @@ router.post(
   verifyToken,
   checkPermission("Booking Management:approve"),
   bookingFormController.unmarkTerritoryBooked
+);
+
+
+router.put(
+  "/documents/file/:personalDetailsId/:docKey",
+  verifyToken,
+  checkPermission("Booking Management:approve"),
+  upload.single("file"),
+  bookingFormController.replaceDocumentFile
 );

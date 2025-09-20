@@ -223,8 +223,7 @@ export const useBookingStore = create(
           return res.data?.data;
         } catch (err) {
           set({
-            error:
-              err.response?.data?.message || "Failed to unmark as booked",
+            error: err.response?.data?.message || "Failed to unmark as booked",
             loading: false,
           });
           throw err;
@@ -243,7 +242,39 @@ export const useBookingStore = create(
         } catch (err) {
           set({
             error:
-              err.response?.data?.message || "Failed to fetch conversion status",
+              err.response?.data?.message ||
+              "Failed to fetch conversion status",
+            loading: false,
+          });
+          throw err;
+        }
+      },
+
+      // store/booking.store.js
+      updateDocumentFile: async (personalDetailsId, docKey, file) => {
+        set({ loading: true, error: null });
+        try {
+          const fd = new FormData();
+          fd.append("file", file);
+
+          const auth = get()._getAuth(); // { headers: { authorization: `Bearer ${token}` } }
+
+          const res = await api.put(
+            `/bookings/documents/file/${personalDetailsId}/${docKey}`,
+            fd,
+            {
+              headers: {
+                ...auth.headers, // keep Authorization
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          set({ loading: false });
+          return res.data?.data;
+        } catch (err) {
+          set({
+            error: err.response?.data?.message || "Failed to upload document",
             loading: false,
           });
           throw err;
