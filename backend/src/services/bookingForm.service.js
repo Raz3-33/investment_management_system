@@ -1,6 +1,7 @@
 import { prisma } from "../config/db.js";
 import { addMonths } from "date-fns";
 import { summarizePayments } from "../helper/booking.helper.js";
+import { deleteFileFromS3ByUrl } from "../utils/s3Utils.js";
 
 // Fetch all bookings
 export const getAllBookings = async () => {
@@ -32,7 +33,6 @@ export const getBookingById = async (id) => {
     },
   });
 };
-
 
 // services/bookingForm.service.js (or booking.service.js)
 // Assumes `prisma` is imported and available
@@ -382,6 +382,116 @@ export async function convertToInvestment({
     };
   });
 }
+
+// services/bookingForm.service.js
+export const deleteBookingCascade = async ({ personalDetailsId, user }) => {
+  try {
+    const roleName = user?.role?.name?.toLowerCase?.() || "";
+    const isFinance = roleName === "finance";
+    const isAdmin = user?.isAdmin === true;
+    if (!isFinance && !isAdmin) {
+      return {
+        success: false,
+        statusCode: 403,
+        message: "Forbidden: Only finance/admin can delete a booking",
+      };
+    }
+    if (!personalDetailsId) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: "personalDetailsId is required",
+      };
+    }
+
+    // 1) Prefetch minimal fields OUTSIDE the transaction
+    const booking = await prisma.bookingFormPersonalDetails.findUnique({
+      where: { id: personalDetailsId },
+      select: {
+        id: true,
+        territoryId: true,
+        aadharFront: true,
+        aadharBack: true,
+        panCard: true,
+        companyPan: true,
+        addressProof: true,
+        attachedImage: true,
+      },
+    });
+    if (!booking) {
+      return {
+        success: false,
+        statusCode: 404,
+        message: "Booking (personal details) not found",
+      };
+    }
+    const docUrls = [
+      booking.aadharFront,
+      booking.aadharBack,
+      booking.panCard,
+      booking.companyPan,
+      booking.addressProof,
+      booking.attachedImage,
+    ].filter(Boolean);
+
+    // 2) Do only DB writes INSIDE the transaction (parallel deletes)
+    const result = await prisma.$transaction(
+      async (tx) => {
+        if (booking.territoryId) {
+          await tx.territory.update({
+            where: { id: booking.territoryId },
+            data: { isBooked: false },
+          });
+        }
+
+        await Promise.all([
+          // delegates from model names (with your existing 'Sceduled' typo)
+          tx.paymentSceduledDetails.deleteMany({
+            where: { personalDetailsId },
+          }),
+          tx.expectedPaymentSceduledDetails.deleteMany({
+            where: { personalDetailsId },
+          }),
+          tx.bookingFormPaymentDetails.deleteMany({
+            where: { personalDetailsId },
+          }),
+          tx.bookingFormOfficeDetails.deleteMany({
+            where: { personalDetailsId },
+          }),
+        ]);
+
+        await tx.bookingFormPersonalDetails.delete({
+          where: { id: personalDetailsId },
+        });
+
+        return { territoryUnbooked: !!booking.territoryId };
+      },
+      { timeout: 20000, maxWait: 5000 }
+    ); // 20s timeout, 5s queue wait
+
+    // 3) Best-effort S3 cleanup OUTSIDE the tx
+    for (const url of docUrls) {
+      try {
+        await deleteFileFromS3ByUrl(url);
+      } catch {}
+    }
+
+    return {
+      success: true,
+      data: {
+        id: personalDetailsId,
+        territoryUnbooked: result.territoryUnbooked,
+      },
+    };
+  } catch (err) {
+    console.error("deleteBookingCascade error:", err);
+    return {
+      success: false,
+      statusCode: 500,
+      message: err.message || "Failed to delete booking",
+    };
+  }
+};
 
 // services/bookingForm.service.js
 // In your service file (e.g., bookingForm.service.js)

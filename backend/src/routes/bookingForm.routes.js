@@ -20,6 +20,15 @@ router.get(
   bookingFormController.getBookingById
 );
 
+// NEW: cascade delete booking + children
+router.delete(
+  "/:personalDetailsId",
+  verifyToken,
+  checkPermission("Booking Management:delete"),
+  bookingFormController.deleteBookingCascade
+);
+
+
 // Approvals (treat as "approve")
 router.put(
   "/payments/approval/:id",
@@ -52,7 +61,6 @@ router.put(
   checkPermission("Booking Management:approve"),
   bookingFormController.updateScheduledPaymentApproval
 );
-
 
 router.post(
   "/mark-booked/:personalDetailsId",

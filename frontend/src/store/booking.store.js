@@ -91,6 +91,7 @@ export const useBookingStore = create(
         }
       },
 
+      // in store/booking.store.js
       deleteBooking: async (id) => {
         set({ loading: true, error: null });
         try {
@@ -98,12 +99,15 @@ export const useBookingStore = create(
             `/bookings/${id}`,
             get()._getAuth()
           );
+          // Re-fetch to refresh list
+          await get().fetchBookings();
           set({ bookingDelete: data, loading: false });
         } catch (err) {
           set({
             error: err.response?.data?.message || "Failed to delete booking",
             loading: false,
           });
+          throw err; // so toast.promise shows error
         }
       },
 

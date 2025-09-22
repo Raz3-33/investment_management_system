@@ -1,12 +1,10 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Button from "../../components/ui/Button";
 import DataTable from "../../components/ui/table/DataTable";
 import PaginationControls from "../../components/ui/PaginationContrls";
-// import Modal from "../../components/ui/Modal/Modal.jsx";
 import { useBookingStore } from "../../store/booking.store";
 import { useNavigate } from "react-router-dom";
-// import AddBookingForm from "../../components/bookingManagement/AddBookingForm";
-// import EditBookingForm from "../../components/bookingManagement/EditBookingForm";
+import { toast } from "react-toastify";
 
 const columns = [
   { key: "fullName", label: "Full Name" },
@@ -23,9 +21,6 @@ export default function BookingListManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(15);
   const navigate = useNavigate();
-  //   const [isModalOpen, setIsModalOpen] = useState(false);
-  //   const [editMode, setEditMode] = useState(false);
-  //   const [editingBookingId, setEditingBookingId] = useState(null);
 
   const {
     bookings,
@@ -35,28 +30,76 @@ export default function BookingListManagement() {
     loading,
     deleteBooking,
     addBooking,
+    error,
   } = useBookingStore((state) => state);
 
-  // Fetch bookings when component mounts or changes occur
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings, bookingUpdate, bookingDelete, addBooking]);
 
-  const handleDelete = async (id) => {
-    await deleteBooking(id);
-  };
+  // NEW: pretty confirm via react-toastify
+  const confirmDelete = useCallback(
+    (id, displayName = "") => {
+      const toastId = toast(
+        ({ closeToast }) => (
+          <div className="flex flex-col gap-3">
+            <div className="text-left">
+              <p className="font-semibold">Delete booking?</p>
+              <p className="text-sm text-gray-600">
+                {displayName ? `This will permanently remove ${displayName}` : "This will permanently remove this booking"}
+                , including all associated records (payments, schedules, office details, etc.).
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={closeToast}
+                className="px-3 py-2 rounded-md border border-gray-300 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  // show a loading toast while deleting
+                  toast.dismiss(toastId);
+                  const p = deleteBooking(id);
+                  toast.promise(p, {
+                    pending: "Deleting booking…",
+                    success: "Booking deleted",
+                    error: (e) =>
+                      e?.response?.data?.message ||
+                      e?.message ||
+                      "Failed to delete booking",
+                  });
+                }}
+                className="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          autoClose: false,
+          closeOnClick: false,
+          draggable: false,
+          closeButton: false,
+          className: "max-w-md",
+        }
+      );
+    },
+    [deleteBooking]
+  );
 
   const filteredRows = useMemo(() => {
-    if (addBooking) {
-      setIsModalOpen(false);
-    }
+    // FIX: removed stale setIsModalOpen reference
+    const q = search.toLowerCase();
     return bookings.filter(
       (row) =>
-        (row?.fullName?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (row?.email?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (row?.phoneNumber?.toLowerCase() || "").includes(search.toLowerCase())
+        (row?.fullName?.toLowerCase() || "").includes(q) ||
+        (row?.email?.toLowerCase() || "").includes(q) ||
+        (row?.phoneNumber?.toLowerCase() || "").includes(q)
     );
-  }, [search, bookings, addBooking]);
+  }, [search, bookings]);
 
   const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   const paginatedRows = filteredRows.slice(
@@ -67,7 +110,6 @@ export default function BookingListManagement() {
   return (
     <main className="grow">
       <div className="p-4">
-        {/* Search + Add button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
           <input
             type="text"
@@ -76,19 +118,8 @@ export default function BookingListManagement() {
             onChange={(e) => setSearch(e.target.value)}
             className="border px-3 py-2 rounded-md w-full sm:w-1/3 dark:bg-gray-800 dark:text-white"
           />
-          {/* <Button
-            className="w-40 h-12"
-            variant="primary"
-            onClick={() => {
-              setEditMode(false);
-              setIsModalOpen(true);
-            }}
-          >
-            Add Booking
-          </Button> */}
         </div>
 
-        {/* Table */}
         {loading ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             Loading...
@@ -103,10 +134,9 @@ export default function BookingListManagement() {
                   <Button
                     variant="primary"
                     aria-label="View"
-                    onClick={() => {
-                      navigate(`/booking_details_management/${row.id}`);
-                    }}
+                    onClick={() => navigate(`/booking_details_management/${row.id}`)}
                   >
+                    {/* eye icon */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="20"
@@ -124,7 +154,11 @@ export default function BookingListManagement() {
                     </svg>
                   </Button>
 
-                  <Button variant="danger" onClick={() => handleDelete(row.id)}>
+                  {/* CHANGED: use confirmDelete */}
+                  <Button
+                    variant="danger"
+                    onClick={() => confirmDelete(row.id, row.fullName)}
+                  >
                     Delete
                   </Button>
                 </>
@@ -138,24 +172,6 @@ export default function BookingListManagement() {
           </>
         )}
       </div>
-
-      {/* Modal */}
-      {/* <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={editMode ? "Edit Booking" : "Add Booking"}
-      >
-        <div className="space-y-4">
-          {editMode ? (
-            <EditBookingForm
-              bookingId={editingBookingId}
-              closeModal={() => setIsModalOpen(false)}
-            />
-          ) : (
-            <AddBookingForm />
-          )}
-        </div>
-      </Modal> */}
     </main>
   );
 }

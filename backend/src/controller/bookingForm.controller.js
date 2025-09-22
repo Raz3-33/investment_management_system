@@ -76,6 +76,33 @@ export const convertToInvestment = async (req, res) => {
   }
 };
 
+
+export const deleteBookingCascade = async (req, res) => {
+  try {
+    const { personalDetailsId } = req.params;
+    const user = req.user;
+
+    const result = await bookingFormService.deleteBookingCascade({
+      personalDetailsId,
+      user,
+    });
+
+    if (!result.success) {
+      return res
+        .status(result.statusCode || 400)
+        .json({ success: false, message: result.message });
+    }
+
+    return res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Delete failed" });
+  }
+};
+
+
+
 // Mark Territory as Booked
 export const markTerritoryBooked = async (req, res) => {
   try {
